@@ -109,3 +109,4 @@ async function cycle(){try{
 $('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log('Démarrage (simulation).');cycle();timer=setInterval(cycle,30000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
 $('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();$('log').textContent=S.log.join('\n');
+if(location.search.includes('auto'))$('go').click();
