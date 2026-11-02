@@ -56,7 +56,26 @@ function buy(p,score){lit(3);const a=p.baseToken.address,amt=+(S.bal*0.08).toFix
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
 
-async function risk(){lit(4);const ks=Object.keys(S.pos);if(!ks.length)return;
+const MAJ=['SOL','BTC','ETH'];
+const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map(x=>e=x*k+e*(1-k))};
+function rsi(v,n=14){let g=0,l=0;for(let i=v.length-n;i<v.length;i++){const d=v[i]-v[i-1];d>0?g+=d:l-=d}return l?100-100/(1+g/l):100}
+async function candles(s){const c=await j(`https://api.exchange.coinbase.com/products/${s}-USD/candles?granularity=300`);return c?c.reverse():null}
+async function prudent(){lit(0);for(const s of MAJ){const c=await candles(s);if(!c){log('Scout : prix '+s+' indisponible');continue}
+ S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),e20=ema(cl,20).at(-1),e50=ema(cl,50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
+ const k='MAJ_'+s,P=S.pos[k];
+ if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
+ else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(S.bal*0.08).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
+ else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}save()}
+function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
+ S.hist.unshift({sym:P.sym,pnl,why,t:Date.now()});log(`Risk : VENTE FICTIVE ${P.sym} (${why}) ${pnl>=0?'+':''}${pnl.toFixed(2)}$`);delete S.pos[k]}
+async function riskMaj(){for(const k of Object.keys(S.pos).filter(k=>S.pos[k].major)){const c=await candles(S.pos[k].sym);if(!c)continue;const P=S.pos[k],px=c.at(-1)[4],t=c.at(-1)[0];
+ if(t>P.pts.at(-1).time)P.pts.push({time:t,value:px});P.peak=Math.max(P.peak,px);const ch=px/P.entry-1;
+ if(ch<=-0.06)close(k,px,'stop -6 %');else if(P.peak/P.entry-1>=0.12&&px<=P.peak*0.85)close(k,px,'stop suiveur')}}
+let yT=0;async function yields(){if(Date.now()-yT<6e5)return;yT=Date.now();const d=await j('https://yields.llama.fi/pools');
+ if(!d?.data){$('yield').innerHTML='<span class=sk>Données indisponibles</span>';return}
+ const r=d.data.filter(p=>p.project==='aave-v3'&&p.symbol==='USDC').sort((a,b)=>b.tvlUsd-a.tvlUsd).slice(0,8);
+ $('yield').innerHTML=r.length?'<table><tr><th>Réseau</th><th>APY</th><th>Dépôts</th></tr>'+r.map(p=>`<tr><td>${p.chain}</td><td class=ok>${p.apy.toFixed(2)} %</td><td>$${(p.tvlUsd/1e6).toFixed(0)}M</td></tr>`).join('')+'</table><div class=sk>Source : DefiLlama. Taux variables, pas garantis.</div>':'<span class=sk>Données indisponibles</span>'}
+async function risk(){lit(4);await riskMaj();const ks=Object.keys(S.pos).filter(k=>!S.pos[k].major);if(!ks.length)return;
  const ps=await j(DS+'/latest/dex/pairs/solana/'+ks.map(k=>S.pos[k].pair).join(','));
  const list=ps?.pairs||[];
  for(const k of ks){const q=list.find(x=>x.pairAddress===S.pos[k].pair);if(!q)continue;const P=S.pos[k],px=+q.priceUsd;
@@ -75,7 +94,8 @@ function render(){lit(5);$('bal').textContent='$'+S.bal.toFixed(2);const s=S.sta
 
 const seenRows=[];
 async function cycle(){try{
- await risk();
+ await risk();yields();
+ if($('mode').value==='prudent'){await prudent();render();return}
  const ps=await scout();
  for(const p of ps.slice(0,8)){const r=await filter(p);const fail=r.filter(x=>x[1]===false);
   const mk=r.map(x=>`<span class=${x[1]===true?'ok':x[1]===false?'ko':'sk'} title="${x[0]}">${x[1]===true?'✔':x[1]===false?'✘':'–'}</span>`).join('');
@@ -88,4 +108,4 @@ async function cycle(){try{
 
 $('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log('Démarrage (simulation).');cycle();timer=setInterval(cycle,30000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
-render();$('log').textContent=S.log.join('\n');
+$('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();$('log').textContent=S.log.join('\n');

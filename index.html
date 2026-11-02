@@ -19,11 +19,12 @@ h2{font-size:15px;margin:0 0 8px}table{width:100%;border-collapse:collapse;font-
 .stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}.stats span b{color:#fff}
 </style></head><body>
 <header><h1>🟢 Sol Desk — Terminal</h1><span class="badge">SIMULATION — PAS D'ARGENT RÉEL</span>
+<label>Stratégie : <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <button id="go">▶ Démarrer</button><button class="grey" id="reset">Remettre à zéro</button>
 <span class="bal">Solde : <span id="bal">$60.00</span></span></header>
 <div class="warn">⚠️ Les memecoins sont très risqués : on peut tout perdre en quelques minutes. Ici tout est simulé : aucun portefeuille, aucune clé, aucun vrai achat.</div>
 <div class="pipe">
-<div class="ag" id="a0"><b>1. Scout</b><div>Cherche les nouvelles paires Solana (30 min à 72 h, 300k à 20M $)</div></div>
+<div class="ag" id="a0"><b>1. Scout</b><div id="d0">Cherche les nouvelles paires Solana (30 min à 72 h, 300k à 20M $)</div></div>
 <div class="ag" id="a1"><b>2. Filter</b><div>8 règles strictes (RugCheck + DexScreener)</div></div>
 <div class="ag" id="a2"><b>3. Analyst</b><div>Note sur 100, passe à 70+</div></div>
 <div class="ag" id="a3"><b>4. Executor</b><div>Achat fictif, max 8 % du solde</div></div>
@@ -32,6 +33,7 @@ h2{font-size:15px;margin:0 0 8px}table{width:100%;border-collapse:collapse;font-
 <main>
 <section><h2>📈 Graphique (positions ouvertes)</h2><select id="sel"></select><div id="chart" class="chart"></div></section>
 <section><h2>📊 Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions ouvertes</h2><table id="pos"></table></section>
+<section><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></section>
 <section><h2>🔎 Dernières paires vues</h2><table id="seen"></table></section>
 <section><h2>📝 Journal</h2><div id="log" style="font:12px monospace;white-space:pre-wrap"></div></section>
 </main>
