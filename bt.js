@@ -13,7 +13,7 @@ async function backtest(){var fee=(+$('btfee').value||0.3)/100+(+$('btslip').val
  var A=['SOL','BTC','ETH'],D={};for(var a of A)D[a]=await hist(a,60,pages);
  var ts=Object.keys(D.SOL).map(Number).filter(function(t){return D.BTC[t]&&D.ETH[t]}).sort(function(a,b){return a-b});if(ts.length<60){$('btout').innerHTML='<span class=ko>Pas assez de données.</span>';return}
  var cl={},e9={},e21={},rs={};A.forEach(function(a){cl[a]=ts.map(function(t){return D[a][t]});e9[a]=ema(cl[a],9);e21[a]=ema(cl[a],21);rs[a]=rsiA(cl[a])});
- // RÉEL : rotation 100 % vers l'actif le plus fort, sinon USDC (contrôle chaque minute ; le vrai bot contrôle toutes les 15 s)
+ // RÉEL : rotation 100 % vers l'actif le plus fort, sinon USDC (contrôle chaque minute ; le vrai bot contrôle toutes les 5 s)
  var hold='USDC',v=CAP,eq=[],tr=0,wins=0,entryV=v;for(var i=30;i<ts.length;i++){if(hold!='USDC')v*=cl[hold][i]/cl[hold][i-1];
   var best=null,bf=-1e9;A.forEach(function(a){var b=e9[a][i]>e21[a][i]&&rs[a][i]>40&&rs[a][i]<80,f=(e9[a][i]/e21[a][i]-1);if(b&&f>bf){bf=f;best=a}});var tgt=best||'USDC';
   if(tgt!=hold){v*=1-fee;if(hold!='USDC'){tr++;if(v>entryV)wins++}entryV=v;hold=tgt}eq.push(v)}

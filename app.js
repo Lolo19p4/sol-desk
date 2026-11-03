@@ -123,7 +123,7 @@ let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy)return;inCycl
   $('seen').innerHTML='<tr><th>Jeton</th><th>Mcap</th><th>Règles (✔ ok ✘ non – pas de données)</th><th>Résultat</th></tr>'+seenRows.slice(0,40).join('')}
  save()}catch(e){log('Erreur : '+e)}finally{inCycle=0}render()}
 
-$('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log('Démarrage (simulation).');cycle();timer=setInterval(cycle,15000)}else clearInterval(timer)};
+$('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log('Démarrage (simulation).');cycle();timer=setInterval(cycle,window.REAL&&REAL.on?5000:15000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
 $('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();$('log').textContent=S.log.join('\n');
 if(location.search.includes('auto'))$('go').click();
