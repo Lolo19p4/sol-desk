@@ -11,10 +11,10 @@ const sp=()=>localStorage.setItem('soldesk_real_pos',JSON.stringify(R.pos));
 function lim(){for(const[k,id,mx]of[['pct','lpct',50],['loss','lloss',50],['slip','lslip',3]]){let v=+el(id).value;if(!(v>0))v=L[k];L[k]=Math.min(v,mx);el(id).value=L[k]}L.pru=el('lpru').checked;localStorage.setItem(LK,JSON.stringify(L))}
 ['lpct','lloss','lslip','lpru'].forEach(id=>el(id).onchange=lim);
 el('lpct').value=L.pct;el('lloss').value=L.loss;el('lslip').value=L.slip;el('lpru').checked=L.pru;
-el('realbtn').onclick=()=>{if(R.on){R.on=false;el('realbox').style.display='none';el('realbtn').textContent='Passer en RÉEL';document.querySelector('.badge').textContent="SIMULATION — PAS D'ARGENT RÉEL";log('Retour en simulation.');return}
- const t=prompt('MODE RÉEL : de vrais fonds peuvent être perdus.\nChaque trade devra être signé par toi dans Phantom.\nTape exactement : JE COMPRENDS LES RISQUES');
- if(t!=='JE COMPRENDS LES RISQUES'){alert('Pas confirmé : on reste en simulation.');return}
- R.on=true;el('realbox').style.display='block';el('realbtn').textContent='Revenir en simulation';const b=document.querySelector('.badge');b.textContent='MODE RÉEL — VALIDATION MANUELLE';b.style.background='#b91c1c';b.style.color='#fff';log('MODE RÉEL activé (validation manuelle dans Phantom).')};
+el('riskok').onchange=()=>{if(!R.on)el('realbtn').disabled=!el('riskok').checked};
+el('realbtn').onclick=()=>{if(R.on){R.on=false;el('realbox').style.display='none';el('realbtn').textContent='Passer en RÉEL';el('riskok').checked=false;el('realbtn').disabled=true;el('riskl').style.display='';document.querySelector('.badge').textContent="SIMULATION — PAS D'ARGENT RÉEL";log('Retour en simulation.');return}
+ if(!el('riskok').checked)return;
+ R.on=true;el('riskl').style.display='none';el('realbox').style.display='block';el('realbtn').textContent='Revenir en simulation';const b=document.querySelector('.badge');b.textContent='MODE RÉEL — VALIDATION MANUELLE';b.style.background='#b91c1c';b.style.color='#fff';log('MODE RÉEL activé (validation manuelle dans Phantom).')};
 const prov=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.solana?.isPhantom?window.solana:null);
 el('conn').onclick=async()=>{const p=prov();if(!p){if(/Android|iPhone/i.test(navigator.userAgent)){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert('Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
  try{const r=await p.connect();R.pk=r.publicKey.toString();el('wal').textContent='Connecté : '+R.pk.slice(0,4)+'…'+R.pk.slice(-4);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){alert('Connexion refusée.')}};
