@@ -3,8 +3,8 @@ Tableau de bord de trading **fictif** (paper trading). Aucun portefeuille, aucun
 
 - **Prudent** (par défaut) : SOL, BTC, ETH (bougies 5 min Coinbase), achat si EMA20 > EMA50 et RSI 45–70, vente si RSI > 75 ou tendance baisse.
 - **Risqué** : memecoins Solana via DexScreener + RugCheck (8 règles, note 0–100, achat à 70+).
-- Risk : stop -6 %, stop suiveur après +12 % (15 % sous le plus haut). Max 15 % du solde par position, plusieurs positions en même temps.
-- Agent 7 « Rendement USDC » : le cash libre (moins 45 % de réserve) est placé fictivement sur le pool Aave v3 USDC au meilleur taux (DefiLlama), intérêts à la seconde, changement de pool seulement si +0,5 point.
+- Risk : stop -6 %, stop suiveur après +12 % (15 % sous le plus haut). Max 20 % du solde par position, plusieurs positions en même temps.
+- Agent 7 « Rendement USDC » : le cash libre (moins 60 % de réserve) est placé fictivement sur le pool Aave v3 USDC au meilleur taux (DefiLlama), intérêts à la seconde, changement de pool seulement si +0,5 point.
 
 ⚠️ Les memecoins sont très risqués : on peut tout perdre.
 
