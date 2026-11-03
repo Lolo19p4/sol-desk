@@ -8,17 +8,16 @@ const L={pct:100,loss:Infinity,slip:1,pru:false};try{localStorage.removeItem(LK)
 const R=window.REAL={on:false,MAJ,pk:null,bal:{},pend:{},stopped:false,pos:JSON.parse(localStorage.getItem('soldesk_real_pos')||'{}')};
 const el=id=>document.getElementById(id);
 const sp=()=>localStorage.setItem('soldesk_real_pos',JSON.stringify(R.pos));
-el('riskok').onchange=()=>{if(!R.on)el('realbtn').disabled=!el('riskok').checked};
 const RK='soldesk_real_on',ss=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},gs=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 function setReal(on,quiet){R.on=on;ss(RK,on?'1':null);const b=document.querySelector('.badge');
- el('realbox').style.display=on?'block':'none';el('riskl').style.display=on?'none':'';el('riskok').checked=false;
- el('realbtn').textContent=on?'Revenir en simulation':'Passer en RÉEL';el('realbtn').disabled=!on;
+ el('realbox').style.display=on?'block':'none';
+ el('realbtn').textContent=on?'Revenir en simulation':'Passer en RÉEL';
  b.textContent=on?'RÉEL':'SIM';b.style.background=on?'#14532d':'';b.style.color=on?'#4ade80':'';
  showWal();if(!quiet)log(on?'MODE RÉEL activé (validation dans Phantom).':'Retour en simulation.')}
 function showWal(){const w=R.watch||gs('soldesk_watch'),s=a=>a.slice(0,4)+'…'+a.slice(-4);
  el('wal').innerHTML=R.pk?'<span class=ok>Connecté : '+s(R.pk)+'</span>':(w?'Portefeuille enregistré : <b>'+s(w)+'</b> (lecture seule) — appuie sur Connecter Phantom pour signer':'Non connecté');
  const rb=el('rbal');if(rb)rb.innerHTML=(R.pk||w)?el('wbal').innerHTML:''}
-el('realbtn').onclick=()=>{if(R.on){setReal(false);return}if(!el('riskok').checked)return;setReal(true)};
+el('realbtn').onclick=()=>{if(R.on){setReal(false);return}setReal(true)};
 const prov=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.solana?.isPhantom?window.solana:null);
 el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator.userAgent)||!!(window.phantom&&window.phantom.solana)||!!(window.solana&&window.solana.isPhantom);
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
