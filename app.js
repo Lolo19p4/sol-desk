@@ -71,10 +71,22 @@ function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal
 async function riskMaj(){for(const k of Object.keys(S.pos).filter(k=>S.pos[k].major)){const c=await candles(S.pos[k].sym);if(!c)continue;const P=S.pos[k],px=c.at(-1)[4],t=c.at(-1)[0];
  if(t>P.pts.at(-1).time)P.pts.push({time:t,value:px});P.peak=Math.max(P.peak,px);const ch=px/P.entry-1;
  if(ch<=-0.06)close(k,px,'stop -6 %');else if(P.peak/P.entry-1>=0.12&&px<=P.peak*0.85)close(k,px,'stop suiveur')}}
-let yT=0;async function yields(){if(Date.now()-yT<6e5)return;yT=Date.now();const d=await j('https://yields.llama.fi/pools');
- if(!d?.data){$('yield').innerHTML='<span class=sk>Données indisponibles</span>';return}
- const r=d.data.filter(p=>p.project==='aave-v3'&&p.symbol==='USDC').sort((a,b)=>b.tvlUsd-a.tvlUsd).slice(0,8);
- $('yield').innerHTML=r.length?'<table><tr><th>Réseau</th><th>APY</th><th>Dépôts</th></tr>'+r.map(p=>`<tr><td>${p.chain}</td><td class=ok>${p.apy.toFixed(2)} %</td><td>$${(p.tvlUsd/1e6).toFixed(0)}M</td></tr>`).join('')+'</table><div class=sk>Source : DefiLlama. Taux variables, pas garantis.</div>':'<span class=sk>Données indisponibles</span>'}
+const POOLS={'aa70268e-4b52-42bf-a116-608b370f9501':'Ethereum','6f00d46b-8735-49ae-9ced-2a0fccc56ad0':'Ethereum (2)','d9fa8e14-0447-4207-9ae8-7810199dfa1f':'Arbitrum','7e0661bf-8cf3-45e6-9424-31916d4c7b84':'Base','0a1131e6-a59d-537c-b18f-826b9583f01f':'Monad','1b8b4cdb-0728-42a8-bf13-2c8fea7427ee':'Polygon','c4b05318-88af-4536-a834-f5fc8940d2d3':'Avalanche'};
+let yT=0,rates=[];async function yields(){if(Date.now()-yT<6e5)return;yT=Date.now();
+ const res=await Promise.all(Object.entries(POOLS).map(async([id,ch])=>{const d=await j('https://yields.llama.fi/chart/'+id);const l=d?.data?.at(-1);return l&&l.apy!=null?{id,chain:ch,apy:l.apy,tvl:l.tvlUsd}:null}));
+ rates=res.filter(Boolean).sort((a,b)=>b.apy-a.apy);
+ $('yield').innerHTML=rates.length?'<table><tr><th>Réseau</th><th>APY</th><th>Dépôts</th></tr>'+rates.map(p=>`<tr><td>${p.chain}</td><td class=ok>${p.apy.toFixed(2)} %</td><td>$${(p.tvl/1e6).toFixed(0)}M</td></tr>`).join('')+'</table><div class=sk>Source : DefiLlama (Aave v3 USDC). Taux variables, pas garantis.</div>':'<span class=sk>Données indisponibles</span>';
+ if(!rates.length)return;const b=rates[0];S.y=S.y||{total:0,day:0,dk:'',last:Date.now()};
+ if(!S.y.id){S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy;log(`Rendement USDC : dépôt fictif sur Aave ${b.chain} à ${b.apy.toFixed(2)} %`)}
+ else{const cur=rates.find(r=>r.id===S.y.id);if(cur)S.y.apy=cur.apy;
+  if(b.id!==S.y.id&&b.apy>=S.y.apy+0.5){log(`Rendement USDC : changement ${S.y.chain} (${S.y.apy.toFixed(2)} %) → ${b.chain} (${b.apy.toFixed(2)} %)`);S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy}}save()}
+const RES=0.24;// garde 24 % du cash libre (3 trades à 8 %) pour les prochains achats
+function accrue(){const y=S.y;if(!y?.id)return;const now=Date.now(),dt=(now-y.last)/1e3;y.last=now;
+ const dep=Math.max(0,S.bal*(1-RES)),gain=dep*y.apy/100*dt/31536e3;S.bal+=gain;y.total+=gain;
+ const dk=new Date().toDateString();if(y.dk!==dk){y.dk=dk;y.day=0}y.day+=gain;
+ $('yc').innerHTML=`Pool : <b>Aave ${y.chain}</b><br>Taux : <b class=ok>${y.apy.toFixed(2)} %</b><br>Placé : $${dep.toFixed(2)} (réserve $${(S.bal-dep).toFixed(2)})<br>Gagné total : <b class=ok>$${y.total.toFixed(6)}</b><br>Aujourd'hui : $${y.day.toFixed(6)}`;
+ $('bal').textContent='$'+S.bal.toFixed(4)}
+setInterval(()=>{accrue();if(Math.random()<0.1)save()},1000);setInterval(yields,6e5);
 async function risk(){lit(4);await riskMaj();const ks=Object.keys(S.pos).filter(k=>!S.pos[k].major);if(!ks.length)return;
  const ps=await j(DS+'/latest/dex/pairs/solana/'+ks.map(k=>S.pos[k].pair).join(','));
  const list=ps?.pairs||[];
