@@ -54,7 +54,7 @@ function analyst(p,r){lit(2);
  const smart=10*(r.filter(x=>x[1]===true).length/9);// pas de données "smart wallets" gratuites : approximation
  return Math.round(mom+buyers+ratio+growth+liq+smart)}
 
-function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*0.08).toFixed(2),px=+p.priceUsd;
+function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*0.15).toFixed(2),px=+p.priceUsd;
  if(amt<0.5||!px||S.pos[a])return;S.bal-=amt;
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
@@ -68,7 +68,7 @@ async function prudent(){lit(0);const RS=[];for(const s of MAJ){const RL=!!windo
  const k='MAJ_'+s,P=S.pos[k];
  if(window.REAL?.on){RS.push({s,bull:e20>e50&&r>40&&r<80,force:(e20/e50-1)*100,why:'1 min EMA9/21, RSI '+r.toFixed(0)+', tendance '+(e20>e50?'hausse':'baisse')});continue}
  if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
- else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.08).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
+ else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.15).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
  else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}
  if(window.REAL?.on&&RS.length)REAL.rotate(RS);save()}
 function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
@@ -85,7 +85,7 @@ let yT=0,rates=[];async function yields(){if(Date.now()-yT<6e5)return;yT=Date.no
  if(!S.y.id){S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy;log(`Rendement USDC : dépôt fictif sur Aave ${b.chain} à ${b.apy.toFixed(2)} %`)}
  else{const cur=rates.find(r=>r.id===S.y.id);if(cur)S.y.apy=cur.apy;
   if(b.id!==S.y.id&&b.apy>=S.y.apy+0.5){log(`Rendement USDC : changement ${S.y.chain} (${S.y.apy.toFixed(2)} %) → ${b.chain} (${b.apy.toFixed(2)} %)`);S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy}}save()}
-const RES=0.24;// garde 24 % du cash libre (3 trades à 8 %) pour les prochains achats
+const RES=0.45;// garde 45 % du cash libre (3 trades à 15 %) pour les prochains achats
 function accrue(){const y=S.y;if(!y?.id)return;const now=Date.now(),dt=(now-y.last)/1e3;y.last=now;
  const dep=Math.max(0,S.bal*(1-RES)),gain=dep*y.apy/100*dt/31536e3;S.bal+=gain;y.total+=gain;
  const dk=new Date().toDateString();if(y.dk!==dk){y.dk=dk;y.day=0}y.day+=gain;
