@@ -29,6 +29,10 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <button id="realbtn" style="background:#b91c1c;padding:10px 14px">Passer en RÉEL</button>
 <button id="go">▶ Démarrer</button><button class="grey" id="reset">Remettre à zéro</button>
 <span class="bal" style="text-align:right">Gains des bots : <span id="bal">+$0.00</span><br><small style="font-size:11px;color:#9ca3af;font-weight:400">Capital fictif : $60</small></span></header>
+<div style="margin:10px;padding:8px;border:1px solid #1f2a36;border-radius:8px;background:#121a23">
+<h2>📈 SOL, ETH, BTC — variation en % (1 min)</h2>
+<div style="display:flex;gap:12px;flex-wrap:wrap;font-weight:700;font-size:13px"><span style="color:#a78bfa">━ SOL <span id="vSOL">–</span></span><span style="color:#60a5fa">━ ETH <span id="vETH">–</span></span><span style="color:#f59e0b">━ BTC <span id="vBTC">–</span></span></div>
+<div id="cmp" style="height:240px"></div><div id="cmpst" class="sk" style="font-size:11px">Chargement…</div></div>
 <div style="margin:10px;padding:10px;border:1px solid #1f2a36;border-radius:8px;background:#121a23">
 <h2>👛 Mon portefeuille</h2>
 <input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%);padding:7px;background:#0b0f14;color:#fff;border:1px solid #30363d;border-radius:6px" autocomplete="off">
@@ -56,4 +60,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <section><h2>🔎 Dernières paires vues</h2><table id="seen"></table></section>
 <section><h2>📝 Journal</h2><div id="log" style="font:12px monospace;white-space:pre-wrap"></div></section>
 </main>
-<script src="lib/lwc.js"></script><script src="lib/web3.js"></script><script src="app.js"></script><script src="real.js"></script></body></html>
+<script src="lib/lwc.js"></script><script src="lib/web3.js"></script><script src="app.js"></script><script src="real.js"></script><script src="cmp.js"></script></body></html>
