@@ -1,15 +1,15 @@
 const DS='https://api.dexscreener.com',RC='https://api.rugcheck.xyz/v1';
 const K='soldesk_v1';
-let S=JSON.parse(localStorage.getItem(K)||'null')||{bal:60,pos:{},hist:[],stats:{seen:0,killed:0,scored:0,trades:0,wins:0,losses:0},done:{},log:[]};
-const save=()=>localStorage.setItem(K,JSON.stringify(S));
+let S=null;try{S=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}S=S||{bal:60,pos:{},hist:[],stats:{seen:0,killed:0,scored:0,trades:0,wins:0,losses:0},done:{},log:[]};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
 const series={};let running=false,timer;
 function log(m){S.log.unshift(new Date().toLocaleTimeString('fr-FR')+'  '+m);S.log=S.log.slice(0,300);save();$('log').textContent=S.log.join('\n')}
 function lit(i){document.querySelectorAll('.ag').forEach((e,j)=>e.classList.toggle('on',j===i))}
 async function j(u){try{const r=await fetch(u);if(!r.ok)throw r.status;return await r.json()}catch(e){return null}}
-const chart=LightweightCharts.createChart($('chart'),{layout:{background:{color:'#121a23'},textColor:'#d6e2ee'},grid:{vertLines:{color:'#1f2a36'},horzLines:{color:'#1f2a36'}},timeScale:{timeVisible:true,secondsVisible:true}});
-const line=chart.addLineSeries({color:'#4ade80'});
-new ResizeObserver(()=>chart.applyOptions({width:$('chart').clientWidth})).observe($('chart'));
+let chart,line;try{chart=LightweightCharts.createChart($('chart'),{layout:{background:{color:'#121a23'},textColor:'#d6e2ee'},grid:{vertLines:{color:'#1f2a36'},horzLines:{color:'#1f2a36'}},timeScale:{timeVisible:true,secondsVisible:true}});
+line=chart.addLineSeries({color:'#4ade80'});
+if(window.ResizeObserver)new ResizeObserver(()=>chart.applyOptions({width:$('chart').clientWidth})).observe($('chart'))}catch(e){line={setData(){}};$('chart').innerHTML='<span class=sk>Graphique indisponible</span>';window.__err&&__err('graphique : '+e.message)}
 $('sel').onchange=drawChart;
 function drawChart(){const a=$('sel').value;const p=S.pos[a];line.setData(p?p.pts:[])}
 
