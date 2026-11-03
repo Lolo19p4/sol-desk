@@ -4,13 +4,10 @@ const JUP='https://lite-api.jup.ag',USDC='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZw
 const MAJ={SOL:SOLM,BTC:'3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',ETH:'7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs'};
 const NAME={[SOLM]:'SOL',[MAJ.BTC]:'wBTC',[MAJ.ETH]:'wETH',[USDC]:'USDC'};
 const LK='soldesk_real_limits',PK='soldesk_real_day';
-const L=Object.assign({pct:8,loss:10,slip:1,pru:true},JSON.parse(localStorage.getItem(LK)||'{}'));
+const L={pct:30,loss:20,slip:1,pru:true};try{localStorage.removeItem(LK)}catch(e){}
 const R=window.REAL={on:false,MAJ,pk:null,bal:{},pend:{},stopped:false,pos:JSON.parse(localStorage.getItem('soldesk_real_pos')||'{}')};
 const el=id=>document.getElementById(id);
 const sp=()=>localStorage.setItem('soldesk_real_pos',JSON.stringify(R.pos));
-function lim(){for(const[k,id,mx]of[['pct','lpct',50],['loss','lloss',50],['slip','lslip',3]]){let v=+el(id).value;if(!(v>0))v=L[k];L[k]=Math.min(v,mx);el(id).value=L[k]}L.pru=el('lpru').checked;localStorage.setItem(LK,JSON.stringify(L))}
-['lpct','lloss','lslip','lpru'].forEach(id=>el(id).onchange=lim);
-el('lpct').value=L.pct;el('lloss').value=L.loss;el('lslip').value=L.slip;el('lpru').checked=L.pru;
 el('riskok').onchange=()=>{if(!R.on)el('realbtn').disabled=!el('riskok').checked};
 const RK='soldesk_real_on',ss=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},gs=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 function setReal(on,quiet){R.on=on;ss(RK,on?'1':null);const b=document.querySelector('.badge');
