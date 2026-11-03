@@ -47,9 +47,9 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <h2>Mode RÉEL — validation dans Phantom</h2>
 <button id="conn">Connecter Phantom</button> <span id="wal">Non connecté</span>
 <div id="rbal" style="margin:6px 0;max-height:220px;overflow:auto"></div>
-<div style="font-size:13px;color:#9fb0c0">Limites : 30 % par trade · perte max 20 %/jour · glissement 1 % · SOL/wBTC/wETH</div>
+<div style="font-size:13px;color:#9fb0c0">Automatique : tout le solde disponible (0,01 SOL gardé pour les frais) · chaque trade signé dans Phantom</div>
 <div id="rstat" style="margin:6px 0"></div><div id="rchk" style="margin:6px 0;font-size:13px;color:#9fb0c0">Dernier contrôle : pas encore (appuie sur Démarrer)</div>
-<h2>Trades à valider</h2><div id="pend" class="sk">Aucun pour l'instant.</div></div>
+<h2>Trades en cours</h2><div id="pend" class="sk">Aucun pour l'instant.</div></div>
 <main>
 <section><h2>📈 Graphique (positions ouvertes)</h2><select id="sel"></select><div id="chart" class="chart"></div></section>
 <section><h2>📊 Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions ouvertes</h2><table id="pos"></table></section>
