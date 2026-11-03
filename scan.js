@@ -1,7 +1,7 @@
 // v26 SCANNER (RÉEL) : cherche les jetons Solana qui montent (GeckoTerminal), filtre anti-arnaque, ajoute les meilleurs à la rotation.
 // Aucune clé, aucune signature ici : il ne fait que lire des API publiques et des devis Jupiter.
 (function(){
-const GT='https://api.geckoterminal.com/api/v2',RPC='https://api.mainnet-beta.solana.com',JUP='https://lite-api.jup.ag',USDC='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const GT='https://api.geckoterminal.com/api/v2',RPCS=['https://solana-rpc.publicnode.com','https://api.mainnet-beta.solana.com'],JUP='https://lite-api.jup.ag',USDC='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const T22='TokenzQdBNbLqP5VEhdkAS6EtFNwCb2EB4yF4bFUH5vcg',SK='soldesk_scan',MAXP=2;
 const R=window.REAL;if(!R)return;
 const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map(x=>e=x*k+e*(1-k))};
@@ -14,7 +14,8 @@ const saveK=()=>{try{localStorage.setItem(SK,JSON.stringify(KEEP))}catch(e){}};
 const SIG={},REJ={},rows={};let busy=0,last=0;
 function reg(k){const t=KEEP[k];R.TK[k]=t.mint;R.NM[k]=t.sym;R.NAME[t.mint]=t.sym;R.SC[k]=1;R.DEC[k]=t.dec}
 Object.keys(KEEP).forEach(reg);
-async function mintInfo(m){const d=await gj(RPC,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getAccountInfo',params:[m,{encoding:'jsonParsed'}]})});
+async function mintInfo(m){for(const u of RPCS){const x=await mi1(u,m);if(x)return x}return null}
+async function mi1(RPC,m){const d=await gj(RPC,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getAccountInfo',params:[m,{encoding:'jsonParsed'}]})});
  const v=d?.result?.value;if(!v)return null;const i=v.data?.parsed?.info;if(!i)return null;
  const ext=i.extensions||[],fee=ext.find(x=>x.extension==='transferFeeConfig');
  const bps=fee?Math.max(+(fee.state?.newerTransferFee?.transferFeeBasisPoints||0),+(fee.state?.olderTransferFee?.transferFeeBasisPoints||0)):0;
