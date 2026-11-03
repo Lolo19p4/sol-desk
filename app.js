@@ -77,7 +77,7 @@ const POOLS={'aa70268e-4b52-42bf-a116-608b370f9501':'Ethereum','6f00d46b-8735-49
 let yT=0,rates=[];async function yields(){if(Date.now()-yT<6e5)return;yT=Date.now();
  const res=await Promise.all(Object.entries(POOLS).map(async([id,ch])=>{const d=await j('https://yields.llama.fi/chart/'+id);const l=d?.data?.at(-1);return l&&l.apy!=null?{id,chain:ch,apy:l.apy,tvl:l.tvlUsd}:null}));
  rates=res.filter(Boolean).sort((a,b)=>b.apy-a.apy);
- $('yield').innerHTML=rates.length?'<table><tr><th>Réseau</th><th>APY</th><th>Dépôts</th></tr>'+rates.map(p=>`<tr><td>${p.chain}</td><td class=ok>${p.apy.toFixed(2)} %</td><td>$${(p.tvl/1e6).toFixed(0)}M</td></tr>`).join('')+'</table><div class=sk>Source : DefiLlama (Aave v3 USDC). Taux variables, pas garantis.</div>':'<span class=sk>Données indisponibles</span>';
+ $('yield').innerHTML=rates.length?'<table><tr><th>Réseau</th><th>APY</th><th>Dépôts</th></tr>'+rates.map(p=>`<tr><td>${p.chain}</td><td class=ok>${p.apy.toFixed(2)} %</td><td>$${(p.tvl/1e6).toFixed(0)}M</td></tr>`).join('')+'</table><div class=sk>Source : DefiLlama (Aave v3 USDC).</div>':'<span class=sk>Données indisponibles</span>';
  if(!rates.length)return;const b=rates[0];S.y=S.y||{total:0,day:0,dk:'',last:Date.now()};
  if(!S.y.id){S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy;log(`Rendement USDC : dépôt fictif sur Aave ${b.chain} à ${b.apy.toFixed(2)} %`)}
  else{const cur=rates.find(r=>r.id===S.y.id);if(cur)S.y.apy=cur.apy;

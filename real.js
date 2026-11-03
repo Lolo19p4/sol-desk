@@ -12,9 +12,9 @@ function lim(){for(const[k,id,mx]of[['pct','lpct',50],['loss','lloss',50],['slip
 ['lpct','lloss','lslip','lpru'].forEach(id=>el(id).onchange=lim);
 el('lpct').value=L.pct;el('lloss').value=L.loss;el('lslip').value=L.slip;el('lpru').checked=L.pru;
 el('riskok').onchange=()=>{if(!R.on)el('realbtn').disabled=!el('riskok').checked};
-el('realbtn').onclick=()=>{if(R.on){R.on=false;el('realbox').style.display='none';el('realbtn').textContent='Passer en RÉEL';el('riskok').checked=false;el('realbtn').disabled=true;el('riskl').style.display='';document.querySelector('.badge').textContent="SIMULATION — PAS D'ARGENT RÉEL";log('Retour en simulation.');return}
+el('realbtn').onclick=()=>{if(R.on){R.on=false;el('realbox').style.display='none';el('realbtn').textContent='Passer en RÉEL';el('riskok').checked=false;el('realbtn').disabled=true;el('riskl').style.display='';{const b=document.querySelector('.badge');b.textContent='SIM';b.style.background='';b.style.color=''}log('Retour en simulation.');return}
  if(!el('riskok').checked)return;
- R.on=true;el('riskl').style.display='none';el('realbox').style.display='block';el('realbtn').textContent='Revenir en simulation';const b=document.querySelector('.badge');b.textContent='MODE RÉEL — VALIDATION MANUELLE';b.style.background='#b91c1c';b.style.color='#fff';log('MODE RÉEL activé (validation manuelle dans Phantom).')};
+ R.on=true;el('riskl').style.display='none';el('realbox').style.display='block';el('realbtn').textContent='Revenir en simulation';const b=document.querySelector('.badge');b.textContent='RÉEL';b.style.background='#14532d';b.style.color='#4ade80';log('MODE RÉEL activé (validation manuelle dans Phantom).')};
 const prov=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.solana?.isPhantom?window.solana:null);
 el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator.userAgent)||!!(window.phantom&&window.phantom.solana)||!!(window.solana&&window.solana.isPhantom);
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
@@ -65,5 +65,5 @@ el('wsave').onclick=()=>{const v=el('waddr').value.trim();el('waddr').value='';
 el('wdel').onclick=()=>{R.watch=null;localStorage.removeItem(WK);el('wbal').innerHTML='';wshow()};
 wshow();if(R.watch)bal();
 // Rendement USDC en RÉEL : conseil seulement
-setInterval(()=>{if(R.on&&el('yc')&&!el('yc').innerHTML.includes('RÉEL'))el('yc').innerHTML='<b class=ko>RÉEL : conseil seulement</b>, aucun fond déplacé. Aave USDC n’existe pas sur Solana : le meilleur taux est sur '+(rates[0]?rates[0].chain+' ('+rates[0].apy.toFixed(2)+' %)':'(données indisponibles)')+'.<br>'+el('yc').innerHTML},1000);
+setInterval(()=>{if(R.on&&el('yc')&&!el('yc').innerHTML.includes('RÉEL'))el('yc').innerHTML='<b>RÉEL : conseil</b> — meilleur taux Aave USDC : '+(rates[0]?rates[0].chain+' ('+rates[0].apy.toFixed(2)+' %)':'(données indisponibles)')+'.<br>'+el('yc').innerHTML},1000);
 })();

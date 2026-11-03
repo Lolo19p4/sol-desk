@@ -3,7 +3,7 @@
 <style>
 body{margin:0;background:#0b0f14;color:#d6e2ee;font:14px system-ui,sans-serif}
 header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #1f2a36}
-h1{font-size:18px;margin:0}.badge{background:#f5a524;color:#000;padding:3px 8px;border-radius:6px;font-weight:700}
+h1{font-size:18px;margin:0}.badge{background:#30363d;color:#bbb;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700}
 .warn{background:#3a1d1d;color:#ffb4b4;padding:8px 12px;font-size:13px}
 .bal{margin-left:auto;font-size:20px;font-weight:700;color:#4ade80}
 button:disabled{opacity:.4}
@@ -24,7 +24,7 @@ window.__err=function(m){var e=document.getElementById('errbar');if(e){e.style.d
 window.onerror=function(m){window.__err(m);};window.addEventListener('unhandledrejection',function(e){window.__err(e.reason&&e.reason.message||e.reason);});
 try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var M={};window.__ls={getItem:function(k){return k in M?M[k]:null},setItem:function(k,v){M[k]=String(v)},removeItem:function(k){delete M[k]}};try{Object.defineProperty(window,'localStorage',{value:window.__ls});}catch(_){}}
 </script>
-<header><h1>🟢 Sol Desk — Terminal</h1><span class="badge">SIMULATION — PAS D'ARGENT RÉEL</span>
+<header><h1>🟢 Sol Desk — Terminal</h1><span class="badge">SIM</span>
 <label>Stratégie : <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <label id="riskl" style="font-size:15px;padding:6px"><input id="riskok" type="checkbox" style="width:22px;height:22px;vertical-align:middle"> Je comprends les risques, c'est de l'argent réel</label>
 <button id="realbtn" style="background:#b91c1c;padding:10px 14px" disabled>Passer en RÉEL</button>
@@ -35,7 +35,6 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%);padding:7px;background:#0b0f14;color:#fff;border:1px solid #30363d;border-radius:6px" autocomplete="off">
 <button id="wsave">Enregistrer</button> <button id="wdel" class="grey">Effacer</button>
 <div id="wmsg" style="margin:6px 0"></div><div id="wbal"></div></div>
-<div class="warn">⚠️ Les memecoins sont très risqués : on peut tout perdre en quelques minutes. Ici tout est simulé : aucun portefeuille, aucune clé, aucun vrai achat.</div>
 <div class="pipe">
 <div class="ag" id="a0"><b>1. Scout</b><div id="d0">Cherche les nouvelles paires Solana (30 min à 72 h, 300k à 20M $)</div></div>
 <div class="ag" id="a1"><b>2. Filter</b><div>8 règles strictes (RugCheck + DexScreener)</div></div>
@@ -45,7 +44,7 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="ag" id="a5"><b>6. Logger</b><div>Journal et statistiques</div></div>
 <div class="ag" id="a6"><b>7. Rendement USDC</b><div id="yc">Chargement…</div></div></div>
 <div id="realbox" style="display:none;margin:10px;padding:10px;border:2px solid #b91c1c;border-radius:8px;background:#1a0f0f">
-<h2>🔴 MODE RÉEL — chaque trade doit être validé par toi dans Phantom</h2>
+<h2>Mode RÉEL — validation dans Phantom</h2>
 <button id="conn">Connecter Phantom</button> <span id="wal">Non connecté</span>
 <div style="font-size:13px">Limites : max <input id="lpct" type="number" step="1" min="1" max="50" style="width:50px">% de l'USDC par trade ·
 perte max du jour <input id="lloss" type="number" step="1" min="1" max="50" style="width:50px">% ·
