@@ -6,6 +6,8 @@ if($('go').textContent.indexOf('Pause')<0)$('go').click(); // démarre les bots 
 $('conn').style.display='none';
 function c(){var p=window.phantom&&phantom.solana||window.solana;if(REAL.pk){$('conn').style.display='none';return}
  if(p&&p.connect)p.connect({onlyIfTrusted:true}).then(function(r){REAL.pk=r.publicKey.toString();$('conn').style.display='none'}).catch(function(){$('conn').style.display=''});else $('conn').style.display=''}
-setTimeout(c,1500);setInterval(function(){$('conn').style.display=REAL.pk?'none':''},3000);
+setTimeout(c,1500);
+setInterval(function(){if(window.REAL&&!REAL.on)$('realbtn').click()},3000); // v25 : RÉEL reste toujours allumé
+setInterval(function(){$('conn').style.display=REAL.pk?'none':''},3000);
 setTimeout(function(){var b=$('btgo');if(b){b.click()}},4000);
 })();
