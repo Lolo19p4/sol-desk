@@ -59,11 +59,11 @@ function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
 
-const MAJ=['SOL','BTC','ETH'];
+const MAJ=['SOL','BTC','ETH'],MAJR=MAJ.concat(['BONK','WIF','RAY','LTC']);// MAJR : liste de rotation RÉEL seulement (SIM inchangé)
 const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map(x=>e=x*k+e*(1-k))};
 function rsi(v,n=14){let g=0,l=0;for(let i=v.length-n;i<v.length;i++){const d=v[i]-v[i-1];d>0?g+=d:l-=d}return l?100-100/(1+g/l):100}
 async function candles(s,gr=300){const c=await j(`https://api.exchange.coinbase.com/products/${s}-USD/candles?granularity=${gr}`);return c?c.reverse():null}
-async function prudent(){lit(0);const RS=[];for(const s of MAJ){const RL=!!window.REAL?.on,c=await candles(s,RL?60:300);if(!c){log('Scout : prix '+s+' indisponible');continue}
+async function prudent(){lit(0);const RS=[];for(const s of (window.REAL?.on?MAJR:MAJ)){const RL=!!window.REAL?.on,c=await candles(s,RL?60:300);if(!c){log('Scout : prix '+s+' indisponible');continue}
  S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),e20=ema(cl,RL?9:20).at(-1),e50=ema(cl,RL?21:50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
  const k='MAJ_'+s,P=S.pos[k];
  if(window.REAL?.on){RS.push({s,bull:e20>e50&&r>40&&r<80,force:(e20/e50-1)*100,why:'1 min EMA9/21, RSI '+r.toFixed(0)+', tendance '+(e20>e50?'hausse':'baisse')});continue}

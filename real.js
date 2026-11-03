@@ -2,7 +2,8 @@
 (function(){
 const JUP='https://lite-api.jup.ag',USDC='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',SOLM='So11111111111111111111111111111111111111112';
 const MAJ={SOL:SOLM,BTC:'3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',ETH:'7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs'};
-const NAME={[SOLM]:'SOL',[MAJ.BTC]:'wBTC',[MAJ.ETH]:'wETH',[USDC]:'USDC'};
+const XT={BONK:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',WIF:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',RAY:'4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',LTC:'cbLTC4T5NpzSUtQ7ekgEMZGaUPVJY1ko6BUikqa4gGf'};
+const NAME={[SOLM]:'SOL',[MAJ.BTC]:'wBTC',[MAJ.ETH]:'wETH',[USDC]:'USDC',[XT.BONK]:'BONK',[XT.WIF]:'WIF',[XT.RAY]:'RAY',[XT.LTC]:'cbLTC'};
 const LK='soldesk_real_limits',PK='soldesk_real_day';
 const L={pct:100,loss:Infinity,slip:1,pru:false};try{localStorage.removeItem(LK)}catch(e){}
 const R=window.REAL={on:false,MAJ,pk:null,bal:{},pend:{},stopped:false,pos:JSON.parse(localStorage.getItem('soldesk_real_pos')||'{}')};
@@ -48,7 +49,7 @@ R.check=(sym,mint,bull,bear,why)=>{if(!R.on)return;const P=R.plan(sym,mint,bull,
  el('rchk').innerHTML='Dernier contrôle '+t+'<br>'+Object.values(R.st).join('<br>');
  if(P.side)R.signal(sym,mint,P.side,why,P.raw)};
 R.cool={};// ROTATION : tout le portefeuille va sur l'actif qui monte le plus (SOL, wBTC, wETH), sinon USDC
-const TK={SOL:SOLM,BTC:MAJ.BTC,ETH:MAJ.ETH,USDC};const NM={SOL:'SOL',BTC:'wBTC',ETH:'wETH',USDC:'USDC'};
+const TK={SOL:SOLM,BTC:MAJ.BTC,ETH:MAJ.ETH,USDC,...XT};const NM={SOL:'SOL',BTC:'wBTC',ETH:'wETH',USDC:'USDC',BONK:'BONK',WIF:'WIF',RAY:'RAY',LTC:'cbLTC'};
 R.pick=list=>{const up=list.filter(x=>x.bull).sort((a,b)=>b.force-a.force);return up.length?up[0].s:'USDC'};
 R.free=s=>{const m=TK[s],b=R.bal[m];if(!b)return 0;return Math.max(0,+b.raw-(m===SOLM?FEE:0))};
 R.val=s=>{const m=TK[s],b=R.bal[m],px=s==='USDC'?1:(R.px||{})[m]?.usdPrice;if(!b||!px)return 0;return R.free(s)/(+b.raw/b.ui)*px};
@@ -75,7 +76,7 @@ async function exec(k){const p=R.pend[k];if(!p||R.busy)return;R.busy=1;const pv=
  if(p.side==='swap'){await bal();const amt=R.free(p.src);if(amt<=0)throw'Rien à échanger';q=await quote(TK[p.src],TK[p.tgt],amt)}
  else if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC';const amt=+u.raw;q=await quote(USDC,p.mint,amt)}
  else{const b=R.bal[p.mint];if(!b)throw'Rien à vendre';let amt=+b.raw-(p.mint===SOLM?FEE:0);if(p.raw)amt=Math.min(amt,p.raw);if(amt<=0)throw'Rien à vendre';q=await quote(p.mint,USDC,amt)}
- const out=p.side==='swap'?`${p.sym} (reçu ~${(+q.outAmount/10**({USDC:6,SOL:9,BTC:8,ETH:8}[p.tgt])).toPrecision(4)} ${NM[p.tgt]})`:p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
+ const out=p.side==='swap'?`${p.sym} (reçu ~${(+q.outAmount/10**({USDC:6,SOL:9,BTC:8,ETH:8,BONK:5,WIF:6,RAY:6,LTC:8}[p.tgt])).toPrecision(4)} ${NM[p.tgt]})`:p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
  log('RÉEL : devis Jupiter '+out+' — signe dans Phantom');
  const sw=()=>fetch(JUP+'/swap/v1/swap',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:R.pk,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true})}).then(r=>r.json()).catch(e=>({error:e.message}));
  let s=await sw();for(let i=0;i<3&&!s.swapTransaction;i++){await new Promise(z=>setTimeout(z,2500*(i+1)));s=await sw()}
