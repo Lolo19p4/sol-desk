@@ -50,6 +50,7 @@ R.check=(sym,mint,bull,bear,why)=>{if(!R.on)return;const P=R.plan(sym,mint,bull,
  if(P.side)R.signal(sym,mint,P.side,why,P.raw)};
 R.cool={};// ROTATION : tout le portefeuille va sur l'actif qui monte le plus (SOL, wBTC, wETH), sinon USDC
 const TK={SOL:SOLM,BTC:MAJ.BTC,ETH:MAJ.ETH,USDC,...XT};const NM={SOL:'SOL',BTC:'wBTC',ETH:'wETH',USDC:'USDC',BONK:'BONK',WIF:'WIF',RAY:'RAY',LTC:'cbLTC'};
+R.TK=TK;R.NM=NM;R.NAME=NAME;R.SC={};R.DEC={};
 R.pick=list=>{const up=list.filter(x=>x.bull).sort((a,b)=>b.force-a.force);return up.length?up[0].s:'USDC'};
 R.free=s=>{const m=TK[s],b=R.bal[m];if(!b)return 0;return Math.max(0,+b.raw-(m===SOLM?FEE:0))};
 R.val=s=>{const m=TK[s],b=R.bal[m],px=s==='USDC'?1:(R.px||{})[m]?.usdPrice;if(!b||!px)return 0;return R.free(s)/(+b.raw/b.ui)*px};
@@ -67,16 +68,16 @@ R.signal=(sym,mint,side,why,raw)=>{if(R.busy||Date.now()-(R.cool[side+mint]||0)<
  R.pend[k]={sym,mint,side,why,raw,t:Date.now()};log(`RÉEL : signal ${side==='buy'?'ACHAT':'VENTE'} ${sym} (${why}) — ouverture de Phantom`);drawP();exec(k)};
 function drawP(){const v=Object.entries(R.pend);el('pend').innerHTML=v.length?v.map(([k,p])=>`<div style="margin:4px 0">${p.side==='buy'?'🟢 Acheter':'🔴 Vendre'} <b>${p.sym}</b> (${p.why}) — en attente de ta signature dans Phantom</div>`).join(''):'<span class=sk>Aucun pour l’instant.</span>';
  document.querySelectorAll('.val').forEach(b=>b.onclick=()=>exec(b.dataset.k));document.querySelectorAll('.ign').forEach(b=>b.onclick=()=>{delete R.pend[b.dataset.k];drawP()})}
-async function quote(inM,outM,amt){const u=`${JUP}/swap/v1/quote?inputMint=${inM}&outputMint=${outM}&amount=${amt}&slippageBps=${Math.round(L.slip*100)}`;let q=await j(u);for(let i=0;i<3&&(!q||q.error);i++){await new Promise(z=>setTimeout(z,2500*(i+1)));q=await j(u)}
- if(!q||q.error)throw'Pas de devis Jupiter';if(+q.priceImpactPct*100>L.slip)throw'Impact de prix '+(q.priceImpactPct*100).toFixed(2)+' % > limite';return q}
+async function quote(inM,outM,amt,sl){sl=sl||L.slip;const u=`${JUP}/swap/v1/quote?inputMint=${inM}&outputMint=${outM}&amount=${amt}&slippageBps=${Math.round(sl*100)}`;let q=await j(u);for(let i=0;i<3&&(!q||q.error);i++){await new Promise(z=>setTimeout(z,2500*(i+1)));q=await j(u)}
+ if(!q||q.error)throw'Pas de devis Jupiter';if(+q.priceImpactPct*100>1)throw'Impact de prix '+(q.priceImpactPct*100).toFixed(2)+' % > limite';return q}
 R.quote=quote;
 async function exec(k){const p=R.pend[k];if(!p||R.busy)return;R.busy=1;const pv=prov();try{
  if(!R.pk||!pv)throw'Connecte Phantom d’abord';
  await bal();let q;
- if(p.side==='swap'){await bal();const amt=R.free(p.src);if(amt<=0)throw'Rien à échanger';q=await quote(TK[p.src],TK[p.tgt],amt)}
+ if(p.side==='swap'){await bal();const amt=R.free(p.src);if(amt<=0)throw'Rien à échanger';q=await quote(TK[p.src],TK[p.tgt],amt,(R.SC[p.src]||R.SC[p.tgt])?2:0)}
  else if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC';const amt=+u.raw;q=await quote(USDC,p.mint,amt)}
  else{const b=R.bal[p.mint];if(!b)throw'Rien à vendre';let amt=+b.raw-(p.mint===SOLM?FEE:0);if(p.raw)amt=Math.min(amt,p.raw);if(amt<=0)throw'Rien à vendre';q=await quote(p.mint,USDC,amt)}
- const out=p.side==='swap'?`${p.sym} (reçu ~${(+q.outAmount/10**({USDC:6,SOL:9,BTC:8,ETH:8,BONK:5,WIF:6,RAY:6,LTC:8}[p.tgt])).toPrecision(4)} ${NM[p.tgt]})`:p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
+ const out=p.side==='swap'?`${p.sym} (reçu ~${(+q.outAmount/10**({USDC:6,SOL:9,BTC:8,ETH:8,BONK:5,WIF:6,RAY:6,LTC:8,...R.DEC}[p.tgt])).toPrecision(4)} ${NM[p.tgt]})`:p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
  log('RÉEL : devis Jupiter '+out+' — signe dans Phantom');
  const sw=()=>fetch(JUP+'/swap/v1/swap',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:R.pk,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true})}).then(r=>r.json()).catch(e=>({error:e.message}));
  let s=await sw();for(let i=0;i<3&&!s.swapTransaction;i++){await new Promise(z=>setTimeout(z,2500*(i+1)));s=await sw()}

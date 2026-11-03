@@ -70,7 +70,7 @@ async function prudent(){lit(0);const RS=[];for(const s of (window.REAL?.on?MAJR
  if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
  else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.30).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
  else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}
- if(window.REAL?.on&&RS.length)REAL.rotate(RS);save()}
+ if(window.REAL?.on&&window.SCAN)RS.push(...SCAN.signals());if(window.REAL?.on&&RS.length)REAL.rotate(RS);save()}
 function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
  S.hist.unshift({sym:P.sym,pnl,why,t:Date.now()});log(`Risk : VENTE FICTIVE ${P.sym} (${why}) ${pnl>=0?'+':''}${pnl.toFixed(2)}$`);delete S.pos[k]}
 async function riskMaj(){for(const k of Object.keys(S.pos).filter(k=>S.pos[k].major)){const c=await candles(S.pos[k].sym);if(!c)continue;const P=S.pos[k],px=c.at(-1)[4],t=c.at(-1)[0];
