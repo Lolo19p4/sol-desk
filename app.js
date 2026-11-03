@@ -54,7 +54,7 @@ function analyst(p,r){lit(2);
  const smart=10*(r.filter(x=>x[1]===true).length/9);// pas de données "smart wallets" gratuites : approximation
  return Math.round(mom+buyers+ratio+growth+liq+smart)}
 
-function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*0.20).toFixed(2),px=+p.priceUsd;
+function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*0.30).toFixed(2),px=+p.priceUsd;
  if(amt<0.5||!px||S.pos[a])return;S.bal-=amt;
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
@@ -68,7 +68,7 @@ async function prudent(){lit(0);const RS=[];for(const s of MAJ){const RL=!!windo
  const k='MAJ_'+s,P=S.pos[k];
  if(window.REAL?.on){RS.push({s,bull:e20>e50&&r>40&&r<80,force:(e20/e50-1)*100,why:'1 min EMA9/21, RSI '+r.toFixed(0)+', tendance '+(e20>e50?'hausse':'baisse')});continue}
  if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
- else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.20).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
+ else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.30).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
  else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}
  if(window.REAL?.on&&RS.length)REAL.rotate(RS);save()}
 function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
@@ -85,7 +85,7 @@ let yT=0,rates=[];async function yields(){if(Date.now()-yT<6e5)return;yT=Date.no
  if(!S.y.id){S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy;log(`Rendement USDC : dépôt fictif sur Aave ${b.chain} à ${b.apy.toFixed(2)} %`)}
  else{const cur=rates.find(r=>r.id===S.y.id);if(cur)S.y.apy=cur.apy;
   if(b.id!==S.y.id&&b.apy>=S.y.apy+0.5){log(`Rendement USDC : changement ${S.y.chain} (${S.y.apy.toFixed(2)} %) → ${b.chain} (${b.apy.toFixed(2)} %)`);S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy}}save()}
-const RES=0.60;// garde 60 % du cash libre (3 trades à 20 %) pour les prochains achats
+const RES=0.90;// garde 90 % du cash libre (3 trades à 30 %) pour les prochains achats
 function accrue(){const y=S.y;if(!y?.id)return;const now=Date.now(),dt=(now-y.last)/1e3;y.last=now;
  const dep=Math.max(0,S.bal*(1-RES)),gain=dep*y.apy/100*dt/31536e3;S.bal+=gain;y.total+=gain;
  const dk=new Date().toDateString();if(y.dk!==dk){y.dk=dk;y.day=0}y.day+=gain;
@@ -110,7 +110,7 @@ function render(){lit(5);showBal();const s=S.stats;
  const v=$('sel').value;$('sel').innerHTML=Object.entries(S.pos).map(([a,p])=>`<option value="${a}">${p.sym}</option>`).join('')||'<option>SOL (aucune position)</option>';if(S.pos[v])$('sel').value=v;drawChart()}
 
 const seenRows=[];
-async function cycle(){try{
+let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy)return;inCycle=1;try{
  await risk();yields();
  if($('mode').value==='prudent'){await prudent();render();return}
  const ps=await scout();
@@ -121,9 +121,9 @@ async function cycle(){try{
   else{const sc=analyst(p,r);S.stats.scored++;verdict=`note ${sc}`;log(`Analyst : ${p.baseToken.symbol} note ${sc}/100`);if(sc>=70)buy(p,sc)}
   seenRows.unshift(`<tr><td>${p.baseToken.symbol}</td><td>$${Math.round((p.marketCap||p.fdv)/1e3)}k</td><td>${mk}</td><td>${verdict}</td></tr>`);
   $('seen').innerHTML='<tr><th>Jeton</th><th>Mcap</th><th>Règles (✔ ok ✘ non – pas de données)</th><th>Résultat</th></tr>'+seenRows.slice(0,40).join('')}
- save()}catch(e){log('Erreur : '+e)}render()}
+ save()}catch(e){log('Erreur : '+e)}finally{inCycle=0}render()}
 
-$('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log('Démarrage (simulation).');cycle();timer=setInterval(cycle,30000)}else clearInterval(timer)};
+$('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log('Démarrage (simulation).');cycle();timer=setInterval(cycle,15000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
 $('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();$('log').textContent=S.log.join('\n');
 if(location.search.includes('auto'))$('go').click();

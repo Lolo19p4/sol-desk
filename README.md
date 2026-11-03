@@ -3,8 +3,8 @@ Tableau de bord de trading **fictif** (paper trading). Aucun portefeuille, aucun
 
 - **Prudent** (par défaut) : SOL, BTC, ETH (bougies 5 min Coinbase), achat si EMA20 > EMA50 et RSI 45–70, vente si RSI > 75 ou tendance baisse.
 - **Risqué** : memecoins Solana via DexScreener + RugCheck (8 règles, note 0–100, achat à 70+).
-- Risk : stop -6 %, stop suiveur après +12 % (15 % sous le plus haut). Max 20 % du solde par position, plusieurs positions en même temps.
-- Agent 7 « Rendement USDC » : le cash libre (moins 60 % de réserve) est placé fictivement sur le pool Aave v3 USDC au meilleur taux (DefiLlama), intérêts à la seconde, changement de pool seulement si +0,5 point.
+- Risk : stop -6 %, stop suiveur après +12 % (15 % sous le plus haut). Max 30 % du solde par position, plusieurs positions en même temps.
+- Agent 7 « Rendement USDC » : le cash libre (moins 90 % de réserve) est placé fictivement sur le pool Aave v3 USDC au meilleur taux (DefiLlama), intérêts à la seconde, changement de pool seulement si +0,5 point.
 
 ⚠️ Les memecoins sont très risqués : on peut tout perdre.
 
@@ -15,7 +15,7 @@ Cryptofeed (flux temps réel), CCXT (accès aux bourses), Freqtrade (bot complet
 Activation seulement après avoir coché « Je comprends les risques, c’est de l’argent réel » puis « Passer en RÉEL ». Connexion Phantom dans le navigateur. Le bot propose des trades ; **chaque transaction est signée par l'utilisateur dans Phantom** (Jupiter swap API). Aucune clé, aucune signature automatique. Limites fixes : 30 % de la valeur du portefeuille par trade, perte max 20 %/jour (bot arrêté), SOL/wBTC/wETH seulement, glissement max 1 %, minimum 0,50 $, 0,01 SOL gardé pour les frais. Le rendement USDC n'est qu'un conseil en mode réel.
 
 ### Rotation (mode RÉEL)
-À chaque contrôle (toutes les 30 s, page ouverte, bouton Démarrer) :
+À chaque contrôle (toutes les 15 s, page ouverte, bouton Démarrer) :
 1. Les bots calculent pour SOL, wBTC et wETH la tendance (EMA9 vs EMA21, bougies 1 min Coinbase) et le RSI 14.
 2. Un actif est « en hausse » si EMA9 > EMA21 et RSI entre 40 et 80. La « force » = écart EMA9/EMA21 en %.
 3. Cible = l'actif en hausse le plus fort ; si aucun n'est en hausse, cible = USDC.
