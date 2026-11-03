@@ -31,17 +31,30 @@ async function bal(){const W=R.pk||R.watch;if(!W)return;const d=await j(JUP+'/ul
  R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}
  const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
- el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;showWal();
+ R.tot=tot;R.px=pr;el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;showWal();
  const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==W){D={dk,pk:W,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
  const dd=D.start?(tot/D.start-1)*100:0;R.stopped=dd<=-L.loss;
  el('rstat').innerHTML=`Début de journée : $${(+D.start).toFixed(2)} · Variation : <span class=${dd>=0?'ok':'ko'}>${dd.toFixed(2)} %</span>`+(R.stopped?` <b class=ko>— PERTE MAX DU JOUR ATTEINTE : bot arrêté jusqu'à demain</b>`:'');
  // stops réels -6 % / suiveur
  for(const[m,P]of Object.entries(R.pos)){const px=pr[m]?.usdPrice;if(!px)continue;if(!R.bal[m]){delete R.pos[m];continue}P.peak=Math.max(P.peak,px);const ch=px/P.entry-1;
   if(ch<=-0.06)R.signal(P.sym,m,'sell','stop -6 %');else if(P.peak/P.entry-1>=0.12&&px<=P.peak*0.85)R.signal(P.sym,m,'sell','stop suiveur')}sp()}
-R.signal=(sym,mint,side,why)=>{if(!R.on)return;const k=side+mint;if(R.pend[k])return;
+const MIN=0.5,FEE=1e7;R.st={};
+// calcule le trade proposé (montant brut) ou la raison de ne rien proposer
+R.plan=(sym,mint,bull,bear)=>{const px=(R.px||{})[mint]?.usdPrice,tot=R.tot||0,cap=tot*L.pct/100;
+ if(!bull&&!bear)return{r:'pas de signal'};
+ if(bear){const b=R.bal[mint];if(!b)return{r:'pas de signal (rien à vendre)'};if(!px)return{r:'prix indisponible'};
+  const dec=+b.raw/b.ui,free=+b.raw-(mint===SOLM?FEE:0);let raw=Math.min(free,Math.floor(cap/px*dec));
+  const usd=raw/dec*px;if(raw<=0||usd<MIN)return{r:`solde trop petit (${usd>0?usd.toFixed(2):'0'} $ < ${MIN} $ ; max ${L.pct} % de ${tot.toFixed(2)} $)`};return{side:'sell',raw,usd}}
+ const u=R.bal[USDC];if(!u)return{r:'signal achat mais pas d’USDC'};if(R.pos[mint])return{r:'déjà en position'};
+ const raw=Math.min(+u.raw,Math.floor(cap*1e6)),usd=raw/1e6;if(usd<MIN)return{r:`solde trop petit (${usd.toFixed(2)} $ < ${MIN} $)`};return{side:'buy',raw,usd}};
+R.check=(sym,mint,bull,bear,why)=>{if(!R.on)return;const P=R.plan(sym,mint,bull,bear);const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+ R.st[sym]=`${sym} : signal ${bear?'baisse':bull?'hausse':'neutre'} (${why}) → `+(P.side?`${P.side==='buy'?'achat':'vente'} ~${P.usd.toFixed(2)} $ proposé`:P.r);
+ el('rchk').innerHTML='Dernier contrôle '+t+'<br>'+Object.values(R.st).join('<br>');
+ if(P.side)R.signal(sym,mint,P.side,why,P.raw)};
+R.signal=(sym,mint,side,why,raw)=>{if(!R.on)return;const k=side+mint;if(R.pend[k])return;
  if(side==='buy'){if(R.stopped){log('RÉEL : signal '+sym+' ignoré (perte max du jour)');return}if(L.pru&&!Object.values(MAJ).includes(mint)){log('RÉEL : '+sym+' ignoré (mode Prudent uniquement)');return}if(R.pos[mint])return}
  else if(!R.bal[mint])return;
- R.pend[k]={sym,mint,side,why,t:Date.now()};log(`RÉEL : signal ${side==='buy'?'ACHAT':'VENTE'} ${sym} (${why}) — à valider`);drawP()};
+ R.pend[k]={sym,mint,side,why,raw,t:Date.now()};log(`RÉEL : signal ${side==='buy'?'ACHAT':'VENTE'} ${sym} (${why}) — à valider`);drawP()};
 function drawP(){const v=Object.entries(R.pend);el('pend').innerHTML=v.length?v.map(([k,p])=>`<div style="margin:4px 0">${p.side==='buy'?'🟢 Acheter':'🔴 Vendre'} <b>${p.sym}</b> (${p.why}) <button data-k="${k}" class=val>Valider ce trade</button> <button data-k="${k}" class="grey ign">Ignorer</button></div>`).join(''):'<span class=sk>Aucun pour l’instant.</span>';
  document.querySelectorAll('.val').forEach(b=>b.onclick=()=>exec(b.dataset.k));document.querySelectorAll('.ign').forEach(b=>b.onclick=()=>{delete R.pend[b.dataset.k];drawP()})}
 async function quote(inM,outM,amt){const q=await j(`${JUP}/swap/v1/quote?inputMint=${inM}&outputMint=${outM}&amount=${amt}&slippageBps=${Math.round(L.slip*100)}`);
@@ -50,8 +63,8 @@ R.quote=quote;
 async function exec(k){const p=R.pend[k];const pv=prov();try{
  if(!R.pk||!pv)throw'Connecte Phantom d’abord';if(p.side==='buy'&&R.stopped)throw'Perte max du jour atteinte';
  await bal();let q;
- if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC dans le portefeuille';const amt=Math.floor(+u.raw*L.pct/100);if(amt<1e6)throw'Montant trop petit (< 1 USDC)';q=await quote(USDC,p.mint,amt)}
- else{const b=R.bal[p.mint];let amt=+b.raw;if(p.mint===SOLM)amt-=1e7;if(amt<=0)throw'Rien à vendre';q=await quote(p.mint,USDC,amt)}
+ if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC dans le portefeuille';const amt=Math.min(+u.raw,p.raw||Math.floor(+u.raw*L.pct/100));if(amt<MIN*1e6)throw'Montant trop petit (< 0,50 USDC)';q=await quote(USDC,p.mint,amt)}
+ else{const b=R.bal[p.mint];if(!b)throw'Rien à vendre';let amt=+b.raw-(p.mint===SOLM?FEE:0);if(p.raw)amt=Math.min(amt,p.raw);if(amt<=0)throw'Rien à vendre';q=await quote(p.mint,USDC,amt)}
  const out=p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
  if(!confirm(`Devis Jupiter : ${out}\nGlissement max ${L.slip} %.\nPhantom va s’ouvrir : vérifie et signe toi-même.`))return;
  const s=await fetch(JUP+'/swap/v1/swap',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:R.pk,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true})}).then(r=>r.json());
