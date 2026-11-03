@@ -86,10 +86,17 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <select id="sel"></select><div id="chart" class="chart"></div></div>
 <div class="two"><div class="pn"><h2>Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions et historique</h2><table id="pos"></table></div>
 <div class="pn"><h2>$ tail -f journal.log</h2><div id="log2"></div><div id="log" style="display:none"></div></div></div>
+<div class="two"><div class="pn"><h2>🧪 Backtest (bougies passées Coinbase)</h2>
+<div class="sk" style="font-size:11px">Rejoue les stratégies RÉEL (rotation EMA9/21 + RSI 40-80, 1 min) et SIM (30 %, EMA20/50, 5 min) sur l'historique. Ne passe aucun ordre.</div>
+<label class=sk>Frais % <input id="btfee" value="0.3" size="3"></label> <label class=sk>Glissement % <input id="btslip" value="0.2" size="3"></label> <label class=sk>Durée <select id="btpg"><option value="2">10 h</option><option value="4" selected>20 h</option><option value="8">40 h</option></select></label> <button id="btgo">▶ Lancer</button>
+<div id="btout" style="margin-top:6px" class=sk>Appuie sur Lancer.</div><canvas id="bteq" height="80" style="width:100%"></canvas><canvas id="bteq2" height="80" style="width:100%"></canvas><div class=sk style="font-size:10px">Bleu : RÉEL rotation · Rose : SIM 30 %</div></div>
+<div class="pn"><h2>📑 Rapport (historique enregistré)</h2><div id="rep"></div><canvas id="repc" height="80" style="width:100%"></canvas></div></div>
+<div class="pn"><h2>🗃 Journal des décisions (sauvé dans le téléphone)</h2><input id="dq" placeholder="Chercher (SOL, USDC, RSI…)" style="width:min(300px,60%)"> <button id="dcsv">Exporter CSV</button> <span id="dn" class=sk></span>
+<div style="max-height:260px;overflow:auto"><table id="dt"></table></div></div>
 <div class="pn"><h2>👛 Mon portefeuille (adresse publique)</h2>
 <input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%)" autocomplete="off"> <button id="wsave">Enregistrer</button> <button id="wdel" class="grey">Effacer</button>
 <div id="wmsg" style="margin:6px 0"></div><div id="wbal"></div></div>
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=20"></script><script src="lib/web3.js?v=20"></script><script src="app.js?v=20"></script><script src="real.js?v=20"></script><script src="cmp.js?v=20"></script><script src="ui.js?v=20"></script></body></html>
+<script src="lib/lwc.js?v=21"></script><script src="lib/web3.js?v=21"></script><script src="app.js?v=21"></script><script src="real.js?v=21"></script><script src="cmp.js?v=21"></script><script src="ui.js?v=21"></script><script src="bt.js?v=21"></script></body></html>
