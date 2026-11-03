@@ -1,22 +1,41 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,"><title>Sol Desk — Terminal (simulation)</title>
 <style>
-body{margin:0;background:#0b0f14;color:#d6e2ee;font:14px system-ui,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #1f2a36}
-h1{font-size:18px;margin:0}.badge{background:#30363d;color:#bbb;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700}
-.warn{background:#3a1d1d;color:#ffb4b4;padding:8px 12px;font-size:13px}
-.bal{margin-left:auto;font-size:20px;font-weight:700;color:#4ade80}
-button:disabled{opacity:.4}
-button{background:#1f6feb;color:#fff;border:0;border-radius:6px;padding:7px 12px;font-weight:600}
-button.grey{background:#30363d}
-.pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:10px}
-.ag{background:#121a23;border:1px solid #1f2a36;border-radius:8px;padding:8px}.ag b{color:#7cc4ff}.ag div{font-size:12px;color:#9fb0c0}
-.ag.on{border-color:#4ade80}
-main{display:grid;grid-template-columns:1fr;gap:10px;padding:10px}@media(min-width:900px){main{grid-template-columns:1fr 1fr}}
-section{background:#121a23;border:1px solid #1f2a36;border-radius:8px;padding:10px;overflow:auto;max-height:420px}
-h2{font-size:15px;margin:0 0 8px}table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;border-bottom:1px solid #1f2a36;text-align:left}
-.ok{color:#4ade80}.ko{color:#f87171}.sk{color:#9ca3af}.chart{height:260px}
-.stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px}.stats span b{color:#fff}
+:root{--bg:#070a14;--pn:#0d1224;--bd:#26305a;--cy:#22d3ee;--pk:#f472b6;--vi:#a78bfa;--gr:#4ade80;--ye:#facc15;--bl:#60a5fa}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#141a3a,#070a14 60%);color:#d6e2ee;font:13px ui-monospace,Menlo,Consolas,monospace}
+.win{max-width:1200px;margin:8px auto;border:1px solid var(--bd);border-radius:14px;background:rgba(10,14,30,.92);box-shadow:0 0 30px #22d3ee22}
+.tb{display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid var(--bd);font-size:11px;color:#8a94c4}.tb i{width:10px;height:10px;border-radius:50%;display:inline-block}.tb .t{flex:1;text-align:center}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px}
+.av{width:58px;height:58px;border-radius:50%;background:#fff;box-shadow:0 0 18px var(--vi)}
+h1{font-size:22px;margin:0;color:var(--cy);text-shadow:0 0 10px var(--cy)}h1 span{color:#fff}
+.badge{background:#14532d;color:var(--gr);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 0 8px var(--gr)}
+.sub{font-size:11px;color:#8a94c4}.run{color:var(--gr)}
+.bal{margin-left:auto;text-align:right;font-size:30px;font-weight:800;color:#fff;text-shadow:0 0 12px #fff8}.bal small{display:block;font-size:11px;color:#8a94c4;font-weight:400;text-shadow:none}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 10px}
+button{background:transparent;color:var(--cy);border:1px solid var(--cy);border-radius:8px;padding:7px 12px;font:700 12px inherit;font-family:inherit;box-shadow:0 0 8px #22d3ee44}
+button.grey{color:#8a94c4;border-color:#3a4370;box-shadow:none}#realbtn{color:#fca5a5;border-color:#ef4444;box-shadow:0 0 8px #ef444466}
+select,input{background:#070a14;color:#fff;border:1px solid var(--bd);border-radius:6px;padding:6px;font-family:inherit}
+.grid{display:grid;grid-template-columns:1fr;gap:10px;padding:0 10px 10px}@media(min-width:820px){.grid{grid-template-columns:260px 1fr}}
+.col{display:flex;flex-direction:column;gap:8px}
+.ag{border:1px solid var(--bd);border-radius:10px;padding:8px;background:var(--pn);position:relative}
+.ag b{font-size:14px;letter-spacing:1px}.ag .ds{font-size:11px;color:#8a94c4}.ag .lv{font-size:11px;margin-top:4px}
+.ag .pill{position:absolute;right:8px;top:8px;font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid currentColor}
+.ag.on{box-shadow:0 0 14px currentColor}.ag.on .pill::after{content:' ●'}
+.c1{color:var(--cy)}.c2{color:var(--pk)}.c3{color:var(--vi)}.c4{color:var(--gr)}.c5{color:var(--ye)}.c6{color:var(--bl)}.c7{color:#34d399}
+.ag .ds,.ag .lv,.ag div{color:#aab3dc}
+.pn{border:1px solid var(--bd);border-radius:10px;background:var(--pn);padding:10px;overflow:auto}
+h2{font-size:11px;margin:0 0 8px;color:#cbd5ff;letter-spacing:1px;text-transform:uppercase}
+.flow{display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;text-align:center}
+.flow div{font-size:10px;color:#8a94c4}.flow .ic{width:46px;height:46px;margin:0 auto 4px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 12px currentColor}
+.two{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:820px){.two{grid-template-columns:1fr 1fr}}
+.rule{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #1e2650;font-size:12px}
+.gauge{width:120px;height:120px;border-radius:50%;margin:6px auto;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff}
+.bar{height:6px;background:#1e2650;border-radius:3px;margin:2px 0 6px}.bar i{display:block;height:100%;background:var(--cy);border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;border-bottom:1px solid #1e2650;text-align:left}
+.ok{color:var(--gr)}.ko{color:#f87171}.sk{color:#7b84b0}.chart{height:240px}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stats span b{color:#fff}
+#log{font:11px monospace;white-space:pre-wrap;color:#9ef0c4;max-height:300px;overflow:auto}
+#realbox{border:1px solid #ef4444!important;box-shadow:0 0 12px #ef444444}
 </style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
@@ -24,40 +43,45 @@ window.__err=function(m){var e=document.getElementById('errbar');if(e){e.style.d
 window.onerror=function(m){window.__err(m);};window.addEventListener('unhandledrejection',function(e){window.__err(e.reason&&e.reason.message||e.reason);});
 try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var M={};window.__ls={getItem:function(k){return k in M?M[k]:null},setItem:function(k,v){M[k]=String(v)},removeItem:function(k){delete M[k]}};try{Object.defineProperty(window,'localStorage',{value:window.__ls});}catch(_){}}
 </script>
-<header><h1>🟢 Sol Desk — Terminal</h1><span class="badge">SIM</span>
-<label>Stratégie : <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
-<button id="realbtn" style="background:#b91c1c;padding:10px 14px">Passer en RÉEL</button>
-<button id="go">▶ Démarrer</button><button class="grey" id="reset">Remettre à zéro</button>
-<span class="bal" style="text-align:right">Gains des bots : <span id="bal">+$0.00</span><br><small style="font-size:11px;color:#9ca3af;font-weight:400">Capital fictif : $60</small></span></header>
-<div style="margin:10px;padding:8px;border:1px solid #1f2a36;border-radius:8px;background:#121a23">
-<h2>📈 SOL, ETH, BTC — variation en % (1 min)</h2>
-<div style="display:flex;gap:12px;flex-wrap:wrap;font-weight:700;font-size:13px"><span style="color:#a78bfa">━ SOL <span id="vSOL">–</span></span><span style="color:#60a5fa">━ ETH <span id="vETH">–</span></span><span style="color:#f59e0b">━ BTC <span id="vBTC">–</span></span></div>
+<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · six agents · rotation SOL / BTC / ETH</span><span id="clk"></span></div>
+<header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">SIM</span></h1>
+<div class="sub"><span class="run" id="runst">● en pause</span> · un contrôle toutes les 15 s · 6 agents</div></div>
+<div class="bal"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
+<div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
+<label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
+<button class="grey" id="reset">Remettre à zéro</button></div>
+<div class="grid"><div class="col">
+<div class="ag c1" id="a0"><span class="pill">SCAN</span><b>🔍 SCOUT</b><div class="ds" id="d0">Regarde SOL, wBTC, wETH (bougies 1 min)</div><div class="lv" id="l0">vus 0</div></div>
+<div class="ag c2" id="a1"><span class="pill">CHECK</span><b>🔻 FILTER</b><div class="ds">EMA9 &gt; EMA21 et RSI entre 40 et 80</div><div class="lv" id="l1">éliminés 0</div></div>
+<div class="ag c3" id="a2"><span class="pill">NOTE</span><b>📊 ANALYST</b><div class="ds">Note la force de hausse 0-100</div><div class="lv" id="l2">notés 0</div></div>
+<div class="ag c4" id="a3"><span class="pill">SWAP</span><b>⚡ EXECUTOR</b><div class="ds">Échange via Jupiter, tu signes dans Phantom</div><div class="lv" id="l3">trades 0</div></div>
+<div class="ag c5" id="a4"><span class="pill">GARDE</span><b>🛡 RISK</b><div class="ds">0,03 SOL gardé · glissement max 1 % · pause 5 min si refus</div><div class="lv" id="l4">gagnés 0 / perdus 0</div></div>
+<div class="ag c6" id="a5"><span class="pill">ÉCRIT</span><b>☰ LOGGER</b><div class="ds">Note chaque trade dans le journal</div><div class="lv" id="l5">lignes 0</div></div>
+<div class="ag c7" id="a6"><span class="pill">INFO</span><b>💵 RENDEMENT USDC</b><div id="yc">Chargement…</div></div>
+</div><div class="col">
+<div class="pn"><h2>Flux en direct · un agent après l'autre</h2><div class="flow">
+<div class="c1"><div class="ic">🔍</div>SCOUT<br><b id="f0">0</b> vus</div><div class="c2"><div class="ic">🔻</div>FILTER<br><b id="f1">0</b> éliminés</div>
+<div class="c3"><div class="ic">📊</div>ANALYST<br><b id="f2">0</b> notés</div><div class="c4"><div class="ic">⚡</div>EXECUTOR<br><b id="f3">0</b> trades</div>
+<div class="c5"><div class="ic">🛡</div>RISK<br><b id="f4">0</b> stops</div><div class="c6"><div class="ic">☰</div>LOGGER<br><b id="f5">0</b> lignes</div></div></div>
+<div class="pn"><h2>📈 SOL, ETH, BTC — variation en % (1 min)</h2>
+<div style="display:flex;gap:12px;flex-wrap:wrap;font-weight:700"><span style="color:#a78bfa">━ SOL <span id="vSOL">–</span></span><span style="color:#60a5fa">━ ETH <span id="vETH">–</span></span><span style="color:#f59e0b">━ BTC <span id="vBTC">–</span></span></div>
 <div id="cmp" style="height:240px"></div><div id="cmpst" class="sk" style="font-size:11px">Chargement…</div></div>
-<div style="margin:10px;padding:10px;border:1px solid #1f2a36;border-radius:8px;background:#121a23">
-<h2>👛 Mon portefeuille</h2>
-<input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%);padding:7px;background:#0b0f14;color:#fff;border:1px solid #30363d;border-radius:6px" autocomplete="off">
-<button id="wsave">Enregistrer</button> <button id="wdel" class="grey">Effacer</button>
-<div id="wmsg" style="margin:6px 0"></div><div id="wbal"></div></div>
-<div class="pipe">
-<div class="ag" id="a0"><b>1. Scout</b><div id="d0">Cherche les nouvelles paires Solana (30 min à 72 h, 300k à 20M $)</div></div>
-<div class="ag" id="a1"><b>2. Filter</b><div>8 règles strictes (RugCheck + DexScreener)</div></div>
-<div class="ag" id="a2"><b>3. Analyst</b><div>Note sur 100, passe à 70+</div></div>
-<div class="ag" id="a3"><b>4. Executor</b><div>Achat fictif, max 30 % du solde</div></div>
-<div class="ag" id="a4"><b>5. Risk</b><div>Stop -6 %, suiveur après +12 % (15 % sous le plus haut)</div></div>
-<div class="ag" id="a5"><b>6. Logger</b><div>Journal et statistiques</div></div>
-<div class="ag" id="a6"><b>7. Rendement USDC</b><div id="yc">Chargement…</div></div></div>
-<div id="realbox" style="display:none;margin:10px;padding:10px;border:2px solid #b91c1c;border-radius:8px;background:#1a0f0f">
-<h2>Mode RÉEL — validation dans Phantom</h2>
-<button id="conn">Connecter Phantom</button> <span id="wal">Non connecté</span>
+<div class="two"><div class="pn"><h2>Filter · règles</h2><div id="rules"><span class="sk">En attente des prix…</span></div></div>
+<div class="pn"><h2>Analyst · note 0-100</h2><div id="gauge" class="gauge" style="background:conic-gradient(#22d3ee 0%,#1e2650 0)"><span style="background:#0d1224;width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center" id="gv">–</span></div><div id="gbars" style="font-size:11px"></div></div></div>
+<div class="pn"><h2>Executor · risk · position</h2><div id="expos" style="margin-bottom:6px"></div>
+<div id="realbox" style="display:none;margin:6px 0;padding:10px;border-radius:8px;background:#1a0f14">
+<h2>Mode RÉEL — validation dans Phantom</h2><button id="conn">Connecter Phantom</button> <span id="wal">Non connecté</span>
 <div id="rbal" style="margin:6px 0;max-height:220px;overflow:auto"></div>
-<div style="font-size:13px;color:#9fb0c0">Rotation automatique vers l’actif qui monte le plus (SOL, wBTC, wETH) sinon USDC · 0,03 SOL gardé pour les frais · chaque trade signé dans Phantom</div>
-<div id="rstat" style="margin:6px 0"></div><div id="rchk" style="margin:6px 0;font-size:13px;color:#9fb0c0">Dernier contrôle : pas encore (appuie sur Démarrer)</div>
+<div class="sk">Rotation automatique vers l’actif qui monte le plus (SOL, wBTC, wETH) sinon USDC · 0,03 SOL gardé pour les frais · chaque trade signé dans Phantom</div>
+<div id="rstat" style="margin:6px 0"></div><div id="rchk" style="margin:6px 0;color:#aab3dc">Dernier contrôle : pas encore (appuie sur Démarrer)</div>
 <h2>Trades en cours</h2><div id="pend" class="sk">Aucun pour l'instant.</div></div>
-<main>
-<section><h2>📈 Graphique (positions ouvertes)</h2><select id="sel"></select><div id="chart" class="chart"></div></section>
-<section><h2>📊 Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions ouvertes</h2><table id="pos"></table></section>
-<section><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></section>
-<section><h2>🔎 Dernières paires vues</h2><table id="seen"></table></section>
-<section><h2>📝 Journal</h2><div id="log" style="font:12px monospace;white-space:pre-wrap"></div></section>
-</main>
-<script src="lib/lwc.js?v=19"></script><script src="lib/web3.js?v=19"></script><script src="app.js?v=19"></script><script src="real.js?v=19"></script><script src="cmp.js?v=19"></script></body></html>
+<select id="sel"></select><div id="chart" class="chart"></div></div>
+<div class="two"><div class="pn"><h2>Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions et historique</h2><table id="pos"></table></div>
+<div class="pn"><h2>$ tail -f journal.log</h2><div id="log"></div></div></div>
+<div class="pn"><h2>👛 Mon portefeuille (adresse publique)</h2>
+<input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%)" autocomplete="off"> <button id="wsave">Enregistrer</button> <button id="wdel" class="grey">Effacer</button>
+<div id="wmsg" style="margin:6px 0"></div><div id="wbal"></div></div>
+<div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
+<div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
+</div></div></div>
+<script src="lib/lwc.js?v=20"></script><script src="lib/web3.js?v=20"></script><script src="app.js?v=20"></script><script src="real.js?v=20"></script><script src="cmp.js?v=20"></script><script src="ui.js?v=20"></script></body></html>
