@@ -19,12 +19,12 @@ const prov=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.s
 el('conn').onclick=async()=>{const p=prov();if(!p){if(/Android|iPhone/i.test(navigator.userAgent)){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert('Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
  try{const r=await p.connect();R.pk=r.publicKey.toString();el('wal').textContent='Connecté : '+R.pk.slice(0,4)+'…'+R.pk.slice(-4);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){alert('Connexion refusée.')}};
 async function price(ids){const d=await j(JUP+'/price/v3?ids='+ids.join(','));return d||{}}
-async function bal(){if(!R.pk)return;const d=await j(JUP+'/ultra/v1/balances/'+R.pk);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
+async function bal(){const W=R.pk||R.watch;if(!W)return;const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
  R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}
  const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
  el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;
- const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==R.pk){D={dk,pk:R.pk,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
+ const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==W){D={dk,pk:W,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
  const dd=D.start?(tot/D.start-1)*100:0;R.stopped=dd<=-L.loss;
  el('rstat').innerHTML=`Début de journée : $${(+D.start).toFixed(2)} · Variation : <span class=${dd>=0?'ok':'ko'}>${dd.toFixed(2)} %</span>`+(R.stopped?` <b class=ko>— PERTE MAX DU JOUR ATTEINTE : bot arrêté jusqu'à demain</b>`:'');
  // stops réels -6 % / suiveur
@@ -53,7 +53,16 @@ async function exec(k){const p=R.pend[k];const pv=prov();try{
  log(`RÉEL : transaction envoyée ${p.sym} — https://solscan.io/tx/${signature}`);
  if(p.side==='buy'){const pr=await price([p.mint]);R.pos[p.mint]={sym:p.sym,entry:pr[p.mint]?.usdPrice||0,peak:pr[p.mint]?.usdPrice||0}}else delete R.pos[p.mint];sp();
  delete R.pend[k];drawP();setTimeout(bal,15000)}catch(e){alert('Trade non fait : '+(e.message||e));log('RÉEL : trade '+p.sym+' non fait ('+(e.message||e)+')')}}
-setInterval(()=>{if(R.on&&R.pk)bal()},30000);
+setInterval(()=>{if(R.pk||R.watch)bal()},30000);
+const WK='soldesk_watch';R.watch=localStorage.getItem(WK);
+const short=a=>a.slice(0,4)+'…'+a.slice(-4);
+function wshow(){el('wmsg').innerHTML=R.watch?`<span class=ok>Portefeuille enregistré (lecture seule)</span> : <b>${short(R.watch)}</b>`:'<span class=sk>Aucun portefeuille enregistré.</span>'}
+el('wsave').onclick=()=>{const v=el('waddr').value.trim();el('waddr').value='';
+ if(v.length>44||/\s/.test(v)||v.startsWith('[')){el('wmsg').innerHTML='<b class=ko>⛔ Ne colle jamais ta clé privée ou ta phrase secrète. Rien n’a été enregistré.</b>';return}
+ if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){el('wmsg').innerHTML='<span class=ko>Adresse Solana invalide.</span>';return}
+ R.watch=v;localStorage.setItem(WK,v);wshow();log('Portefeuille enregistré (lecture seule) '+short(v));bal()};
+el('wdel').onclick=()=>{R.watch=null;localStorage.removeItem(WK);el('wbal').innerHTML='';wshow()};
+wshow();if(R.watch)bal();
 // Rendement USDC en RÉEL : conseil seulement
 setInterval(()=>{if(R.on&&el('yc')&&!el('yc').innerHTML.includes('RÉEL'))el('yc').innerHTML='<b class=ko>RÉEL : conseil seulement</b>, aucun fond déplacé. Aave USDC n’existe pas sur Solana : le meilleur taux est sur '+(rates[0]?rates[0].chain+' ('+rates[0].apy.toFixed(2)+' %)':'(données indisponibles)')+'.<br>'+el('yc').innerHTML},1000);
 })();
