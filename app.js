@@ -60,11 +60,11 @@ function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,
 const MAJ=['SOL','BTC','ETH'];
 const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map(x=>e=x*k+e*(1-k))};
 function rsi(v,n=14){let g=0,l=0;for(let i=v.length-n;i<v.length;i++){const d=v[i]-v[i-1];d>0?g+=d:l-=d}return l?100-100/(1+g/l):100}
-async function candles(s){const c=await j(`https://api.exchange.coinbase.com/products/${s}-USD/candles?granularity=300`);return c?c.reverse():null}
-async function prudent(){lit(0);const RS=[];for(const s of MAJ){const c=await candles(s);if(!c){log('Scout : prix '+s+' indisponible');continue}
- S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),e20=ema(cl,20).at(-1),e50=ema(cl,50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
+async function candles(s,gr=300){const c=await j(`https://api.exchange.coinbase.com/products/${s}-USD/candles?granularity=${gr}`);return c?c.reverse():null}
+async function prudent(){lit(0);const RS=[];for(const s of MAJ){const RL=!!window.REAL?.on,c=await candles(s,RL?60:300);if(!c){log('Scout : prix '+s+' indisponible');continue}
+ S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),e20=ema(cl,RL?9:20).at(-1),e50=ema(cl,RL?21:50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
  const k='MAJ_'+s,P=S.pos[k];
- if(window.REAL?.on){RS.push({s,bull:e20>e50&&r>45&&r<75,force:(e20/e50-1)*100,why:'RSI '+r.toFixed(0)+', tendance '+(e20>e50?'hausse':'baisse')});continue}
+ if(window.REAL?.on){RS.push({s,bull:e20>e50&&r>40&&r<80,force:(e20/e50-1)*100,why:'1 min EMA9/21, RSI '+r.toFixed(0)+', tendance '+(e20>e50?'hausse':'baisse')});continue}
  if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
  else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.08).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
  else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}

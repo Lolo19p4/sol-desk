@@ -16,8 +16,8 @@ Activation seulement après avoir coché « Je comprends les risques, c’est de
 
 ### Rotation (mode RÉEL)
 À chaque contrôle (toutes les 30 s, page ouverte, bouton Démarrer) :
-1. Les bots calculent pour SOL, wBTC et wETH la tendance (EMA20 vs EMA50, bougies 5 min Coinbase) et le RSI 14.
-2. Un actif est « en hausse » si EMA20 > EMA50 et RSI entre 45 et 75. La « force » = écart EMA20/EMA50 en %.
+1. Les bots calculent pour SOL, wBTC et wETH la tendance (EMA9 vs EMA21, bougies 1 min Coinbase) et le RSI 14.
+2. Un actif est « en hausse » si EMA9 > EMA21 et RSI entre 40 et 80. La « force » = écart EMA9/EMA21 en %.
 3. Cible = l'actif en hausse le plus fort ; si aucun n'est en hausse, cible = USDC.
 4. Si le portefeuille tient autre chose que la cible, tout est échangé vers la cible via Jupiter (glissement 1 %), en gardant toujours 0,01 SOL pour les frais.
 5. Phantom s'ouvre automatiquement ; l'utilisateur signe chaque transaction. Si une transaction est refusée, la même rotation n'est pas reproposée pendant 5 min.
