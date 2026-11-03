@@ -12,19 +12,26 @@ function lim(){for(const[k,id,mx]of[['pct','lpct',50],['loss','lloss',50],['slip
 ['lpct','lloss','lslip','lpru'].forEach(id=>el(id).onchange=lim);
 el('lpct').value=L.pct;el('lloss').value=L.loss;el('lslip').value=L.slip;el('lpru').checked=L.pru;
 el('riskok').onchange=()=>{if(!R.on)el('realbtn').disabled=!el('riskok').checked};
-el('realbtn').onclick=()=>{if(R.on){R.on=false;el('realbox').style.display='none';el('realbtn').textContent='Passer en RÉEL';el('riskok').checked=false;el('realbtn').disabled=true;el('riskl').style.display='';{const b=document.querySelector('.badge');b.textContent='SIM';b.style.background='';b.style.color=''}log('Retour en simulation.');return}
- if(!el('riskok').checked)return;
- R.on=true;el('riskl').style.display='none';el('realbox').style.display='block';el('realbtn').textContent='Revenir en simulation';const b=document.querySelector('.badge');b.textContent='RÉEL';b.style.background='#14532d';b.style.color='#4ade80';log('MODE RÉEL activé (validation manuelle dans Phantom).')};
+const RK='soldesk_real_on',ss=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},gs=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+function setReal(on,quiet){R.on=on;ss(RK,on?'1':null);const b=document.querySelector('.badge');
+ el('realbox').style.display=on?'block':'none';el('riskl').style.display=on?'none':'';el('riskok').checked=false;
+ el('realbtn').textContent=on?'Revenir en simulation':'Passer en RÉEL';el('realbtn').disabled=!on;
+ b.textContent=on?'RÉEL':'SIM';b.style.background=on?'#14532d':'';b.style.color=on?'#4ade80':'';
+ showWal();if(!quiet)log(on?'MODE RÉEL activé (validation dans Phantom).':'Retour en simulation.')}
+function showWal(){const w=R.watch||gs('soldesk_watch'),s=a=>a.slice(0,4)+'…'+a.slice(-4);
+ el('wal').innerHTML=R.pk?'<span class=ok>Connecté : '+s(R.pk)+'</span>':(w?'Portefeuille enregistré : <b>'+s(w)+'</b> (lecture seule) — appuie sur Connecter Phantom pour signer':'Non connecté');
+ const rb=el('rbal');if(rb)rb.innerHTML=(R.pk||w)?el('wbal').innerHTML:''}
+el('realbtn').onclick=()=>{if(R.on){if(confirm('Revenir en simulation ?'))setReal(false);return}if(!el('riskok').checked)return;setReal(true)};
 const prov=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.solana?.isPhantom?window.solana:null);
 el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator.userAgent)||!!(window.phantom&&window.phantom.solana)||!!(window.solana&&window.solana.isPhantom);
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
- try{const r=await p.connect();R.pk=r.publicKey.toString();el('wal').textContent='Connecté : '+R.pk.slice(0,4)+'…'+R.pk.slice(-4);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){alert('Connexion refusée.')}};
+ try{const r=await p.connect();R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){el('wal').innerHTML='<span class=ko>Connexion Phantom échouée : '+String(e&&e.message||e).replace(/</g,'&lt;')+'</span>'}};
 async function price(ids){const d=await j(JUP+'/price/v3?ids='+ids.join(','));return d||{}}
 async function bal(){const W=R.pk||R.watch;if(!W)return;const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
  R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}
  const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
- el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;
+ el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;showWal();
  const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==W){D={dk,pk:W,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
  const dd=D.start?(tot/D.start-1)*100:0;R.stopped=dd<=-L.loss;
  el('rstat').innerHTML=`Début de journée : $${(+D.start).toFixed(2)} · Variation : <span class=${dd>=0?'ok':'ko'}>${dd.toFixed(2)} %</span>`+(R.stopped?` <b class=ko>— PERTE MAX DU JOUR ATTEINTE : bot arrêté jusqu'à demain</b>`:'');
@@ -55,13 +62,16 @@ async function exec(k){const p=R.pend[k];const pv=prov();try{
  if(p.side==='buy'){const pr=await price([p.mint]);R.pos[p.mint]={sym:p.sym,entry:pr[p.mint]?.usdPrice||0,peak:pr[p.mint]?.usdPrice||0}}else delete R.pos[p.mint];sp();
  delete R.pend[k];drawP();setTimeout(bal,15000)}catch(e){alert('Trade non fait : '+(e.message||e));log('RÉEL : trade '+p.sym+' non fait ('+(e.message||e)+')')}}
 setInterval(()=>{if(R.pk||R.watch)bal()},30000);
+let hooked=0;function hook(p){if(hooked||!p.on)return;hooked=1;p.on('disconnect',()=>{R.pk=null;showWal()});p.on('accountChanged',k=>{R.pk=k?k.toString():null;showWal();bal()})}
+if(gs(RK)==='1')setReal(true,true);
+(function auto(n){const p=prov();if(p){p.connect({onlyIfTrusted:true}).then(r=>{R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom reconnecté '+R.pk.slice(0,4)+'…');bal()}).catch(()=>{})}else if(n<10)setTimeout(()=>auto(n+1),300)})(0);
 const WK='soldesk_watch';R.watch=localStorage.getItem(WK);
 const short=a=>a.slice(0,4)+'…'+a.slice(-4);
 function wshow(){el('wmsg').innerHTML=R.watch?`<span class=ok>Portefeuille enregistré (lecture seule)</span> : <b>${short(R.watch)}</b>`:'<span class=sk>Aucun portefeuille enregistré.</span>'}
 el('wsave').onclick=()=>{const v=el('waddr').value.trim();el('waddr').value='';
  if(v.length>44||/\s/.test(v)||v.startsWith('[')){el('wmsg').innerHTML='<b class=ko>⛔ Ne colle jamais ta clé privée ou ta phrase secrète. Rien n’a été enregistré.</b>';return}
  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){el('wmsg').innerHTML='<span class=ko>Adresse Solana invalide.</span>';return}
- R.watch=v;localStorage.setItem(WK,v);wshow();log('Portefeuille enregistré (lecture seule) '+short(v));bal()};
+ R.watch=v;localStorage.setItem(WK,v);wshow();showWal();log('Portefeuille enregistré (lecture seule) '+short(v));bal()};
 el('wdel').onclick=()=>{R.watch=null;localStorage.removeItem(WK);el('wbal').innerHTML='';wshow()};
 wshow();if(R.watch)bal();
 // Rendement USDC en RÉEL : conseil seulement
