@@ -34,13 +34,13 @@ async function bal(){const W=R.pk||R.watch;if(!W)return;const d=await j(JUP+'/ul
  // stops réels -6 % / suiveur
  for(const[m,P]of Object.entries(R.pos)){const px=pr[m]?.usdPrice;if(!px)continue;if(!R.bal[m]){delete R.pos[m];continue}P.peak=Math.max(P.peak,px);const ch=px/P.entry-1;
   }sp()}
-const MIN=0,FEE=2e7;R.cool={};R.st={};
+const MIN=0,FEE=3e7;R.cool={};R.st={};
 // calcule le trade proposé (montant brut) ou la raison de ne rien proposer
 R.plan=(sym,mint,bull,bear)=>{const px=(R.px||{})[mint]?.usdPrice,tot=R.tot||0,cap=tot*L.pct/100;
  if(!bull&&!bear)return{r:'pas de signal'};
  if(bear){const b=R.bal[mint];if(!b)return{r:'pas de signal (rien à vendre)'};if(!px)return{r:'prix indisponible'};
   const dec=+b.raw/b.ui,free=+b.raw-(mint===SOLM?FEE:0);let raw=free;
-  const usd=raw/dec*px;if(raw<=0)return{r:'solde trop petit (il faut plus de 0,02 SOL)'};return{side:'sell',raw,usd}}
+  const usd=raw/dec*px;if(raw<=0)return{r:'solde trop petit (il faut plus de 0,03 SOL)'};return{side:'sell',raw,usd}}
  const u=R.bal[USDC];if(!u)return{r:'signal achat mais pas d’USDC'};if(R.pos[mint])return{r:'déjà en position'};
  const raw=+u.raw,usd=raw/1e6;if(raw<=0)return{r:'solde trop petit'};return{side:'buy',raw,usd}};
 R.check=(sym,mint,bull,bear,why)=>{if(!R.on)return;const P=R.plan(sym,mint,bull,bear);const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
