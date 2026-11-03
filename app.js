@@ -1,5 +1,6 @@
 const DS='https://api.dexscreener.com',RC='https://api.rugcheck.xyz/v1';
-const K='soldesk_v1';
+const K='soldesk_v2',CAP=60;try{localStorage.removeItem('soldesk_v1')}catch(e){}
+function showBal(){const eq=S.bal+Object.values(S.pos).reduce((s,p)=>s+p.amt*(p.pts.at(-1).value/p.entry),0),g=eq-CAP;$('bal').textContent=(g>=0?'+':'−')+'$'+Math.abs(g).toFixed(g!==0&&Math.abs(g)<0.01?6:2);$('bal').style.color=g>=0?'#4ade80':'#f87171'}
 let S=null;try{S=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}S=S||{bal:60,pos:{},hist:[],stats:{seen:0,killed:0,scored:0,trades:0,wins:0,losses:0},done:{},log:[]};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -51,7 +52,7 @@ function analyst(p,r){lit(2);
  const smart=10*(r.filter(x=>x[1]===true).length/9);// pas de données "smart wallets" gratuites : approximation
  return Math.round(mom+buyers+ratio+growth+liq+smart)}
 
-function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(S.bal*0.08).toFixed(2),px=+p.priceUsd;
+function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*0.08).toFixed(2),px=+p.priceUsd;
  if(amt<0.5||!px||S.pos[a])return;S.bal-=amt;
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
@@ -66,7 +67,7 @@ async function prudent(){lit(0);for(const s of MAJ){const c=await candles(s);if(
  if(window.REAL?.on&&(r>75||e20<e50))REAL.signal(s,REAL.MAJ[s],'sell',r>75?'RSI > 75':'tendance baisse');
  if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
  else if(window.REAL?.on&&e20>e50&&r>45&&r<70){REAL.signal(s,REAL.MAJ[s],'buy','EMA20>EMA50, RSI '+r.toFixed(0))}
- else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(S.bal*0.08).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
+ else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.08).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
  else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}save()}
 function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
  S.hist.unshift({sym:P.sym,pnl,why,t:Date.now()});log(`Risk : VENTE FICTIVE ${P.sym} (${why}) ${pnl>=0?'+':''}${pnl.toFixed(2)}$`);delete S.pos[k]}
@@ -87,7 +88,7 @@ function accrue(){const y=S.y;if(!y?.id)return;const now=Date.now(),dt=(now-y.la
  const dep=Math.max(0,S.bal*(1-RES)),gain=dep*y.apy/100*dt/31536e3;S.bal+=gain;y.total+=gain;
  const dk=new Date().toDateString();if(y.dk!==dk){y.dk=dk;y.day=0}y.day+=gain;
  $('yc').innerHTML=`Pool : <b>Aave ${y.chain}</b><br>Taux : <b class=ok>${y.apy.toFixed(2)} %</b><br>Placé : $${dep.toFixed(2)} (réserve $${(S.bal-dep).toFixed(2)})<br>Gagné total : <b class=ok>$${y.total.toFixed(6)}</b><br>Aujourd'hui : $${y.day.toFixed(6)}`;
- $('bal').textContent='$'+S.bal.toFixed(4)}
+ showBal()}
 setInterval(()=>{accrue();if(Math.random()<0.1)save()},1000);setInterval(yields,6e5);
 async function risk(){lit(4);await riskMaj();const ks=Object.keys(S.pos).filter(k=>!S.pos[k].major);if(!ks.length)return;
  const ps=await j(DS+'/latest/dex/pairs/solana/'+ks.map(k=>S.pos[k].pair).join(','));
@@ -100,7 +101,7 @@ async function risk(){lit(4);await riskMaj();const ks=Object.keys(S.pos).filter(
    S.hist.unshift({sym:P.sym,pnl,why,t:Date.now()});log(`Risk : VENTE FICTIVE ${P.sym} (${why}) ${pnl>=0?'+':''}${pnl.toFixed(2)}$`);delete S.pos[k]}}
  save()}
 
-function render(){lit(5);$('bal').textContent='$'+S.bal.toFixed(2);const s=S.stats;
+function render(){lit(5);showBal();const s=S.stats;
  const inPos=Object.values(S.pos).reduce((a,p)=>a+p.amt*(p.pts.at(-1).value/p.entry),0);
  $('stats').innerHTML=`<span>Vus <b>${s.seen}</b></span><span>Éliminés <b>${s.killed}</b></span><span>Notés <b>${s.scored}</b></span><span>Trades <b>${s.trades}</b></span><span>Gagnés <b class=ok>${s.wins}</b></span><span>Perdus <b class=ko>${s.losses}</b></span><span>En position <b>$${inPos.toFixed(2)}</b></span>`;
  $('pos').innerHTML='<tr><th>Jeton</th><th>Mise</th><th>Entrée</th><th>Var.</th></tr>'+Object.values(S.pos).map(p=>{const c=(p.pts.at(-1).value/p.entry-1)*100;return`<tr><td><a href="${p.url}" target=_blank style="color:#7cc4ff">${p.sym}</a></td><td>$${p.amt}</td><td>${p.entry}</td><td class=${c>=0?'ok':'ko'}>${c.toFixed(1)} %</td></tr>`}).join('')+S.hist.slice(0,10).map(h=>`<tr><td class=sk>${h.sym} (fermé)</td><td colspan=2 class=sk>${h.why}</td><td class=${h.pnl>=0?'ok':'ko'}>${h.pnl.toFixed(2)}$</td></tr>`).join('');
