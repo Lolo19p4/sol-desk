@@ -12,7 +12,9 @@ let chart,line;try{chart=LightweightCharts.createChart($('chart'),{layout:{backg
 line=chart.addLineSeries({color:'#4ade80'});
 if(window.ResizeObserver)new ResizeObserver(()=>chart.applyOptions({width:$('chart').clientWidth})).observe($('chart'))}catch(e){line={setData(){}};$('chart').innerHTML='<span class=sk>Graphique indisponible</span>';window.__err&&__err('graphique : '+e.message)}
 $('sel').onchange=drawChart;
-function drawChart(){const a=$('sel').value;const p=S.pos[a];line.setData(p?p.pts:[])}
+let solT=0;function drawChart(){const a=$('sel').value;const p=S.pos[a];if(p){line.setData(p.pts);return}
+ // aucune position fictive (ex. mode RÉEL) : on affiche le prix SOL en 1 min au lieu d'un graphique vide
+ if(Date.now()-solT<25e3)return;solT=Date.now();candles('SOL',60).then(c=>{if(!c||S.pos[$('sel').value])return;const o=new Date().getTimezoneOffset()*60;line.setData(c.slice(-120).map(x=>({time:x[0]-o,value:x[4]})));chart&&chart.timeScale().fitContent()})}
 
 async function scout(){lit(0);
  const a=await j(DS+'/token-profiles/latest/v1'),b=await j(DS+'/token-boosts/latest/v1');
@@ -105,7 +107,7 @@ function render(){lit(5);showBal();const s=S.stats;
  const inPos=Object.values(S.pos).reduce((a,p)=>a+p.amt*(p.pts.at(-1).value/p.entry),0);
  $('stats').innerHTML=`<span>Vus <b>${s.seen}</b></span><span>Éliminés <b>${s.killed}</b></span><span>Notés <b>${s.scored}</b></span><span>Trades <b>${s.trades}</b></span><span>Gagnés <b class=ok>${s.wins}</b></span><span>Perdus <b class=ko>${s.losses}</b></span><span>En position <b>$${inPos.toFixed(2)}</b></span>`;
  $('pos').innerHTML='<tr><th>Jeton</th><th>Mise</th><th>Entrée</th><th>Var.</th></tr>'+Object.values(S.pos).map(p=>{const c=(p.pts.at(-1).value/p.entry-1)*100;return`<tr><td><a href="${p.url}" target=_blank style="color:#7cc4ff">${p.sym}</a></td><td>$${p.amt}</td><td>${p.entry}</td><td class=${c>=0?'ok':'ko'}>${c.toFixed(1)} %</td></tr>`}).join('')+S.hist.slice(0,10).map(h=>`<tr><td class=sk>${h.sym} (fermé)</td><td colspan=2 class=sk>${h.why}</td><td class=${h.pnl>=0?'ok':'ko'}>${h.pnl.toFixed(2)}$</td></tr>`).join('');
- const v=$('sel').value;$('sel').innerHTML=Object.entries(S.pos).map(([a,p])=>`<option value="${a}">${p.sym}</option>`).join('')||'<option>Aucune position</option>';if(S.pos[v])$('sel').value=v;drawChart()}
+ const v=$('sel').value;$('sel').innerHTML=Object.entries(S.pos).map(([a,p])=>`<option value="${a}">${p.sym}</option>`).join('')||'<option>SOL (aucune position)</option>';if(S.pos[v])$('sel').value=v;drawChart()}
 
 const seenRows=[];
 async function cycle(){try{
