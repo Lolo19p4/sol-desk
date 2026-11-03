@@ -51,7 +51,7 @@ function analyst(p,r){lit(2);
  const smart=10*(r.filter(x=>x[1]===true).length/9);// pas de données "smart wallets" gratuites : approximation
  return Math.round(mom+buyers+ratio+growth+liq+smart)}
 
-function buy(p,score){lit(3);const a=p.baseToken.address,amt=+(S.bal*0.08).toFixed(2),px=+p.priceUsd;
+function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(S.bal*0.08).toFixed(2),px=+p.priceUsd;
  if(amt<0.5||!px||S.pos[a])return;S.bal-=amt;
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
@@ -63,7 +63,9 @@ async function candles(s){const c=await j(`https://api.exchange.coinbase.com/pro
 async function prudent(){lit(0);for(const s of MAJ){const c=await candles(s);if(!c){log('Scout : prix '+s+' indisponible');continue}
  S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),e20=ema(cl,20).at(-1),e50=ema(cl,50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
  const k='MAJ_'+s,P=S.pos[k];
+ if(window.REAL?.on&&(r>75||e20<e50))REAL.signal(s,REAL.MAJ[s],'sell',r>75?'RSI > 75':'tendance baisse');
  if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
+ else if(window.REAL?.on&&e20>e50&&r>45&&r<70){REAL.signal(s,REAL.MAJ[s],'buy','EMA20>EMA50, RSI '+r.toFixed(0))}
  else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(S.bal*0.08).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
  else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}save()}
 function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
