@@ -20,6 +20,9 @@ select,input{background:#070a14;color:#fff;border:1px solid var(--bd);border-rad
 .ag{border:1px solid var(--bd);border-radius:10px;padding:8px;background:var(--pn);position:relative}
 .ag b{font-size:14px;letter-spacing:1px}.ag .ds{font-size:11px;color:#8a94c4}.ag .lv{font-size:11px;margin-top:4px}
 .ag .pill{position:absolute;right:8px;top:8px;font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid currentColor}
+.ag2{border:1px solid var(--bd);border-radius:10px;padding:8px;background:var(--pn);position:relative}.ag2 b{font-size:14px;letter-spacing:1px}.ag2 .pill{position:absolute;right:8px;top:8px;font-size:10px;padding:1px 6px;border-radius:6px;border:1px solid currentColor}.ag2 div{color:#aab3dc;font-size:11px}
+.hk{display:flex;gap:14px;text-align:center}.hk b{display:block;font-size:24px}.hk small{font-size:10px;color:#8a94c4}
+.lg{display:flex;gap:6px;padding:3px 0;border-bottom:1px solid #1e2650;font-size:11px}.lg .tg{border:1px solid var(--cy);color:var(--cy);border-radius:4px;padding:0 4px;font-size:10px;height:16px}.lg .rs{color:#facc15}
 .ag.on{box-shadow:0 0 14px currentColor}.ag.on .pill::after{content:' ●'}
 .c1{color:var(--cy)}.c2{color:var(--pk)}.c3{color:var(--vi)}.c4{color:var(--gr)}.c5{color:var(--ye)}.c6{color:var(--bl)}.c7{color:#34d399}
 .ag .ds,.ag .lv,.ag div{color:#aab3dc}
@@ -46,7 +49,7 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · six agents · rotation SOL / BTC / ETH</span><span id="clk"></span></div>
 <header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">SIM</span></h1>
 <div class="sub"><span class="run" id="runst">● en pause</span> · un contrôle toutes les 15 s · 6 agents</div></div>
-<div class="bal"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
+<div class="hk"><div><b id="hT" style="color:#fff">0</b><small>trades</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div><div class="bal"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
 <div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <button class="grey" id="reset">Remettre à zéro</button></div>
@@ -55,14 +58,19 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="ag c2" id="a1"><span class="pill">CHECK</span><b>🔻 FILTER</b><div class="ds">EMA9 &gt; EMA21 et RSI entre 40 et 80</div><div class="lv" id="l1">éliminés 0</div></div>
 <div class="ag c3" id="a2"><span class="pill">NOTE</span><b>📊 ANALYST</b><div class="ds">Note la force de hausse 0-100</div><div class="lv" id="l2">notés 0</div></div>
 <div class="ag c4" id="a3"><span class="pill">SWAP</span><b>⚡ EXECUTOR</b><div class="ds">Échange via Jupiter, tu signes dans Phantom</div><div class="lv" id="l3">trades 0</div></div>
+<div class="ag2 c3"><span class="pill">TAILLE</span><b>◆ SIZER</b><div>Taille de chaque trade en % du capital</div><div id="sz">–</div></div>
 <div class="ag c5" id="a4"><span class="pill">GARDE</span><b>🛡 RISK</b><div class="ds">0,03 SOL gardé · glissement max 1 % · pause 5 min si refus</div><div class="lv" id="l4">gagnés 0 / perdus 0</div></div>
 <div class="ag c6" id="a5"><span class="pill">ÉCRIT</span><b>☰ LOGGER</b><div class="ds">Note chaque trade dans le journal</div><div class="lv" id="l5">lignes 0</div></div>
+<div class="ag2 c1"><span class="pill">COURBE</span><b>💧 EQUITY</b><div>Solde mis à jour à chaque clôture</div><div id="eq">–</div></div>
 <div class="ag c7" id="a6"><span class="pill">INFO</span><b>💵 RENDEMENT USDC</b><div id="yc">Chargement…</div></div>
 </div><div class="col">
 <div class="pn"><h2>Flux en direct · un agent après l'autre</h2><div class="flow">
 <div class="c1"><div class="ic">🔍</div>SCOUT<br><b id="f0">0</b> vus</div><div class="c2"><div class="ic">🔻</div>FILTER<br><b id="f1">0</b> éliminés</div>
 <div class="c3"><div class="ic">📊</div>ANALYST<br><b id="f2">0</b> notés</div><div class="c4"><div class="ic">⚡</div>EXECUTOR<br><b id="f3">0</b> trades</div>
 <div class="c5"><div class="ic">🛡</div>RISK<br><b id="f4">0</b> stops</div><div class="c6"><div class="ic">☰</div>LOGGER<br><b id="f5">0</b> lignes</div></div></div>
+<div class="pn"><h2>Flux · contrôle → taille → échange → journal</h2><div class="flow" id="flow2"></div><canvas id="eqc" height="90" style="width:100%;margin-top:6px"></canvas><div class="sk" style="font-size:10px">Courbe du solde (simulation) : départ 60 $ + chaque trade clôturé.</div></div>
+<div class="two"><div class="pn"><h2>Trade · entrée vs sortie (dernier)</h2><div id="lt" class="sk">Aucun trade clôturé pour l’instant.</div></div>
+<div class="pn"><h2>Résultat · départ vs maintenant</h2><div id="res"></div></div></div>
 <div class="pn"><h2>📈 SOL, ETH, BTC — variation en % (1 min)</h2>
 <div style="display:flex;gap:12px;flex-wrap:wrap;font-weight:700"><span style="color:#a78bfa">━ SOL <span id="vSOL">–</span></span><span style="color:#60a5fa">━ ETH <span id="vETH">–</span></span><span style="color:#f59e0b">━ BTC <span id="vBTC">–</span></span></div>
 <div id="cmp" style="height:240px"></div><div id="cmpst" class="sk" style="font-size:11px">Chargement…</div></div>
@@ -77,7 +85,7 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <h2>Trades en cours</h2><div id="pend" class="sk">Aucun pour l'instant.</div></div>
 <select id="sel"></select><div id="chart" class="chart"></div></div>
 <div class="two"><div class="pn"><h2>Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions et historique</h2><table id="pos"></table></div>
-<div class="pn"><h2>$ tail -f journal.log</h2><div id="log"></div></div></div>
+<div class="pn"><h2>$ tail -f journal.log</h2><div id="log2"></div><div id="log" style="display:none"></div></div></div>
 <div class="pn"><h2>👛 Mon portefeuille (adresse publique)</h2>
 <input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%)" autocomplete="off"> <button id="wsave">Enregistrer</button> <button id="wdel" class="grey">Effacer</button>
 <div id="wmsg" style="margin:6px 0"></div><div id="wbal"></div></div>

@@ -19,3 +19,21 @@ function scores(){Promise.all(['SOL','BTC','ETH'].map(function(k){return fetch('
  $('gbars').innerHTML=L.map(function(x){return NM[x.k]+' '+x.sc+'<div class="bar"><i style="width:'+x.sc+'%"></i></div>'}).join('')+'<span class=sk>Affichage indicatif. Les bots décident avec EMA9/21 et RSI 40-80.</span>'})}
 scores();setInterval(scores,30000);
 })();
+// Ajout : SIZER, EQUITY, dernier trade, résultat, journal avec « raison : » (lecture seule)
+(function(){var $=function(i){return document.getElementById(i)},CAP=60,esc=function(t){return String(t).replace(/</g,'&lt;')};
+function raison(l){var m=l.match(/\(([^()]*(?:\([^()]*\)[^()]*)*)\)/);return m?m[1]:(/rotation|garde|cible/.test(l)?'tendance 1 min (EMA9/21, RSI)':'')}
+function t2(){try{if(typeof S==='undefined'||!S)return;var s=S.stats||{},h=S.hist||[],R=window.REAL||{};
+ $('hT').textContent=s.trades||0;$('hW').textContent=s.wins||0;$('hL').textContent=s.losses||0;
+ var eqv=S.bal+Object.values(S.pos||{}).reduce(function(a,p){return a+p.amt*(p.pts.at(-1).value/p.entry)},0);
+ $('sz').textContent=R.on?'RÉEL : 100 % du solde (0,03 SOL gardé)':'SIM : 30 % de $'+S.bal.toFixed(2)+' = $'+(S.bal*0.3).toFixed(2);
+ $('eq').textContent='$'+eqv.toFixed(2)+' · '+h.length+' clôtures';
+ $('flow2').innerHTML=[['c2','🔻','CONTRÔLE',(s.scored||0)+' notés'],['c3','◆','TAILLE',R.on?'100 %':'30 %'],['c4','⚡','ÉCHANGE',(s.trades||0)+' trades'],['c6','☰','JOURNAL',(S.log||[]).length+' lignes']].map(function(x){return '<div class="'+x[0]+'"><div class="ic">'+x[1]+'</div>'+x[2]+'<br><b>'+x[3]+'</b></div>'}).join('');
+ if(h[0]){var l=h[0],tl=(S.log||[]).find(function(x){return x.indexOf(l.sym)>=0&&/ACHAT/.test(x)})||'',en=tl.match(/(\d+(?:\.\d+)?)\$ @ ([\d.e-]+)/);
+  $('lt').innerHTML='<b style="font-size:18px">'+esc(l.sym)+'</b> <b class='+(l.pnl>=0?'ok':'ko')+'>'+(l.pnl>=0?'+':'')+l.pnl.toFixed(2)+' $</b><br>entrée : '+(en?en[2]:'–')+'<br>sortie : '+(en?(+en[2]*(1+l.pnl/+en[1])).toPrecision(6):'–')+'<br>glissement : '+(R.on?'max 1 %':'0 (simulation)')+'<br>taille : '+(en?'$'+en[1]:'–')+'<br><span style="color:#facc15">raison :</span> '+esc(l.why)}
+ var pct=Math.max(0,Math.min(100,eqv/Math.max(CAP,eqv)*100));
+ $('res').innerHTML='DÉPART <b>$'+CAP.toFixed(2)+'</b><div class="bar"><i style="width:'+(CAP/Math.max(CAP,eqv)*100)+'%;background:#7b84b0"></i></div>MAINTENANT <b class='+(eqv>=CAP?'ok':'ko')+'>$'+eqv.toFixed(2)+'</b><div class="bar"><i style="width:'+pct+'%"></i></div><span class=sk>'+(s.wins||0)+' G / '+(s.losses||0)+' P · simulation</span>'+(R.on&&R.tot!=null?'<br>Portefeuille réel : <b>$'+R.tot.toFixed(2)+'</b>':'');
+ var c=$('eqc'),x=c.getContext('2d'),w=c.width=c.clientWidth||300,H=90,pts=[CAP],v=CAP;h.slice().reverse().forEach(function(e){v+=e.pnl;pts.push(v)});
+ x.clearRect(0,0,w,H);var mn=Math.min.apply(0,pts),mx=Math.max.apply(0,pts);if(mx===mn){mx+=1;mn-=1}x.strokeStyle='#22d3ee';x.lineWidth=2;x.shadowColor='#22d3ee';x.shadowBlur=6;x.beginPath();pts.forEach(function(p,i){var px=pts.length>1?i/(pts.length-1)*(w-8)+4:w/2,py=H-6-(p-mn)/(mx-mn)*(H-12);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+ $('log2').innerHTML=(S.log||[]).slice(0,80).map(function(l){var t=l.slice(0,8),m=l.slice(10),tg=/ACHAT|devis|envoy/.test(m)?'ENTRÉE':/VENTE/.test(m)?'SORTIE':/Analyst|Filter|contrôle|rotation/.test(m)?'DÉCISION':'INFO',r=tg==='INFO'?'':raison(m);
+  return '<div class="lg"><span class=sk>'+t+'</span><span class="tg">'+tg+'</span><span>'+esc(m)+(r?'<br><span class="rs">raison :</span> '+esc(r):'')+'</span></div>'}).join('')}catch(e){}}
+setInterval(t2,2000);t2()})();
