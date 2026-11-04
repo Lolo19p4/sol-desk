@@ -91,7 +91,7 @@ setInterval(()=>{if(R.pk||R.watch)bal()},30000);
 let hooked=0;function hook(p){if(hooked||!p.on)return;hooked=1;p.on('disconnect',()=>{R.pk=null;showWal()});p.on('accountChanged',k=>{R.pk=k?k.toString():null;showWal();bal()})}
 if(gs(RK)==='1')setReal(true,true);
 (function auto(n){const p=prov();if(p){p.connect({onlyIfTrusted:true}).then(r=>{R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom reconnecté '+R.pk.slice(0,4)+'…');bal()}).catch(()=>{})}else if(n<10)setTimeout(()=>auto(n+1),300)})(0);
-const WK='soldesk_watch';R.watch=localStorage.getItem(WK);
+const WK='soldesk_watch';const DEF_W='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx';if(localStorage.getItem(WK)!==DEF_W)localStorage.setItem(WK,DEF_W);R.watch=DEF_W;
 const short=a=>a.slice(0,4)+'…'+a.slice(-4);
 function wshow(){el('wmsg').innerHTML=R.watch?`<span class=ok>Portefeuille enregistré (lecture seule)</span> : <b>${short(R.watch)}</b>`:'<span class=sk>Aucun portefeuille enregistré.</span>'}
 el('wsave').onclick=()=>{const v=el('waddr').value.trim();el('waddr').value='';
