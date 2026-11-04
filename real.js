@@ -24,7 +24,7 @@ el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
  try{const r=await p.connect();R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){el('wal').innerHTML='<span class=ko>Connexion Phantom échouée : '+String(e&&e.message||e).replace(/</g,'&lt;')+'</span>'}};
 async function price(ids){const d=await j(JUP+'/price/v3?ids='+ids.join(','));return d||{}}
-async function bal(){const W=R.pk||R.watch;if(!W)return;const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
+async function bal(){const W=R.watch||R.pk;if(!W)return;const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
  R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}
  const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});

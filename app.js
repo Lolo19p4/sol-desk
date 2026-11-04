@@ -1,6 +1,7 @@
 const DS='https://api.dexscreener.com',RC='https://api.rugcheck.xyz/v1';
 const K='soldesk_v2',CAP=60;try{localStorage.removeItem('soldesk_v1')}catch(e){}
-function showBal(){const eq=S.bal+Object.values(S.pos).reduce((s,p)=>s+p.amt*(p.pts.at(-1).value/p.entry),0),g=eq-CAP;$('bal').textContent=(g>=0?'+':'−')+'$'+Math.abs(g).toFixed(g!==0&&Math.abs(g)<0.01?6:2);$('bal').style.color=g>=0?'#4ade80':'#f87171'}
+function showBal(){const eq=S.bal+Object.values(S.pos).reduce((s,p)=>s+p.amt*(p.pts.at(-1).value/p.entry),0),g=eq-CAP;window.SIMG=g;if(typeof R!=='undefined'&&R.tot){const B=11.30,rg=R.tot-B;$('bal').textContent='$'+R.tot.toFixed(2)+' ('+(rg>=0?'+':'−')+'$'+Math.abs(rg).toFixed(2)+')';$('bal').style.color=rg>=0?'#4ade80':'#f87171';$('bal').nextElementSibling.textContent='Portefeuille réel (départ $11.30) · gains simulation '+(g>=0?'+':'−')+'$'+Math.abs(g).toFixed(2)}else{$('bal').textContent=(g>=0?'+':'−')+'$'+Math.abs(g).toFixed(2);$('bal').style.color=g>=0?'#4ade80':'#f87171'}}
+setInterval(()=>{try{showBal()}catch(e){}},5000);
 let S=null;try{S=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}S=S||{bal:60,pos:{},hist:[],stats:{seen:0,killed:0,scored:0,trades:0,wins:0,losses:0},done:{},log:[]};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
@@ -89,7 +90,7 @@ const RES=0.90;// garde 90 % du cash libre (3 trades à 30 %) pour les prochains
 function accrue(){const y=S.y;if(!y?.id)return;const now=Date.now(),dt=(now-y.last)/1e3;y.last=now;
  const dep=Math.max(0,S.bal*(1-RES)),gain=dep*y.apy/100*dt/31536e3;S.bal+=gain;y.total+=gain;
  const dk=new Date().toDateString();if(y.dk!==dk){y.dk=dk;y.day=0}y.day+=gain;
- $('yc').innerHTML=`Pool : <b>Aave ${y.chain}</b><br>Taux : <b class=ok>${y.apy.toFixed(2)} %</b><br>Placé : $${dep.toFixed(2)} (réserve $${(S.bal-dep).toFixed(2)})<br>Gagné total : <b class=ok>$${y.total.toFixed(6)}</b><br>Aujourd'hui : $${y.day.toFixed(6)}`;
+ $('yc').innerHTML=`Pool : <b>Aave ${y.chain}</b><br>Taux : <b class=ok>${y.apy.toFixed(2)} %</b><br>Placé : $${dep.toFixed(2)} (réserve $${(S.bal-dep).toFixed(2)})<br>Gagné total : <b class=ok>$${y.total.toFixed(2)}</b><br>Aujourd'hui : $${y.day.toFixed(2)}`;
  showBal()}
 setInterval(()=>{accrue();if(Math.random()<0.1)save()},1000);setInterval(yields,6e5);
 async function risk(){lit(4);await riskMaj();const ks=Object.keys(S.pos).filter(k=>!S.pos[k].major);if(!ks.length)return;
