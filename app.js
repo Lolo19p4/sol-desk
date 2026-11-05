@@ -55,23 +55,22 @@ function analyst(p,r){lit(2);
  const smart=10*(r.filter(x=>x[1]===true).length/9);// pas de données "smart wallets" gratuites : approximation
  return Math.round(mom+buyers+ratio+growth+liq+smart)}
 
-function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*STRAT.size).toFixed(2),px=+p.priceUsd;
+function buy(p,score){lit(3);if(window.REAL?.on){REAL.signal(p.baseToken.symbol,p.baseToken.address,'buy','note '+score);return}const a=p.baseToken.address,amt=+(Math.min(S.bal,CAP*100)*0.30).toFixed(2),px=+p.priceUsd;
  if(amt<0.5||!px||S.pos[a])return;S.bal-=amt;
  S.pos[a]={sym:p.baseToken.symbol,pair:p.pairAddress,entry:px,peak:px,amt,score,url:p.url,pts:[{time:Math.floor(Date.now()/1e3),value:px}]};
  S.stats.trades++;log(`Executor : ACHAT FICTIF ${p.baseToken.symbol} ${amt}$ @ ${px} (note ${score})`);save()}
 
-const MAJ=['SOL','BTC','ETH','JUP','BONK','WIF','LINK','AVAX'],MAJR=MAJ.concat(['RAY','LTC']);// v31 : univers élargi
-const STRAT={rsiMin:35,rsiMax:85,emaTol:0.998,analyst:60,size:0.40,mv1Exit:-1.5,mv5Exit:-2.5,mv5Max:4};window.STRAT=STRAT;// MAJR : liste de rotation RÉEL seulement (SIM inchangé)
+const MAJ=['SOL','BTC','ETH'],MAJR=MAJ.concat(['BONK','WIF','RAY','LTC']);// MAJR : liste de rotation RÉEL seulement (SIM inchangé)
 const ema=(v,n)=>{const k=2/(n+1);let e=v[0];return v.map(x=>e=x*k+e*(1-k))};
 function rsi(v,n=14){let g=0,l=0;for(let i=v.length-n;i<v.length;i++){const d=v[i]-v[i-1];d>0?g+=d:l-=d}return l?100-100/(1+g/l):100}
 async function candles(s,gr=300){const c=await j(`https://api.exchange.coinbase.com/products/${s}-USD/candles?granularity=${gr}`);return c?c.reverse():null}
 async function prudent(){lit(0);const RS=[];for(const s of (window.REAL?.on?MAJR:MAJ)){const RL=!!window.REAL?.on,c=await candles(s,RL?60:300);if(!c){log('Scout : prix '+s+' indisponible');continue}
- S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),mv1=(px/cl.at(-2)-1)*100,mv5=(px/cl.at(-6)-1)*100,e20=ema(cl,RL?9:20).at(-1),e50=ema(cl,RL?21:50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
+ S.stats.seen++;const cl=c.map(x=>x[4]),px=cl.at(-1),e20=ema(cl,RL?9:20).at(-1),e50=ema(cl,RL?21:50).at(-1),r=rsi(cl);lit(2);S.stats.scored++;
  const k='MAJ_'+s,P=S.pos[k];
- if(window.REAL?.on){RS.push({s,bull:e20>e50*STRAT.emaTol&&r>STRAT.rsiMin&&r<STRAT.rsiMax&&mv1>STRAT.mv1Exit&&mv5<STRAT.mv5Max,bear:mv5<STRAT.mv5Exit,force:(e20/e50-1)*100,why:'1 min EMA9/21, RSI '+r.toFixed(0)+', 1m '+mv1.toFixed(2)+' % / 5m '+mv5.toFixed(2)+' %'+', tendance '+(e20>e50?'hausse':'baisse')});continue}
- if(P){if(r>STRAT.rsiMax||e20<e50*STRAT.emaTol||mv5<STRAT.mv5Exit){close(k,px,r>STRAT.rsiMax?'RSI > '+STRAT.rsiMax:mv5<STRAT.mv5Exit?'chute 5 bougies '+mv5.toFixed(1)+' %':'tendance baisse')}}
- else if(e20>e50*STRAT.emaTol&&r>STRAT.rsiMin&&r<STRAT.rsiMax&&mv1>STRAT.mv1Exit&&mv5<STRAT.mv5Max){lit(3);const amt=+(Math.min(S.bal,CAP*100)*STRAT.size).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
- else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'}, 1b ${mv1.toFixed(2)} % / 5b ${mv5.toFixed(2)} %)`)}}
+ if(window.REAL?.on){RS.push({s,bull:e20>e50&&r>40&&r<80,force:(e20/e50-1)*100,why:'1 min EMA9/21, RSI '+r.toFixed(0)+', tendance '+(e20>e50?'hausse':'baisse')});continue}
+ if(P){if(r>75||e20<e50){close(k,px,r>75?'RSI > 75':'tendance baisse')}}
+ else if(e20>e50&&r>45&&r<70){lit(3);const amt=+(Math.min(S.bal,CAP*100)*0.30).toFixed(2);if(amt>=0.5){S.bal-=amt;S.pos[k]={sym:s,major:1,entry:px,peak:px,amt,score:Math.round(r),url:'https://www.coinbase.com/price/'+s.toLowerCase(),pts:c.slice(-100).map(x=>({time:x[0],value:x[4]}))};S.stats.trades++;log(`Executor : ACHAT FICTIF ${s} ${amt}$ @ ${px} (EMA20>EMA50, RSI ${r.toFixed(0)})`)}}
+ else{S.stats.killed++;log(`Analyst : ${s} pas d'achat (RSI ${r.toFixed(0)}, tendance ${e20>e50?'hausse':'baisse'})`)}}
  if(window.REAL?.on&&window.SCAN)RS.push(...SCAN.signals());if(window.REAL?.on&&RS.length)REAL.rotate(RS);save()}
 function close(k,px,why){const P=S.pos[k],ch=px/P.entry-1,val=P.amt*(1+ch);S.bal+=val;const pnl=val-P.amt;pnl>=0?S.stats.wins++:S.stats.losses++;
  S.hist.unshift({sym:P.sym,pnl,why,t:Date.now()});log(`Risk : VENTE FICTIVE ${P.sym} (${why}) ${pnl>=0?'+':''}${pnl.toFixed(2)}$`);delete S.pos[k]}
@@ -120,12 +119,12 @@ let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy)return;inCycl
   const mk=r.map(x=>`<span class=${x[1]===true?'ok':x[1]===false?'ko':'sk'} title="${x[0]}">${x[1]===true?'✔':x[1]===false?'✘':'–'}</span>`).join('');
   let verdict;
   if(fail.length){S.stats.killed++;verdict='<span class=ko>éliminé</span>';log(`Filter : ${p.baseToken.symbol} éliminé (${fail.map(x=>x[0]).join(', ')})`)}
-  else{const sc=analyst(p,r);S.stats.scored++;verdict=`note ${sc}`;log(`Analyst : ${p.baseToken.symbol} note ${sc}/100`);if(sc>=STRAT.analyst)buy(p,sc)}
+  else{const sc=analyst(p,r);S.stats.scored++;verdict=`note ${sc}`;log(`Analyst : ${p.baseToken.symbol} note ${sc}/100`);if(sc>=70)buy(p,sc)}
   seenRows.unshift(`<tr><td>${p.baseToken.symbol}</td><td>$${Math.round((p.marketCap||p.fdv)/1e3)}k</td><td>${mk}</td><td>${verdict}</td></tr>`);
   $('seen').innerHTML='<tr><th>Jeton</th><th>Mcap</th><th>Règles (✔ ok ✘ non – pas de données)</th><th>Résultat</th></tr>'+seenRows.slice(0,40).join('')}
  save()}catch(e){log('Erreur : '+e)}finally{inCycle=0}render()}
 
 $('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log(window.REAL&&REAL.on?'Démarrage (RÉEL, signature Phantom).':'Démarrage (simulation).');cycle();timer=setInterval(cycle,window.REAL&&REAL.on?5000:15000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
-if($('mode')){$('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};}yields();render();$('log').textContent=S.log.join('\n');
+$('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();$('log').textContent=S.log.join('\n');
 if(location.search.includes('auto'))$('go').click();

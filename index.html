@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="data:,"><title>Sol Desk — Mode Prudent v2</title>
+<link rel="icon" href="data:,"><title>Sol Desk — Terminal</title>
 <style>
 :root{--bg:#070a14;--pn:#0d1224;--bd:#26305a;--cy:#22d3ee;--pk:#f472b6;--vi:#a78bfa;--gr:#4ade80;--ye:#facc15;--bl:#60a5fa}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#141a3a,#070a14 60%);color:#d6e2ee;font:13px ui-monospace,Menlo,Consolas,monospace}
@@ -10,12 +10,12 @@ header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px}
 h1{font-size:22px;margin:0;color:var(--cy);text-shadow:0 0 10px var(--cy)}h1 span{color:#fff}
 .badge{background:#14532d;color:var(--gr);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;box-shadow:0 0 8px var(--gr)}
 .sub{font-size:11px;color:#8a94c4}.run{color:var(--gr)}
-.bal{margin-left:auto;text-align:right;font-size:28px;font-weight:800;color:#fff;text-shadow:0 0 12px #fff8}.bal small{display:block;font-size:11px;color:#8a94c4;font-weight:400;text-shadow:none}
+.bal{margin-left:auto;text-align:right;font-size:30px;font-weight:800;color:#fff;text-shadow:0 0 12px #fff8}.bal small{display:block;font-size:11px;color:#8a94c4;font-weight:400;text-shadow:none}
 .ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 10px}
 button{background:transparent;color:var(--cy);border:1px solid var(--cy);border-radius:8px;padding:7px 12px;font:700 12px inherit;font-family:inherit;box-shadow:0 0 8px #22d3ee44}
 button.grey{color:#8a94c4;border-color:#3a4370;box-shadow:none}#realbtn{color:#fca5a5;border-color:#ef4444;box-shadow:0 0 8px #ef444466}
 select,input{background:#070a14;color:#fff;border:1px solid var(--bd);border-radius:6px;padding:6px;font-family:inherit}
-.grid{display:grid;grid-template-columns:1fr;gap:10px;padding:0 10px 10px}@media(min-width:820px){.grid{grid-template-columns:280px 1fr}}
+.grid{display:grid;grid-template-columns:1fr;gap:10px;padding:0 10px 10px}@media(min-width:820px){.grid{grid-template-columns:260px 1fr}}
 .col{display:flex;flex-direction:column;gap:8px}
 .ag{border:1px solid var(--bd);border-radius:10px;padding:8px;background:var(--pn);position:relative}
 .ag b{font-size:14px;letter-spacing:1px}.ag .ds{font-size:11px;color:#8a94c4}.ag .lv{font-size:11px;margin-top:4px}
@@ -31,7 +31,7 @@ h2{font-size:11px;margin:0 0 8px;color:#cbd5ff;letter-spacing:1px;text-transform
 .flow{display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;text-align:center}
 .flow div{font-size:10px;color:#8a94c4}.flow .ic{width:46px;height:46px;margin:0 auto 4px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 12px currentColor}
 .two{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:820px){.two{grid-template-columns:1fr 1fr}}
-.rule{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed #1e2650;font-size:12px}
+.rule{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #1e2650;font-size:12px}
 .gauge{width:120px;height:120px;border-radius:50%;margin:6px auto;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff}
 .bar{height:6px;background:#1e2650;border-radius:3px;margin:2px 0 6px}.bar i{display:block;height:100%;background:var(--cy);border-radius:3px}
 table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;border-bottom:1px solid #1e2650;text-align:left}
@@ -39,175 +39,64 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 .stats{display:flex;gap:12px;flex-wrap:wrap}.stats span b{color:#fff}
 #log{font:11px monospace;white-space:pre-wrap;color:#9ef0c4;max-height:300px;overflow:auto}
 #realbox{border:1px solid #ef4444!important;box-shadow:0 0 12px #ef444444}
-.poscard{border:1px solid var(--bd);border-radius:8px;padding:8px;margin:6px 0;background:#0a1020}
-.poscard b{font-size:15px}.kv{display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:2px 0;color:#aab3dc}
-</style><style>/* v31 panneaux Terminal Crypto, style Sol Desk */
-.ct .ct-cherche{display:flex;gap:6px;margin:6px 0}.ct .ct-cherche input{flex:1;min-width:0;font-size:16px}
-.ct-grille{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-.ct .c{background:#070a14;border:1px solid var(--bd);border-radius:8px;padding:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;cursor:pointer;min-width:0}
-.ct .c b{color:#fff}.ct .prix{color:#fff;text-align:right;overflow-wrap:anywhere}.ct .up{color:var(--gr)}.ct .down,.ct .dn{color:#f87171}
-.ct .star{border:0;box-shadow:none;color:var(--ye);font-size:20px;padding:0 6px;min-width:40px;min-height:40px}
-.ct .msg{color:var(--ye);padding:6px}
-#ct_graph canvas{width:100%;height:min(48vw,240px);min-height:170px;display:block}
-.ct .periodes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.ct .periodes button.on,.ct .sens button.on{background:var(--cy);color:#000}
-.ct-frais{background:#2a1f05;color:var(--ye);border:1px solid var(--ye);border-radius:8px;padding:6px;margin:6px 0;font-weight:700}
-#ct_swapbox{display:flex;flex-direction:column;gap:6px}#ct_swapbox select,#ct_swapbox input{font-size:16px;min-height:42px;width:100%}
-#ct_swapbox button{min-height:44px}#ct_echanger{color:var(--pk);border-color:var(--pk);box-shadow:0 0 8px #f472b644}
-.ct .sens{display:flex;gap:6px}.ct .sens button{flex:1;min-height:42px}
-#ct_devis{color:#fff}#ct_swapMsg{color:var(--gr)}#ct_swapMsg.err,#ct_etat.err{color:#f87171}#ct_swapMsg a{color:var(--ye)}
-.ct-alerte{background:#2a0f1a;border:1px solid var(--pk);border-radius:8px;padding:8px;margin:6px 0;font-size:12px}
-.ct .meme{display:flex;align-items:center;gap:8px;background:#070a14;border:1px solid var(--bd);border-radius:8px;padding:8px;margin:6px 0;flex-wrap:wrap}
-.ct .meme img{width:36px;height:36px;border-radius:50%}.ct .meme .nm{flex:1;min-width:120px}.ct .meme .st{font-size:11px;color:#8a94c4;width:100%}
-</style>
-</head><body>
+</style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
 window.__err=function(m){var e=document.getElementById('errbar');if(e){e.style.display='block';e.textContent='⚠️ Problème technique : '+m+' (le reste de la page reste utilisable)';}};
 window.onerror=function(m){window.__err(m);};window.addEventListener('unhandledrejection',function(e){window.__err(e.reason&&e.reason.message||e.reason);});
 try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var M={};window.__ls={getItem:function(k){return k in M?M[k]:null},setItem:function(k,v){M[k]=String(v)},removeItem:function(k){delete M[k]}};try{Object.defineProperty(window,'localStorage',{value:window.__ls});}catch(_){}}
 </script>
-<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · mode prudent v2 · SOL / wBTC / wETH</span><span id="clk"></span></div>
-<header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">PRUDENT v2</span></h1>
-<div class="sub"><span class="run" id="runst">● autonome</span> · contrôle toutes les 30 min · affichage seulement</div></div>
-<div class="hk"><div><b id="hT" style="color:#fff">2</b><small>trades v2</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div>
-<div class="bal"><span id="bal">~$80</span><small id="balsub">Portefeuille · Mode Prudent v2</small></div></header>
-<div class="ctl"><button id="go" style="display:none">▶ Démarrer</button><button id="realbtn" style="display:none">Passer en RÉEL</button>
-<label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH, JUP, BONK, WIF…)</option><option value="risque">Risqué (memecoins)</option></select></label>
-<span class="sub">Stratégie active : <b class="ok">Mode Prudent v2</b> (05/11)</span>
-<button class="grey" id="reset" style="display:none">Remettre à zéro</button></div>
+<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · six agents · rotation SOL / BTC / ETH</span><span id="clk"></span></div>
+<header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">SIM</span></h1>
+<div class="sub"><span class="run" id="runst">● en pause</span> · un contrôle toutes les 5 s (RÉEL) · 6 agents</div></div>
+<div class="hk"><div><b id="hT" style="color:#fff">0</b><small>trades</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div><div class="bal"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
+<div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
+<label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
+<button class="grey" id="reset">Remettre à zéro</button></div>
 <div class="grid"><div class="col">
-<div class="ag c1" id="a0"><span class="pill">TAILLE</span><b>◆ SIZER</b><div class="ds" id="d0">25–30 % du capital dispo</div><div class="lv" id="l0">réserve ≥ 0,05 SOL</div></div>
-<div class="ag c2" id="a1"><span class="pill">ENTRÉE</span><b>🔻 FILTER</b><div class="ds">Réactif : EMA9 ≥ EMA21 (tolérance 0,2 %) · RSI 35–85</div><div class="lv" id="l1">surveillance 1 min / 5 min</div></div>
-<div class="ag c3" id="a2"><span class="pill">DIP</span><b>📊 ANALYST</b><div class="ds">Préfère le repli : près EMA21 5 min · RSI 40–55</div><div class="lv" id="l2">jamais RSI &gt; 65 · check si pump 24 h &gt; 5 %</div></div>
-<div class="ag c4" id="a3"><span class="pill">SWAP</span><b>⚡ EXECUTOR</b><div class="ds">Jupiter direct · exécution autonome</div><div class="lv" id="l3">1 entrée max par passage</div></div>
-<div class="ag2 c3"><span class="pill">% </span><b>◆ SIZER</b><div>Chaque trade = jusqu’à 40 % du capital</div><div id="sz">max 40 % · réserve 0,03 SOL</div></div>
-<div class="ag c5" id="a4"><span class="pill">GARDE</span><b>🛡 RISK</b><div class="ds">Stop −4 % · TP +8 % puis trailing 3 % sous le plus haut</div><div class="lv" id="l4">coupe-circuit : 2 pertes ou −8 %/jour</div></div>
-<div class="ag c6" id="a5"><span class="pill">UNIV</span><b>☰ UNIVERS</b><div class="ds">SOL → wBTC → wETH si capital &lt; 100 $</div><div class="lv" id="l5">memecoins (réactif) : liq ≥50k · vol ≥250k · shield OK · frais compte &lt;1 %</div></div>
-<div class="ag2 c1"><span class="pill">SOLDE</span><b>💧 EQUITY</b><div>Valeur début de jour ~80,69 $</div><div id="eq">dernière ~80,34 $ · DD jour faible</div></div>
-<div class="ag c7" id="a6"><span class="pill">INFO</span><b>💵 COUPE-CIRCUIT</b><div id="yc">OFF · 0 perte d’affilée · pas d’entrée sous 10 $</div></div>
+<div class="ag c1" id="a0"><span class="pill">SCAN</span><b>🔍 SCOUT</b><div class="ds" id="d0">Regarde SOL, wBTC, wETH, BONK, WIF, RAY, LTC (bougies 1 min)</div><div class="lv" id="l0">vus 0</div></div>
+<div class="ag c2" id="a1"><span class="pill">CHECK</span><b>🔻 FILTER</b><div class="ds">EMA9 &gt; EMA21 et RSI entre 40 et 80</div><div class="lv" id="l1">éliminés 0</div></div>
+<div class="ag c3" id="a2"><span class="pill">NOTE</span><b>📊 ANALYST</b><div class="ds">Note la force de hausse 0-100</div><div class="lv" id="l2">notés 0</div></div>
+<div class="ag c4" id="a3"><span class="pill">SWAP</span><b>⚡ EXECUTOR</b><div class="ds">Échange via Jupiter, tu signes dans Phantom</div><div class="lv" id="l3">trades 0</div></div>
+<div class="ag2 c3"><span class="pill">TAILLE</span><b>◆ SIZER</b><div>Taille de chaque trade en % du capital</div><div id="sz">–</div></div>
+<div class="ag c5" id="a4"><span class="pill">GARDE</span><b>🛡 RISK</b><div class="ds">0,03 SOL gardé · glissement max 1 % · pause 5 min si refus</div><div class="lv" id="l4">gagnés 0 / perdus 0</div></div>
+<div class="ag c6" id="a5"><span class="pill">ÉCRIT</span><b>☰ LOGGER</b><div class="ds">Note chaque trade dans le journal</div><div class="lv" id="l5">lignes 0</div></div>
+<div class="ag2 c1"><span class="pill">COURBE</span><b>💧 EQUITY</b><div>Solde mis à jour à chaque clôture</div><div id="eq">–</div></div>
+<div class="ag c7" id="a6"><span class="pill">INFO</span><b>💵 RENDEMENT USDC</b><div id="yc">Chargement…</div></div>
 </div><div class="col">
-<div class="pn"><h2>Flux Mode Prudent v2</h2><div class="flow">
-<div class="c1"><div class="ic">🔍</div>4 h<br><b>EMA50↑</b></div><div class="c2"><div class="ic">🔻</div>5 min<br><b>EMA9&gt;21</b></div>
-<div class="c3"><div class="ic">📊</div>RSI15<br><b>40–70</b></div><div class="c4"><div class="ic">⚡</div>Trade<br><b>25–30 %</b></div>
-<div class="c5"><div class="ic">🛡</div>Stop<br><b>−4 % / +8 %</b></div><div class="c6"><div class="ic">☰</div>Trail<br><b>−3 %</b></div></div>
-<div class="sk" style="font-size:10px;margin-top:6px">Affichage des règles actives. Les ordres partent du bot autonome (pas de cette page).</div></div>
-
-<div class="pn"><h2>Positions ouvertes (snapshot)</h2>
-<div id="prudentpos">
-<div class="poscard c4"><b>SOL</b> <span class="sk">(ancienne cassure 04/11)</span>
-<div class="kv"><span>qté</span><span>0,0239 SOL</span></div>
-<div class="kv"><span>entrée</span><span>96,67 $</span></div>
-<div class="kv"><span>stop / objectif</span><span>92,80 $ / 104,40 $</span></div>
-<div class="kv"><span>trailing</span><span>dès +8 % : stop 3 % sous le plus haut</span></div>
-</div>
-<div class="poscard c5"><b>wBTC</b> <span class="sk">09:29 · Mode Prudent</span>
-<div class="kv"><span>qté</span><span>0,00024021</span></div>
-<div class="kv"><span>coût</span><span>0,2 SOL ≈ 19,37 $</span></div>
-<div class="kv"><span>entrée</span><span>80 621 $</span></div>
-<div class="kv"><span>stop / objectif</span><span>77 396 $ / 87 071 $</span></div>
-<div class="kv"><span>trailing</span><span>dès +8 % : stop 3 % sous le plus haut</span></div>
-</div>
-<div class="poscard c6"><b>wETH</b> <span class="sk">12:21 · Mode Prudent</span>
-<div class="kv"><span>qté</span><span>0,00779081</span></div>
-<div class="kv"><span>coût</span><span>0,195 SOL ≈ 18,85 $</span></div>
-<div class="kv"><span>entrée</span><span>2 419,10 $</span></div>
-<div class="kv"><span>stop / objectif</span><span>2 322,30 $ / 2 612,60 $</span></div>
-<div class="kv"><span>trailing</span><span>dès +8 % : stop 3 % sous le plus haut</span></div>
-</div>
-</div>
-<div class="sk" style="font-size:10px">Snapshot d’affichage (05/11). Les montants réels évoluent avec le bot ; cette page ne déplace aucun fonds.</div>
-</div>
-
-<div class="pn"><h2>Flux · contrôle → taille → échange → journal</h2><div class="flow" id="flow2"></div><canvas id="eqc" height="90" style="width:100%;margin-top:6px"></canvas><div class="sk" style="font-size:10px">Courbe locale (historique navigateur) — indépendante du Mode Prudent autonome.</div></div>
-<div class="two"><div class="pn"><h2>Trade · entrée vs sortie (dernier local)</h2><div id="lt" class="sk">Voir positions Prudent ci-dessus (wBTC, wETH).</div></div>
-<div class="pn"><h2>Résultat · départ vs maintenant</h2><div id="res"><div class="kv"><span>Début de jour</span><b>≈ 80,69 $</b></div><div class="kv"><span>Dernière valeur</span><b>≈ 80,34 $</b></div><div class="sk">≈ −0,4 % sur la journée · coupe-circuit OFF</div></div></div></div>
-
+<div class="pn"><h2>Flux en direct · un agent après l'autre</h2><div class="flow">
+<div class="c1"><div class="ic">🔍</div>SCOUT<br><b id="f0">0</b> vus</div><div class="c2"><div class="ic">🔻</div>FILTER<br><b id="f1">0</b> éliminés</div>
+<div class="c3"><div class="ic">📊</div>ANALYST<br><b id="f2">0</b> notés</div><div class="c4"><div class="ic">⚡</div>EXECUTOR<br><b id="f3">0</b> trades</div>
+<div class="c5"><div class="ic">🛡</div>RISK<br><b id="f4">0</b> stops</div><div class="c6"><div class="ic">☰</div>LOGGER<br><b id="f5">0</b> lignes</div></div></div>
+<div class="pn"><h2>Flux · contrôle → taille → échange → journal</h2><div class="flow" id="flow2"></div><canvas id="eqc" height="90" style="width:100%;margin-top:6px"></canvas><div class="sk" style="font-size:10px">Courbe du solde (historique test) : départ 60 $ + chaque trade clôturé.</div></div>
+<div class="two"><div class="pn"><h2>Trade · entrée vs sortie (dernier)</h2><div id="lt" class="sk">Aucun trade clôturé pour l’instant.</div></div>
+<div class="pn"><h2>Résultat · départ vs maintenant</h2><div id="res"></div></div></div>
 <div class="pn"><h2>📈 SOL, ETH, BTC — variation en % (1 min)</h2>
 <div style="display:flex;gap:12px;flex-wrap:wrap;font-weight:700"><span style="color:#a78bfa">━ SOL <span id="vSOL">–</span></span><span style="color:#60a5fa">━ ETH <span id="vETH">–</span></span><span style="color:#f59e0b">━ BTC <span id="vBTC">–</span></span></div>
 <div id="cmp" style="height:240px"></div><div id="cmpst" class="sk" style="font-size:11px">Chargement…</div></div>
-
-<div class="two"><div class="pn"><h2>Filter · règles Mode Prudent v2</h2><div id="rules">
-<div class="rule"><span>Taille 25–30 % · réserve ≥ 0,05 SOL</span><span class="ok">✔</span></div>
-<div class="rule"><span>Prix &gt; EMA50 4 h et EMA50 montante 24 h</span><span class="ok">✔</span></div>
-<div class="rule"><span>EMA9 &gt; EMA21 en 5 min (plus de filtre 1 min)</span><span class="ok">✔</span></div>
-<div class="rule"><span>RSI 15 min entre 40 et 70</span><span class="ok">✔</span></div>
-<div class="rule"><span>Préférence dip : près EMA21 5 min · RSI 40–55</span><span class="ok">✔</span></div>
-<div class="rule"><span>Jamais acheter si RSI &gt; 65</span><span class="ok">✔</span></div>
-<div class="rule"><span>Si pump 24 h &gt; 5 % → vérifier la cause</span><span class="ok">✔</span></div>
-<div class="rule"><span>Stop −4 % · TP +8 % puis trailing −3 %</span><span class="ok">✔</span></div>
-<div class="rule"><span>Capital &lt; 100 $ : SOL puis wBTC / wETH</span><span class="ok">✔</span></div>
-<div class="rule"><span>Memecoin (réactif) : liq ≥50k · vol24h ≥250k · shield · impact ≤1 %</span><span class="ok">✔</span></div>
-<div class="rule"><span>Coupe-circuit : 2 pertes d’affilée ou DD jour &gt; 8 %</span><span class="ok">✔</span></div>
-<div class="rule"><span>Aucune entrée si capital &lt; 10 $</span><span class="ok">✔</span></div>
-</div></div>
-<div class="pn"><h2>Analyst · note 0-100 (indicatif)</h2><div id="gauge" class="gauge" style="background:conic-gradient(#22d3ee 0%,#1e2650 0)"><span style="background:#0d1224;width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center" id="gv">–</span></div><div id="gbars" style="font-size:11px"></div></div></div>
-
-<div class="pn"><h2>Executor · risk · position</h2><div id="expos" style="margin-bottom:6px">Mode Prudent v2 · exécution autonome (hors page)</div>
+<div class="two"><div class="pn"><h2>Filter · règles</h2><div id="rules"><span class="sk">En attente des prix…</span></div></div>
+<div class="pn"><h2>Analyst · note 0-100</h2><div id="gauge" class="gauge" style="background:conic-gradient(#22d3ee 0%,#1e2650 0)"><span style="background:#0d1224;width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center" id="gv">–</span></div><div id="gbars" style="font-size:11px"></div></div></div>
+<div class="pn"><h2>Executor · risk · position</h2><div id="expos" style="margin-bottom:6px"></div>
 <div id="realbox" style="display:none;margin:6px 0;padding:10px;border-radius:8px;background:#1a0f14">
 <h2>Mode RÉEL — validation dans Phantom</h2><button id="conn">Connecter Phantom</button> <span id="wal">Non connecté</span>
 <div id="rbal" style="margin:6px 0;max-height:220px;overflow:auto"></div>
-<div class="sk">Ancien panneau navigateur (Phantom). Le trading autonome Mode Prudent ne passe pas par ici.</div>
-<div id="rstat" style="margin:6px 0"></div><div id="rchk" style="margin:6px 0;color:#aab3dc">Panneau secondaire</div>
+<div class="sk">Rotation automatique vers l’actif qui monte le plus (SOL, wBTC, wETH) sinon USDC · 0,03 SOL gardé pour les frais · chaque trade signé dans Phantom</div>
+<div id="rstat" style="margin:6px 0"></div><div id="rchk" style="margin:6px 0;color:#aab3dc">Dernier contrôle : pas encore (appuie sur Démarrer)</div>
 <h2>Trades en cours</h2><div id="pend" class="sk">Aucun pour l'instant.</div></div>
 <select id="sel"></select><div id="chart" class="chart"></div></div>
-
-<div class="two"><div class="pn"><h2>Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions et historique (local)</h2><table id="pos"></table></div>
+<div class="two"><div class="pn"><h2>Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions et historique</h2><table id="pos"></table></div>
 <div class="pn"><h2>$ tail -f journal.log</h2><div id="log2"></div><div id="log" style="display:none"></div></div></div>
-
 <div class="two"><div class="pn"><h2>🧪 Backtest (bougies passées Coinbase)</h2>
-<div class="sk" style="font-size:11px">Outil local. Les paramètres actifs du bot = Mode Prudent v2 (RSI 40–70, conf. 5 min).</div>
+<div class="sk" style="font-size:11px">Rejoue les stratégies RÉEL (rotation EMA9/21 + RSI 40-80, 1 min) et SIM (30 %, EMA20/50, 5 min) sur l'historique. Ne passe aucun ordre.</div>
 <label class=sk>Frais % <input id="btfee" value="0.3" size="3"></label> <label class=sk>Glissement % <input id="btslip" value="0.2" size="3"></label> <label class=sk>Durée <select id="btpg"><option value="2">10 h</option><option value="4" selected>20 h</option><option value="8">40 h</option></select></label> <button id="btgo">▶ Lancer</button>
-<div id="btout" style="margin-top:6px" class=sk>Appuie sur Lancer.</div><canvas id="bteq" height="80" style="width:100%"></canvas><canvas id="bteq2" height="80" style="width:100%"></canvas><div class=sk style="font-size:10px">Bleu / Rose : courbes locales</div></div>
+<div id="btout" style="margin-top:6px" class=sk>Appuie sur Lancer.</div><canvas id="bteq" height="80" style="width:100%"></canvas><canvas id="bteq2" height="80" style="width:100%"></canvas><div class=sk style="font-size:10px">Bleu : RÉEL rotation · Rose : SIM 30 %</div></div>
 <div class="pn"><h2>📑 Rapport (historique enregistré)</h2><div id="rep"></div><canvas id="repc" height="80" style="width:100%"></canvas></div></div>
-
 <div class="pn"><h2>🗃 Journal des décisions (sauvé dans le téléphone)</h2><input id="dq" placeholder="Chercher (SOL, USDC, RSI…)" style="width:min(300px,60%)"> <button id="dcsv">Exporter CSV</button> <span id="dn" class=sk></span>
 <div style="max-height:260px;overflow:auto"><table id="dt"></table></div></div>
 <div class="pn"><h2>👛 Mon portefeuille (adresse publique)</h2>
 <input id="waddr" placeholder="Colle ton adresse PUBLIQUE Solana" style="width:min(420px,70%)" autocomplete="off"> <button id="wsave">Enregistrer</button> <button id="wdel" class="grey">Effacer</button>
 <div id="wmsg" style="margin:6px 0"></div><div id="wbal"></div></div>
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
-<div class="pn"><h2>🔎 Univers actif</h2><table id="seen"><tr><th>Priorité</th><th>Actif</th><th>Règle</th></tr>
-<tr><td>1</td><td>SOL</td><td>si capital &lt; 100 $</td></tr>
-<tr><td>2</td><td>wBTC</td><td>si capital &lt; 100 $</td></tr>
-<tr><td>3</td><td>wETH</td><td>si capital &lt; 100 $</td></tr>
-<tr><td>4+</td><td>memecoins</td><td>liq≥50k · vol≥250k · shield · impact≤1%</td></tr>
-</table></div></div>
-<div class="pn ct" id="ct_strat"><h2>⚙ Stratégie page v31 (plus réactive · simulation / RÉEL signé)</h2><div id="ct_stratv" class="sk"></div></div>
-<div class="pn ct"><h2>🔍 Recherche crypto</h2><div id="ct_etat" class="sk">Chargement…</div>
-<form id="ct_form" class="ct-cherche" role="search"><input id="ct_recherche" type="search" placeholder="Chercher (ex: sol)" autocomplete="off" enterkeyhint="search"><button type="submit">Rechercher</button></form>
-<div id="ct_resultats" class="ct-grille"></div></div>
-<div class="pn ct" id="ct_graph"><h2 id="ct_titreGraph">Bitcoin</h2><div class="periodes"><button type="button" data-j="1">24h</button><button type="button" data-j="7">7j</button><button type="button" data-j="30">30j</button><button type="button" data-j="365">1 an</button></div><canvas id="ct_canvas"></canvas></div>
-<div class="pn ct" id="ct_swap"><h2>⇄ Échanger avec Phantom (Jupiter)</h2><div class="sk">Achat/vente contre USDC avec <b>ton</b> Phantom. Chaque échange est signé à la main dans Phantom. Glissement max 1 %.</div>
-<div class="ct-frais" id="ct_frais"></div><div id="ct_swapbox">
-<div class="sens"><button type="button" id="ct_btnAchat">Acheter</button><button type="button" id="ct_btnVente">Vendre</button></div>
-<label for="ct_jeton">Crypto</label><select id="ct_jeton"></select><label id="ct_lblMontant" for="ct_montant"></label><input id="ct_montant" type="text" inputmode="decimal" placeholder="ex : 10" autocomplete="off">
-<button type="button" id="ct_devisBtn" class="grey">Voir le prix</button><div id="ct_devis"></div>
-<button type="button" id="ct_connect" class="grey">Connecter Phantom</button><button type="button" id="ct_echanger">Échanger avec Phantom</button><div id="ct_swapMsg"></div></div></div>
-<div class="pn ct" id="ct_memes"><h2>🔥 Memecoins Solana · tendances &amp; nouveaux</h2><div class="ct-alerte">⚠️ <b>Très risqué :</b> ces tokens peuvent perdre 90 % ou plus en quelques minutes, voire être des arnaques. Petites sommes seulement. Seuls les tokens avec plus de 20 000 $ de liquidité sont affichés.</div>
-<div class="sens"><button type="button" id="ct_mTend" class="on">Tendances</button><button type="button" id="ct_mNew">Nouveaux</button></div><div id="ct_memeListe">Chargement…</div></div>
-<div class="two"><div class="pn ct"><h2>★ Ma liste</h2><div id="ct_liste" class="ct-grille"></div></div><div class="pn ct"><h2>Top 20</h2><div id="ct_top" class="ct-grille"></div></div></div>
+<div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=33"></script><script src="lib/web3.js?v=33"></script><script src="app.js?v=33"></script><script src="real.js?v=33"></script><script src="cmp.js?v=33"></script><script src="ui.js?v=33"></script><script src="bt.js?v=33"></script><script src="scan.js?v=33"></script><script src="auto.js?v=33"></script><script src="swap.js?v=33"></script><script src="crypto-app.js?v=33"></script><script src="memes.js?v=33"></script>
-<script>(function(){var S=window.STRAT,e=document.getElementById("ct_stratv");if(!S||!e)return;e.innerHTML="FILTER : RSI "+S.rsiMin+"–"+S.rsiMax+" · EMA rapide &gt; EMA lente × "+S.emaTol+" (tolérance 0,2 %)<br>ANALYST : seuil note "+S.analyst+"/100 (avant 70)<br>SIZER : "+Math.round(S.size*100)+" % du capital par trade (avant 30 %)<br>Surveillance 1 bougie / 5 bougies : pas d’entrée si 1b &lt; "+S.mv1Exit+" % ou 5b &gt; +"+S.mv5Max+" % · sortie si 5b &lt; "+S.mv5Exit+" %<br>Univers : SOL, BTC, ETH, JUP, BONK, WIF, LINK, AVAX (+ RAY, LTC en RÉEL)<br>Memecoins Risqué : liq ≥ 100k (inchangé) · vol ≥ 100k (avant 200k) · âge ≥ 6 h (avant 24 h) · 24h &gt; −5 %<br>Garde-fous : signature manuelle Phantom · réserve 0,03 SOL · glissement max 1 % · journal<br><span style=\"color:#facc15\">Le Mode Prudent autonome (serveur) n’est pas modifié.</span>"})();</script>
-<script>
-/* Affichage Mode Prudent v2 : ne touche pas aux fonds ni à la logique de trading. */
-(function(){
-  var $=function(i){return document.getElementById(i)};
-  function tick(){var c=$('clk');if(c)c.textContent=new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'});}
-  setInterval(tick,1000);tick();
-  // Empêche ui.js d'écraser les règles Prudent v2 avec l'ancien filtre 40-80
-  var rules=$('rules');
-  if(rules){
-    var html=rules.innerHTML;
-    setInterval(function(){
-      if(rules.dataset.lock!=='0' && rules.innerHTML.indexOf('Mode Prudent')<0 && rules.innerHTML.indexOf('EMA50 4 h')<0){
-        // si ui.js a tout remplacé, on réinjecte un bandeau v2 en tête
-        if(rules.innerHTML.indexOf('Prudent v2')<0){
-          rules.insertAdjacentHTML('afterbegin','<div class="rule" style="color:#facc15"><span>Règles actives = Mode Prudent v2 (pas l’ancien RSI 40-80)</span><span class="ok">✔</span></div>');
-        }
-      }
-    },2500);
-  }
-})();
-</script>
-</body></html>
+<script src="lib/lwc.js?v=34"></script><script src="lib/web3.js?v=34"></script><script src="app.js?v=34"></script><script src="real.js?v=34"></script><script src="cmp.js?v=34"></script><script src="ui.js?v=34"></script><script src="bt.js?v=34"></script><script src="scan.js?v=34"></script><script src="auto.js?v=34"></script></body></html>
