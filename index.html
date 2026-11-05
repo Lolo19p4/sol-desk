@@ -41,7 +41,25 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 #realbox{border:1px solid #ef4444!important;box-shadow:0 0 12px #ef444444}
 .poscard{border:1px solid var(--bd);border-radius:8px;padding:8px;margin:6px 0;background:#0a1020}
 .poscard b{font-size:15px}.kv{display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:2px 0;color:#aab3dc}
-</style></head><body>
+</style><style>/* v31 panneaux Terminal Crypto, style Sol Desk */
+.ct .ct-cherche{display:flex;gap:6px;margin:6px 0}.ct .ct-cherche input{flex:1;min-width:0;font-size:16px}
+.ct-grille{display:grid;gap:6px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.ct .c{background:#070a14;border:1px solid var(--bd);border-radius:8px;padding:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;cursor:pointer;min-width:0}
+.ct .c b{color:#fff}.ct .prix{color:#fff;text-align:right;overflow-wrap:anywhere}.ct .up{color:var(--gr)}.ct .down,.ct .dn{color:#f87171}
+.ct .star{border:0;box-shadow:none;color:var(--ye);font-size:20px;padding:0 6px;min-width:40px;min-height:40px}
+.ct .msg{color:var(--ye);padding:6px}
+#ct_graph canvas{width:100%;height:min(48vw,240px);min-height:170px;display:block}
+.ct .periodes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.ct .periodes button.on,.ct .sens button.on{background:var(--cy);color:#000}
+.ct-frais{background:#2a1f05;color:var(--ye);border:1px solid var(--ye);border-radius:8px;padding:6px;margin:6px 0;font-weight:700}
+#ct_swapbox{display:flex;flex-direction:column;gap:6px}#ct_swapbox select,#ct_swapbox input{font-size:16px;min-height:42px;width:100%}
+#ct_swapbox button{min-height:44px}#ct_echanger{color:var(--pk);border-color:var(--pk);box-shadow:0 0 8px #f472b644}
+.ct .sens{display:flex;gap:6px}.ct .sens button{flex:1;min-height:42px}
+#ct_devis{color:#fff}#ct_swapMsg{color:var(--gr)}#ct_swapMsg.err,#ct_etat.err{color:#f87171}#ct_swapMsg a{color:var(--ye)}
+.ct-alerte{background:#2a0f1a;border:1px solid var(--pk);border-radius:8px;padding:8px;margin:6px 0;font-size:12px}
+.ct .meme{display:flex;align-items:center;gap:8px;background:#070a14;border:1px solid var(--bd);border-radius:8px;padding:8px;margin:6px 0;flex-wrap:wrap}
+.ct .meme img{width:36px;height:36px;border-radius:50%}.ct .meme .nm{flex:1;min-width:120px}.ct .meme .st{font-size:11px;color:#8a94c4;width:100%}
+</style>
+</head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
 window.__err=function(m){var e=document.getElementById('errbar');if(e){e.style.display='block';e.textContent='⚠️ Problème technique : '+m+' (le reste de la page reste utilisable)';}};
@@ -153,8 +171,23 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <tr><td>3</td><td>wETH</td><td>si capital &lt; 100 $</td></tr>
 <tr><td>4+</td><td>memecoins</td><td>liq≥150k · vol≥1M · shield · frais&lt;1%</td></tr>
 </table></div></div>
+<div class="pn ct" id="ct_strat"><h2>⚙ Stratégie page v31 (plus réactive · simulation / RÉEL signé)</h2><div id="ct_stratv" class="sk"></div></div>
+<div class="pn ct"><h2>🔍 Recherche crypto</h2><div id="ct_etat" class="sk">Chargement…</div>
+<form id="ct_form" class="ct-cherche" role="search"><input id="ct_recherche" type="search" placeholder="Chercher (ex: sol)" autocomplete="off" enterkeyhint="search"><button type="submit">Rechercher</button></form>
+<div id="ct_resultats" class="ct-grille"></div></div>
+<div class="pn ct" id="ct_graph"><h2 id="ct_titreGraph">Bitcoin</h2><div class="periodes"><button type="button" data-j="1">24h</button><button type="button" data-j="7">7j</button><button type="button" data-j="30">30j</button><button type="button" data-j="365">1 an</button></div><canvas id="ct_canvas"></canvas></div>
+<div class="pn ct" id="ct_swap"><h2>⇄ Échanger avec Phantom (Jupiter)</h2><div class="sk">Achat/vente contre USDC avec <b>ton</b> Phantom. Chaque échange est signé à la main dans Phantom. Glissement max 1 %.</div>
+<div class="ct-frais" id="ct_frais"></div><div id="ct_swapbox">
+<div class="sens"><button type="button" id="ct_btnAchat">Acheter</button><button type="button" id="ct_btnVente">Vendre</button></div>
+<label for="ct_jeton">Crypto</label><select id="ct_jeton"></select><label id="ct_lblMontant" for="ct_montant"></label><input id="ct_montant" type="text" inputmode="decimal" placeholder="ex : 10" autocomplete="off">
+<button type="button" id="ct_devisBtn" class="grey">Voir le prix</button><div id="ct_devis"></div>
+<button type="button" id="ct_connect" class="grey">Connecter Phantom</button><button type="button" id="ct_echanger">Échanger avec Phantom</button><div id="ct_swapMsg"></div></div></div>
+<div class="pn ct" id="ct_memes"><h2>🔥 Memecoins Solana · tendances &amp; nouveaux</h2><div class="ct-alerte">⚠️ <b>Très risqué :</b> ces tokens peuvent perdre 90 % ou plus en quelques minutes, voire être des arnaques. Petites sommes seulement. Seuls les tokens avec plus de 20 000 $ de liquidité sont affichés.</div>
+<div class="sens"><button type="button" id="ct_mTend" class="on">Tendances</button><button type="button" id="ct_mNew">Nouveaux</button></div><div id="ct_memeListe">Chargement…</div></div>
+<div class="two"><div class="pn ct"><h2>★ Ma liste</h2><div id="ct_liste" class="ct-grille"></div></div><div class="pn ct"><h2>Top 20</h2><div id="ct_top" class="ct-grille"></div></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=30"></script><script src="lib/web3.js?v=30"></script><script src="app.js?v=30"></script><script src="real.js?v=30"></script><script src="cmp.js?v=30"></script><script src="ui.js?v=30"></script><script src="bt.js?v=30"></script><script src="scan.js?v=30"></script><script src="auto.js?v=30"></script>
+<script src="lib/lwc.js?v=31"></script><script src="lib/web3.js?v=31"></script><script src="app.js?v=31"></script><script src="real.js?v=31"></script><script src="cmp.js?v=31"></script><script src="ui.js?v=31"></script><script src="bt.js?v=31"></script><script src="scan.js?v=31"></script><script src="auto.js?v=31"></script><script src="swap.js?v=31"></script><script src="crypto-app.js?v=31"></script><script src="memes.js?v=31"></script>
+<script>(function(){var S=window.STRAT,e=document.getElementById("ct_stratv");if(!S||!e)return;e.innerHTML="FILTER : RSI "+S.rsiMin+"–"+S.rsiMax+" · EMA rapide &gt; EMA lente × "+S.emaTol+" (tolérance 0,2 %)<br>ANALYST : seuil note "+S.analyst+"/100 (avant 70)<br>SIZER : "+Math.round(S.size*100)+" % du capital par trade (avant 30 %)<br>Surveillance 1 bougie / 5 bougies : pas d’entrée si 1b &lt; "+S.mv1Exit+" % ou 5b &gt; +"+S.mv5Max+" % · sortie si 5b &lt; "+S.mv5Exit+" %<br>Univers : SOL, BTC, ETH, JUP, BONK, WIF, LINK, AVAX (+ RAY, LTC en RÉEL)<br>Memecoins Risqué : liq ≥ 100k (inchangé) · vol ≥ 100k (avant 200k) · âge ≥ 6 h (avant 24 h) · 24h &gt; −5 %<br>Garde-fous : signature manuelle Phantom · réserve 0,03 SOL · glissement max 1 % · journal<br><span style=\"color:#facc15\">Le Mode Prudent autonome (serveur) n’est pas modifié.</span>"})();</script>
 <script>
 /* Affichage Mode Prudent v2 : ne touche pas aux fonds ni à la logique de trading. */
 (function(){
