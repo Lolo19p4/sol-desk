@@ -6,7 +6,7 @@ let S=null;try{S=JSON.parse(localStorage.getItem(K)||'null')}catch(e){}S=S||{bal
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const $=id=>document.getElementById(id);
 const series={};let running=false,timer;
-function log(m){S.log.unshift(new Date().toLocaleTimeString('fr-FR')+'  '+m);S.log=S.log.slice(0,300);save();$('log').textContent=S.log.join('\n')}
+function log(m){S.log.unshift(new Date().toLocaleTimeString('fr-FR')+'  '+m);S.log=S.log.slice(0,300);save();var _l=$('log');if(_l)_l.textContent=S.log.join('\n')}
 function lit(i){document.querySelectorAll('.ag').forEach((e,j)=>e.classList.toggle('on',j===i))}
 async function j(u){try{const r=await fetch(u);if(!r.ok)throw r.status;return await r.json()}catch(e){return null}}
 let chart,line;try{chart=LightweightCharts.createChart($('chart'),{layout:{background:{color:'#121a23'},textColor:'#d6e2ee'},grid:{vertLines:{color:'#1f2a36'},horzLines:{color:'#1f2a36'}},timeScale:{timeVisible:true,secondsVisible:true}});
@@ -126,5 +126,5 @@ let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy)return;inCycl
 
 $('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log(window.REAL&&REAL.on?'Démarrage (RÉEL, signature Phantom).':'Démarrage (simulation).');cycle();timer=setInterval(cycle,window.REAL&&REAL.on?5000:15000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
-$('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();$('log').textContent=S.log.join('\n');
+$('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();var _l=$('log');if(_l)_l.textContent=S.log.join('\n');
 if(location.search.includes('auto'))$('go').click();
