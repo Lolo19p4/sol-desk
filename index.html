@@ -71,17 +71,6 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="sub"><span class="run" id="runst">● autonome</span> · contrôle toutes les 30 min · affichage seulement</div></div>
 <div class="hk"><div><b id="hT" style="color:#fff">2</b><small>trades v2</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div>
 <div class="bal"><span id="bal">~$80</span><small id="balsub">Portefeuille · Mode Prudent v2</small></div></header>
-<div class="pn" id="pnlbox" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:8px 10px"><div><small class="sk">RÉSULTAT RÉEL</small><div id="pnlpct" style="font-size:40px;font-weight:800;line-height:1">…</div></div><div><div id="pnlval" style="font-size:30px;font-weight:800;color:#fff">…</div><small id="pnlsub" class="sk">valeur du portefeuille vs départ</small></div></div>
-<script>(function(){var W='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx',BASE=80.69;
-async function go(){try{var b=await(await fetch('https://lite-api.jup.ag/ultra/v1/balances/'+W,{cache:'no-store'})).json();
-var m={};Object.keys(b).forEach(function(k){m[k==='SOL'?'So11111111111111111111111111111111111111112':k]=b[k].uiAmount||0});
-var p=await(await fetch('https://lite-api.jup.ag/price/v3?ids='+Object.keys(m).join(','),{cache:'no-store'})).json();
-var v=0;Object.keys(m).forEach(function(k){v+=m[k]*((p[k]&&p[k].usdPrice)||0)});var g=v-BASE,pc=g/BASE*100,c=g>=0?'#4ade80':'#f87171';
-var e=document.getElementById('pnlpct');e.textContent=(pc>=0?'+':'−')+Math.abs(pc).toFixed(2)+' %';e.style.color=c;e.style.textShadow='0 0 12px '+c;
-document.getElementById('pnlval').innerHTML='$'+v.toFixed(2)+' <span style="font-size:18px;color:'+c+'">('+(g>=0?'+':'−')+'$'+Math.abs(g).toFixed(2)+')</span>';
-document.getElementById('pnlsub').textContent='Portefeuille réel vs départ $'+BASE.toFixed(2)+' (05/11, dépôt inclus) · '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'});
-var pb=document.getElementById('pnlbox');pb.style.borderColor=c;pb.style.boxShadow='0 0 14px '+c+'55';}catch(err){document.getElementById('pnlsub').textContent='Prix indisponibles, nouvel essai dans 1 min'}}
-go();setInterval(go,60000)})();</script>
 <div class="ctl"><button id="go" style="display:none">▶ Démarrer</button><button id="realbtn" style="display:none">Passer en RÉEL</button>
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH, JUP, BONK, WIF…)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <span class="sub">Stratégie active : <b class="ok">Mode Prudent v2</b> (05/11)</span>
@@ -93,7 +82,7 @@ go();setInterval(go,60000)})();</script>
 <div class="ag c4" id="a3"><span class="pill">SWAP</span><b>⚡ EXECUTOR</b><div class="ds">Jupiter direct · exécution autonome</div><div class="lv" id="l3">1 entrée max par passage</div></div>
 <div class="ag2 c3"><span class="pill">% </span><b>◆ SIZER</b><div>Chaque trade = jusqu’à 40 % du capital</div><div id="sz">max 40 % · réserve 0,03 SOL</div></div>
 <div class="ag c5" id="a4"><span class="pill">GARDE</span><b>🛡 RISK</b><div class="ds">Stop −4 % · TP +8 % puis trailing 3 % sous le plus haut</div><div class="lv" id="l4">coupe-circuit : 2 pertes ou −8 %/jour</div></div>
-<div class="ag c6" id="a5"><span class="pill">UNIV</span><b>☰ UNIVERS</b><div class="ds">SOL → wBTC → wETH si capital &lt; 100 $</div><div class="lv" id="l5">memecoins après : liq ≥150k · vol ≥1M · shield OK · frais compte &lt;1 %</div></div>
+<div class="ag c6" id="a5"><span class="pill">UNIV</span><b>☰ UNIVERS</b><div class="ds">SOL → wBTC → wETH si capital &lt; 100 $</div><div class="lv" id="l5">memecoins (réactif) : liq ≥50k · vol ≥250k · shield OK · frais compte &lt;1 %</div></div>
 <div class="ag2 c1"><span class="pill">SOLDE</span><b>💧 EQUITY</b><div>Valeur début de jour ~80,69 $</div><div id="eq">dernière ~80,34 $ · DD jour faible</div></div>
 <div class="ag c7" id="a6"><span class="pill">INFO</span><b>💵 COUPE-CIRCUIT</b><div id="yc">OFF · 0 perte d’affilée · pas d’entrée sous 10 $</div></div>
 </div><div class="col">
@@ -147,7 +136,7 @@ go();setInterval(go,60000)})();</script>
 <div class="rule"><span>Si pump 24 h &gt; 5 % → vérifier la cause</span><span class="ok">✔</span></div>
 <div class="rule"><span>Stop −4 % · TP +8 % puis trailing −3 %</span><span class="ok">✔</span></div>
 <div class="rule"><span>Capital &lt; 100 $ : SOL puis wBTC / wETH</span><span class="ok">✔</span></div>
-<div class="rule"><span>Memecoin : liq ≥150k · vol24h ≥1M · shield · frais &lt;1 %</span><span class="ok">✔</span></div>
+<div class="rule"><span>Memecoin (réactif) : liq ≥50k · vol24h ≥250k · shield · impact ≤1 %</span><span class="ok">✔</span></div>
 <div class="rule"><span>Coupe-circuit : 2 pertes d’affilée ou DD jour &gt; 8 %</span><span class="ok">✔</span></div>
 <div class="rule"><span>Aucune entrée si capital &lt; 10 $</span><span class="ok">✔</span></div>
 </div></div>
@@ -181,7 +170,7 @@ go();setInterval(go,60000)})();</script>
 <tr><td>1</td><td>SOL</td><td>si capital &lt; 100 $</td></tr>
 <tr><td>2</td><td>wBTC</td><td>si capital &lt; 100 $</td></tr>
 <tr><td>3</td><td>wETH</td><td>si capital &lt; 100 $</td></tr>
-<tr><td>4+</td><td>memecoins</td><td>liq≥150k · vol≥1M · shield · frais&lt;1%</td></tr>
+<tr><td>4+</td><td>memecoins</td><td>liq≥50k · vol≥250k · shield · impact≤1%</td></tr>
 </table></div></div>
 <div class="pn ct" id="ct_strat"><h2>⚙ Stratégie page v31 (plus réactive · simulation / RÉEL signé)</h2><div id="ct_stratv" class="sk"></div></div>
 <div class="pn ct"><h2>🔍 Recherche crypto</h2><div id="ct_etat" class="sk">Chargement…</div>
@@ -198,7 +187,7 @@ go();setInterval(go,60000)})();</script>
 <div class="sens"><button type="button" id="ct_mTend" class="on">Tendances</button><button type="button" id="ct_mNew">Nouveaux</button></div><div id="ct_memeListe">Chargement…</div></div>
 <div class="two"><div class="pn ct"><h2>★ Ma liste</h2><div id="ct_liste" class="ct-grille"></div></div><div class="pn ct"><h2>Top 20</h2><div id="ct_top" class="ct-grille"></div></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=32"></script><script src="lib/web3.js?v=32"></script><script src="app.js?v=32"></script><script src="real.js?v=32"></script><script src="cmp.js?v=32"></script><script src="ui.js?v=32"></script><script src="bt.js?v=32"></script><script src="scan.js?v=32"></script><script src="auto.js?v=32"></script><script src="swap.js?v=32"></script><script src="crypto-app.js?v=32"></script><script src="memes.js?v=32"></script>
+<script src="lib/lwc.js?v=33"></script><script src="lib/web3.js?v=33"></script><script src="app.js?v=33"></script><script src="real.js?v=33"></script><script src="cmp.js?v=33"></script><script src="ui.js?v=33"></script><script src="bt.js?v=33"></script><script src="scan.js?v=33"></script><script src="auto.js?v=33"></script><script src="swap.js?v=33"></script><script src="crypto-app.js?v=33"></script><script src="memes.js?v=33"></script>
 <script>(function(){var S=window.STRAT,e=document.getElementById("ct_stratv");if(!S||!e)return;e.innerHTML="FILTER : RSI "+S.rsiMin+"–"+S.rsiMax+" · EMA rapide &gt; EMA lente × "+S.emaTol+" (tolérance 0,2 %)<br>ANALYST : seuil note "+S.analyst+"/100 (avant 70)<br>SIZER : "+Math.round(S.size*100)+" % du capital par trade (avant 30 %)<br>Surveillance 1 bougie / 5 bougies : pas d’entrée si 1b &lt; "+S.mv1Exit+" % ou 5b &gt; +"+S.mv5Max+" % · sortie si 5b &lt; "+S.mv5Exit+" %<br>Univers : SOL, BTC, ETH, JUP, BONK, WIF, LINK, AVAX (+ RAY, LTC en RÉEL)<br>Memecoins Risqué : liq ≥ 100k (inchangé) · vol ≥ 100k (avant 200k) · âge ≥ 6 h (avant 24 h) · 24h &gt; −5 %<br>Garde-fous : signature manuelle Phantom · réserve 0,03 SOL · glissement max 1 % · journal<br><span style=\"color:#facc15\">Le Mode Prudent autonome (serveur) n’est pas modifié.</span>"})();</script>
 <script>
 /* Affichage Mode Prudent v2 : ne touche pas aux fonds ni à la logique de trading. */

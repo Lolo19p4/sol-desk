@@ -33,7 +33,7 @@ async function scan(){if(busy||!R.on)return;busy=1;last=Date.now();try{
  for(const p of P){const a=p.attributes,m=(p.relationships?.base_token?.data?.id||'').replace('solana_','');if(!m||seen[m]||Object.values(R.MAJ).includes(m)||m===USDC)continue;seen[m]=1;
   const sym=(a.name||'?').split(' / ')[0].trim().slice(0,12),h24=+(a.price_change_percentage?.h24||0),liq=+a.reserve_in_usd||0,vol=+(a.volume_usd?.h24||0),age=(Date.now()-Date.parse(a.pool_created_at))/36e5;
   const c={m,sym,h24,liq,vol,age,pool:a.address};
-  let why=null;if(liq<1e5)why='liquidité $'+Math.round(liq/1e3)+'k < 100k';else if(vol<1e5)why='volume 24h $'+Math.round(vol/1e3)+'k < 100k';else if(!(age>=6))why='pool trop jeune ('+age.toFixed(0)+' h < 6 h)';else if(h24<=-5)why='chute 24h ('+h24.toFixed(0)+' %)';
+  let why=null;if(liq<5e4)why='liquidité $'+Math.round(liq/1e3)+'k < 50k';else if(vol<2.5e5)why='volume 24h $'+Math.round(vol/1e3)+'k < 250k';else if(!(age>=6))why='pool trop jeune ('+age.toFixed(0)+' h < 6 h)';else if(h24<=-5)why='chute 24h ('+h24.toFixed(0)+' %)';
   if(why){rows[m]={...c,ok:false,why};continue}cand.push(c)}
  cand.sort((a,b)=>b.h24-a.h24);let picked=0;
  for(const c of cand){if(picked>=MAXP){rows[c.m]={...c,ok:false,why:'pas dans les '+MAXP+' meilleurs'};continue}

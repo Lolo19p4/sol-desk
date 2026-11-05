@@ -17,7 +17,7 @@ function scores(){Promise.all(['SOL','BTC','ETH','BONK','WIF','RAY','LTC'].map(f
  var live=L.map(function(x){return '<div class="rule"><span>'+NM[x.k]+' · EMA9&gt;EMA21 (indicatif 1m)</span><span class='+(x.up?'ok':'ko')+'>'+(x.up?'✔':'✘')+'</span></div><div class="rule"><span>'+NM[x.k]+' · RSI '+x.r.toFixed(0)+'</span><span class='+(x.rok?'ok':'ko')+'>'+(x.rok?'✔':'✘')+'</span></div>'}).join('');
  var box=$('rules'); if(box && box.dataset.prudent!=='done'){ box.dataset.prudent='done'; }
  if(box){ var head=box.querySelector('#liveind'); if(!head){ box.insertAdjacentHTML('beforeend','<div id="liveind"></div>'); head=box.querySelector('#liveind'); }
- head.innerHTML='<h2 style="margin-top:10px">Indicatif marché (1 min)</h2>'+live+'<span class=sk>Les décisions du bot = Mode Prudent v2 (EMA50 4h + EMA9/21 5m + RSI15 40-70).</span>'; }
+ head.innerHTML='<h2 style="margin-top:10px">Indicatif marché (1 min)</h2>'+live+'<span class=sk>Les décisions du bot = Mode Réactif (RSI15 35-85 · EMA9&gt;EMA21 5m ou rebond 1m · momentum +1,5 %/15 min · SL −6 % · TP +10 % puis trailing 4 % · taille jusqu’à 40 % · réserve 0,03 SOL).</span>'; }
  var best=L.slice().sort(function(a,b){return b.sc-a.sc})[0];$('gv').textContent=best.sc;$('gauge').style.background='conic-gradient(#22d3ee '+best.sc+'%,#1e2650 0)';
  $('gbars').innerHTML=L.map(function(x){return NM[x.k]+' '+x.sc+'<div class="bar"><i style="width:'+x.sc+'%"></i></div>'}).join('')+'<span class=sk>Affichage indicatif. Bot actif = Mode Prudent v2 (pas ce score 1 min).</span>'})}
 scores();setInterval(scores,30000);
