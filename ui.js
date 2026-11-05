@@ -14,9 +14,12 @@ function tick(){try{var st=(typeof S!=='undefined'&&S)?S:null;if(!st)return;var 
 setInterval(tick,1000);tick();
 function scores(){Promise.all(['SOL','BTC','ETH','BONK','WIF','RAY','LTC'].map(function(k){return fetch('https://api.exchange.coinbase.com/products/'+k+'-USD/candles?granularity=60').then(function(r){return r.json()}).then(function(c){c=c.reverse();var cl=c.map(function(x){return x[4]}),a=ema(cl,9).at(-1),b=ema(cl,21).at(-1),r=rsi(cl),f=(a/b-1)*100;
  var sc=Math.max(0,Math.min(100,Math.round(50+f*400)));return{k:k,up:a>b,rok:r>40&&r<80,r:r,sc:sc}}).catch(function(){return null})})).then(function(L){L=L.filter(Boolean);if(!L.length)return;
- $('rules').innerHTML=L.map(function(x){return '<div class="rule"><span>'+NM[x.k]+' · EMA9 &gt; EMA21</span><span class='+(x.up?'ok':'ko')+'>'+(x.up?'✔':'✘')+'</span></div><div class="rule"><span>'+NM[x.k]+' · RSI '+x.r.toFixed(0)+' (40-80)</span><span class='+(x.rok?'ok':'ko')+'>'+(x.rok?'✔':'✘')+'</span></div>'}).join('');
+ var live=L.map(function(x){return '<div class="rule"><span>'+NM[x.k]+' · EMA9&gt;EMA21 (indicatif 1m)</span><span class='+(x.up?'ok':'ko')+'>'+(x.up?'✔':'✘')+'</span></div><div class="rule"><span>'+NM[x.k]+' · RSI '+x.r.toFixed(0)+'</span><span class='+(x.rok?'ok':'ko')+'>'+(x.rok?'✔':'✘')+'</span></div>'}).join('');
+ var box=$('rules'); if(box && box.dataset.prudent!=='done'){ box.dataset.prudent='done'; }
+ if(box){ var head=box.querySelector('#liveind'); if(!head){ box.insertAdjacentHTML('beforeend','<div id="liveind"></div>'); head=box.querySelector('#liveind'); }
+ head.innerHTML='<h2 style="margin-top:10px">Indicatif marché (1 min)</h2>'+live+'<span class=sk>Les décisions du bot = Mode Prudent v2 (EMA50 4h + EMA9/21 5m + RSI15 40-70).</span>'; }
  var best=L.slice().sort(function(a,b){return b.sc-a.sc})[0];$('gv').textContent=best.sc;$('gauge').style.background='conic-gradient(#22d3ee '+best.sc+'%,#1e2650 0)';
- $('gbars').innerHTML=L.map(function(x){return NM[x.k]+' '+x.sc+'<div class="bar"><i style="width:'+x.sc+'%"></i></div>'}).join('')+'<span class=sk>Affichage indicatif. Les bots décident avec EMA9/21 et RSI 40-80.</span>'})}
+ $('gbars').innerHTML=L.map(function(x){return NM[x.k]+' '+x.sc+'<div class="bar"><i style="width:'+x.sc+'%"></i></div>'}).join('')+'<span class=sk>Affichage indicatif. Bot actif = Mode Prudent v2 (pas ce score 1 min).</span>'})}
 scores();setInterval(scores,30000);
 })();
 // Ajout : SIZER, EQUITY, dernier trade, résultat, journal avec « raison : » (lecture seule)
@@ -25,7 +28,7 @@ function raison(l){var m=l.match(/\(([^()]*(?:\([^()]*\)[^()]*)*)\)/);return m?m
 function t2(){try{if(typeof S==='undefined'||!S)return;var s=S.stats||{},h=S.hist||[],R=window.REAL||{};
  $('hT').textContent=s.trades||0;$('hW').textContent=s.wins||0;$('hL').textContent=s.losses||0;
  var eqv=S.bal+Object.values(S.pos||{}).reduce(function(a,p){return a+p.amt*(p.pts.at(-1).value/p.entry)},0);
- $('sz').textContent=R.on?'RÉEL : 100 % du solde (0,03 SOL gardé)':'SIM : 30 % de $'+S.bal.toFixed(2)+' = $'+(S.bal*0.3).toFixed(2);
+ $('sz').textContent='Prudent v2 : 25–30 % · réserve ≥ 0,05 SOL';
  $('eq').textContent='$'+eqv.toFixed(2)+' · '+h.length+' clôtures';
  $('flow2').innerHTML=[['c2','🔻','CONTRÔLE',(s.scored||0)+' notés'],['c3','◆','TAILLE',R.on?'100 %':'30 %'],['c4','⚡','ÉCHANGE',(s.trades||0)+' trades'],['c6','☰','JOURNAL',(S.log||[]).length+' lignes']].map(function(x){return '<div class="'+x[0]+'"><div class="ic">'+x[1]+'</div>'+x[2]+'<br><b>'+x[3]+'</b></div>'}).join('');
  if(h[0]){var l=h[0],tl=(S.log||[]).find(function(x){return x.indexOf(l.sym)>=0&&/ACHAT/.test(x)})||'',en=tl.match(/(\d+(?:\.\d+)?)\$ @ ([\d.e-]+)/);

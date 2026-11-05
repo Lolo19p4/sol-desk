@@ -1,0 +1,13 @@
+auto_state.json
+journal_auto.md
+bt30/
+bt_prudent/
+v2/
+copy.js
+jup_quote.js
+jup_swap.md
+shield.js
+secrets/
+.env
+*.pem
+*.key
