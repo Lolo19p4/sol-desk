@@ -39,6 +39,15 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 .stats{display:flex;gap:12px;flex-wrap:wrap}.stats span b{color:#fff}
 #log{font:11px monospace;white-space:pre-wrap;color:#9ef0c4;max-height:300px;overflow:auto}
 #realbox{border:1px solid #ef4444!important;box-shadow:0 0 12px #ef444444}
+#ct_swapbox{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+#ct_swapbox select,#ct_swapbox input{font-size:16px;min-height:42px;width:100%}
+#ct_swapbox button{min-height:44px}
+#ct_echanger{color:var(--pk);border-color:var(--pk);box-shadow:0 0 8px #f472b644}
+#ct_devis{color:#fff}
+#ct_swapMsg{color:var(--gr)}#ct_swapMsg.err{color:#f87171}#ct_swapMsg a{color:var(--ye)}
+.ct-frais{color:#facc15;font-size:12px;margin:6px 0}
+#ct_swap .sens{display:flex;gap:6px;margin:6px 0}
+#ct_swap .sens button.on{background:var(--cy);color:#070a14}
 </style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
@@ -86,6 +95,20 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <select id="sel"></select><div id="chart" class="chart"></div></div>
 <div class="two"><div class="pn"><h2>Stats</h2><div class="stats" id="stats"></div><h2 style="margin-top:10px">Positions et historique</h2><table id="pos"></table></div>
 </div>
+<div class="pn" id="ct_swap"><h2>⇄ Échanger avec Phantom</h2>
+<div class="sk">Achetez ou vendez contre des USDC avec <b>votre</b> Phantom, au meilleur prix Jupiter (Solana).</div>
+<p class="ct-frais" id="ct_frais" role="note"></p>
+<div id="ct_swapbox">
+<div class="sens" role="group" aria-label="Sens de l'échange"><button type="button" id="ct_btnAchat">Acheter</button><button type="button" id="ct_btnVente">Vendre</button></div>
+<label for="ct_jeton">Crypto</label><select id="ct_jeton"></select>
+<label id="ct_lblMontant" for="ct_montant"></label>
+<input id="ct_montant" type="text" inputmode="decimal" placeholder="ex : 10" autocomplete="off">
+<button type="button" id="ct_devisBtn" class="grey">Voir le prix</button>
+<div id="ct_devis" aria-live="polite"></div>
+<button type="button" id="ct_connect" class="grey">Connecter Phantom</button>
+<button type="button" id="ct_echanger">Échanger avec Phantom</button>
+<div id="ct_swapMsg" role="status" aria-live="polite"></div>
+</div></div>
 <div class="two"><div class="pn"><h2>🧪 Backtest (bougies passées Coinbase)</h2>
 <div class="sk" style="font-size:11px">Rejoue les stratégies RÉEL (rotation EMA9/21 + RSI 40-80, 1 min) et SIM (30 %, EMA20/50, 5 min) sur l'historique. Ne passe aucun ordre.</div>
 <label class=sk>Frais % <input id="btfee" value="0.3" size="3"></label> <label class=sk>Glissement % <input id="btslip" value="0.2" size="3"></label> <label class=sk>Durée <select id="btpg"><option value="2">10 h</option><option value="4" selected>20 h</option><option value="8">40 h</option></select></label> <button id="btgo">▶ Lancer</button>
@@ -99,4 +122,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=35"></script><script src="lib/web3.js?v=35"></script><script src="app.js?v=35"></script><script src="real.js?v=35"></script><script src="cmp.js?v=35"></script><script src="ui.js?v=35"></script><script src="bt.js?v=35"></script><script src="scan.js?v=35"></script><script src="auto.js?v=35"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script></body></html>
