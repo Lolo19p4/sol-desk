@@ -48,6 +48,20 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 .ct-frais{color:#facc15;font-size:12px;margin:6px 0}
 #ct_swap .sens{display:flex;gap:6px;margin:6px 0}
 #ct_swap .sens button.on{background:var(--cy);color:#070a14}
+
+.mk-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px}
+@media(min-width:640px){.mk-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1000px){.mk-grid{grid-template-columns:1fr 1fr 1fr}}
+.mk-card{border:1px solid var(--bd);border-radius:10px;padding:10px;background:#0a1020}
+.mk-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mk-name{font-size:16px;font-weight:800;color:#fff}
+.mk-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.mk-tag.up{background:#14532d;color:var(--gr)}
+.mk-tag.dn{background:#450a0a;color:#f87171}
+.mk-tag.wait{background:#1e2650;color:#8a94c4}
+.mk-px{font-size:22px;font-weight:800;color:#fff;margin:4px 0}
+.mk-chg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px}
+.mk-card canvas{width:100%;height:120px;display:block;margin-top:6px;touch-action:manipulation}
 </style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
@@ -62,6 +76,12 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <button class="grey" id="reset">Remettre à zéro</button></div>
+<div class="pn" id="marches">
+<h2>📊 Marchés — une carte par crypto</h2>
+<div class="sk">Prix, variation et courbe de chaque crypto suivie par le terminal (bougies 1 h, 48 h). Mise à jour toutes les 60 s.</div>
+<div id="mkgrid" class="mk-grid"></div>
+<div id="mkst" class="sk" style="font-size:11px;margin-top:6px">Chargement…</div>
+</div>
 <div class="grid"><div class="col">
 <div class="ag c1" id="a0"><span class="pill">SCAN</span><b>🔍 SCOUT</b><div class="ds" id="d0">Regarde SOL, wBTC, wETH, BONK, WIF, RAY, LTC (bougies 1 min)</div><div class="lv" id="l0">vus 0</div></div>
 <div class="ag c2" id="a1"><span class="pill">CHECK</span><b>🔻 FILTER</b><div class="ds">EMA9 &gt; EMA21 et RSI entre 40 et 80</div><div class="lv" id="l1">éliminés 0</div></div>
@@ -122,4 +142,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=37"></script></body></html>
