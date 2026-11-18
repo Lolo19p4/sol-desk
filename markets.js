@@ -1,5 +1,24 @@
-// Section Marchés : une carte et une courbe par crypto. Affichage seulement, aucune clé.
+// Section Marchés : carte USDC (solde + portefeuille) puis une carte par crypto. Affichage seulement, aucune clé.
 (function(){
+  var WALLET='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx';
+  var USDC_MINT='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+  var RPCS=['https://solana-rpc.publicnode.com','https://api.mainnet-beta.solana.com'];
+  var TOKEN_PROG='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+  var TOKEN_2022='TokenzQdBNbLqP5VEhdkAS6EtFNwCb2EB4yF4bFUH5vcg';
+  var MINTS={
+    'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v':'USDC',
+    'So11111111111111111111111111111111111111112':'SOL',
+    'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN':'JUP',
+    'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263':'BONK',
+    'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm':'WIF',
+    '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R':'RAY',
+    'jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL':'JTO',
+    'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3':'PYTH',
+    'rndrizKT3MK1iimdxRdWabcF7Zg7AR5T4nud4EkHBof':'RENDER',
+    '6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN':'TRUMP',
+    '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh':'BTC',
+    '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs':'ETH'
+  };
   var ASSETS=[
     {id:'SOL',sym:'SOLUSDT',nom:'Solana'},
     {id:'BTC',sym:'BTCUSDT',nom:'Bitcoin'},
@@ -27,7 +46,25 @@
     if(p==null||!isFinite(p))return '–';
     return (p>=0?'+':'')+p.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
   }
+  function fmtUsd(x){
+    if(x==null||!isFinite(x))return '–';
+    return x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' $';
+  }
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  var usdc={id:'USDC',sym:'USDCUSDT',nom:'dollar'};
+  (function makeUsdc(){
+    var el=document.createElement('div');
+    el.className='mk-card mk-usdc';
+    el.id='mk-USDC';
+    el.innerHTML='<div class="mk-head"><span class="mk-name">'+esc(usdc.id)+' <span class="sk" style="font-weight:400;font-size:11px">'+esc(usdc.nom)+'</span></span><span class="mk-tag wait" data-tag>Ton solde</span></div>'+
+      '<div class="mk-px" data-px>Chargement…</div>'+
+      '<div class="mk-chg"><span>1 h <b data-h1 class="sk">–</b></span><span>24 h <b data-h24 class="sk">–</b></span></div>'+
+      '<div class="mk-hold"><span>Solde <b data-usdc class="sk">Chargement…</b></span><span>Portefeuille <b data-tot class="sk">Chargement…</b></span></div>'+
+      '<canvas height="120" aria-label="Courbe 48 h de USDC"></canvas>';
+    grid.appendChild(el);
+    usdc.el=el; usdc.cv=el.querySelector('canvas');
+  })();
 
   ASSETS.forEach(function(a){
     var el=document.createElement('div');
@@ -81,7 +118,7 @@
     throw lastErr||new Error('indisponible');
   }
 
-  function apply(a, d){
+  function apply(a, d, opts){
     var rows=d.map(function(x){return {t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4]}});
     a._last=rows;
     var cl=rows.map(function(r){return r.c});
@@ -96,29 +133,131 @@
     b1.textContent=fmtPct(h1); b1.className=h1>=0?'ok':'ko';
     b24.textContent=fmtPct(h24); b24.className=h24>=0?'ok':'ko';
     var tag=el.querySelector('[data-tag]');
-    tag.textContent=up?'Ça monte':'Ça baisse';
-    tag.className='mk-tag '+(up?'up':'dn');
+    if(!(opts&&opts.keepTag)){
+      tag.textContent=up?'Ça monte':'Ça baisse';
+      tag.className='mk-tag '+(up?'up':'dn');
+    }
     draw(a.cv, rows);
   }
 
   function fail(a, msg){
     var el=a.el;
     el.querySelector('[data-px]').textContent='Indisponible';
-    el.querySelector('[data-tag]').textContent='Pas de données';
-    el.querySelector('[data-tag]').className='mk-tag wait';
+    if(a!==usdc){
+      el.querySelector('[data-tag]').textContent='Pas de données';
+      el.querySelector('[data-tag]').className='mk-tag wait';
+    }
     var cv=a.cv, w=cv.clientWidth||280, x=cv.getContext('2d');
     if(x){cv.width=w; cv.height=120; x.fillStyle='#121a23'; x.fillRect(0,0,w,120); x.fillStyle='#8a94c4'; x.font='12px sans-serif'; x.fillText(msg||'Données indisponibles',10,64)}
+  }
+
+  async function rpc(method, params){
+    var body=JSON.stringify({jsonrpc:'2.0',id:1,method:method,params:params});
+    var lastErr;
+    for(var i=0;i<RPCS.length;i++){
+      try{
+        var r=await fetch(RPCS[i],{method:'POST',headers:{'Content-Type':'application/json'},body:body});
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        var d=await r.json();
+        if(d.error) throw new Error(d.error.message||'rpc');
+        return d.result;
+      }catch(e){ lastErr=e }
+    }
+    throw lastErr||new Error('rpc indisponible');
+  }
+
+  function addAccounts(res, hold){
+    var vals=(res&&res.value)||[];
+    vals.forEach(function(a){
+      var info=a.account&&a.account.data&&a.account.data.parsed&&a.account.data.parsed.info;
+      if(!info||!info.tokenAmount)return;
+      var id=MINTS[info.mint], ui=+info.tokenAmount.uiAmount;
+      if(!id||!isFinite(ui)||ui<=0)return;
+      hold[id]=(hold[id]||0)+ui;
+    });
+  }
+
+  var hold=null, holdErr=null;
+  function pxOf(id){
+    if(id==='USDC'){
+      if(usdc._last&&usdc._last.length)return usdc._last[usdc._last.length-1].c;
+      return 1;
+    }
+    for(var i=0;i<ASSETS.length;i++){
+      var a=ASSETS[i];
+      if(a.id===id&&a._last&&a._last.length)return a._last[a._last.length-1].c;
+    }
+    return null;
+  }
+  function fillHold(){
+    var el=usdc.el; if(!el)return;
+    var uEl=el.querySelector('[data-usdc]'), tEl=el.querySelector('[data-tot]');
+    if(holdErr||!hold){
+      uEl.textContent='Indisponible'; uEl.className='ko';
+      tEl.textContent='Indisponible'; tEl.className='ko';
+      return;
+    }
+    var u=hold.USDC||0;
+    uEl.textContent=u.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDC';
+    uEl.className='';
+    var tot=0;
+    Object.keys(hold).forEach(function(id){
+      var px=pxOf(id);
+      if(px==null){ if(id==='USDC')px=1; else return; }
+      tot+=hold[id]*px;
+    });
+    tEl.textContent=fmtUsd(tot);
+    tEl.className='';
+  }
+
+  async function loadWallet(){
+    holdErr=null;
+    try{
+      var parts=await Promise.all([
+        rpc('getBalance',[WALLET]),
+        rpc('getTokenAccountsByOwner',[WALLET,{programId:TOKEN_PROG},{encoding:'jsonParsed'}]),
+        rpc('getTokenAccountsByOwner',[WALLET,{programId:TOKEN_2022},{encoding:'jsonParsed'}])
+      ]);
+      var native=parts[0], tok=parts[1], tok2=parts[2];
+      var h={};
+      var sol=((native&&native.value)||0)/1e9;
+      if(sol>0)h.SOL=sol;
+      addAccounts(tok,h);
+      addAccounts(tok2,h);
+      // Au cas où l'USDC n'apparaîtrait pas dans la liste complète, on le relit par mint.
+      if(h.USDC==null){
+        try{
+          var only=await rpc('getTokenAccountsByOwner',[WALLET,{mint:USDC_MINT},{encoding:'jsonParsed'}]);
+          addAccounts(only,h);
+        }catch(e){}
+      }
+      hold=h;
+    }catch(e){
+      hold=null; holdErr=e;
+    }
+    fillHold();
   }
 
   var loading=false;
   async function load(){
     if(loading)return; loading=true;
     var ok=0, ko=0;
-    await Promise.all(ASSETS.map(async function(a){
+    var jobs=[
+      (async function(){
+        try{ apply(usdc, await klines(usdc.sym), {keepTag:true}); ok++ }
+        catch(e){ fail(usdc, 'Paire '+usdc.sym+' absente ou réseau coupé'); ko++ }
+      })(),
+      loadWallet()
+    ].concat(ASSETS.map(async function(a){
       try{ apply(a, await klines(a.sym)); ok++ }
       catch(e){ fail(a, 'Paire '+a.sym+' absente ou réseau coupé'); ko++ }
     }));
-    if(st) st.textContent=(ok?ok+' courbes à jour':'Aucune donnée')+(ko?' · '+ko+' indisponible(s)':'')+' · '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' (heure de Paris) · rafraîchi toutes les 60 s';
+    await Promise.all(jobs);
+    fillHold();
+    if(st){
+      var wtxt=hold&&hold.USDC!=null?('solde '+hold.USDC.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDC'): (holdErr?'solde USDC indisponible':'');
+      st.textContent=(ok?ok+' courbes à jour':'Aucune donnée')+(ko?' · '+ko+' indisponible(s)':'')+(wtxt?' · '+wtxt:'')+' · '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' (heure de Paris) · rafraîchi toutes les 60 s';
+    }
     loading=false;
   }
 
@@ -128,6 +267,7 @@
   window.addEventListener('resize', function(){
     clearTimeout(resizeT);
     resizeT=setTimeout(function(){
+      if(usdc._last) draw(usdc.cv, usdc._last);
       ASSETS.forEach(function(a){ if(a._last) draw(a.cv, a._last) });
     }, 150);
   });
