@@ -1,4 +1,4 @@
-// Section Marchés : carte USDC (solde + portefeuille) puis une carte par crypto. Affichage seulement, aucune clé.
+// Section Marchés : cartes et courbes en direct via le WebSocket public Binance. Affichage seulement, aucune clé.
 (function(){
   var WALLET='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx';
   var USDC_MINT='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
@@ -33,10 +33,18 @@
     {id:'TRUMP',sym:'TRUMPUSDT',nom:'Trump'}
   ];
   var BASES=['https://api.binance.com','https://data-api.binance.vision'];
+  var WS_HOSTS=['wss://stream.binance.com:443','wss://data-stream.binance.vision','wss://stream.binance.com:9443'];
+  var IVS={
+    '1m': {label:'1 min', limit:60, cap:'60 min · bougies 1 min'},
+    '15m':{label:'15 min',limit:48, cap:'12 h · bougies 15 min'},
+    '1h': {label:'1 h',   limit:48, cap:'48 h · bougies 1 h'}
+  };
   var grid=document.getElementById('mkgrid'), st=document.getElementById('mkst');
   if(!grid)return;
 
-  function ema(v,n){var k=2/(n+1),e=v[0];return v.map(function(x){return e=x*k+e*(1-k)})}
+  var iv='1m';
+  try{ var saved=localStorage.getItem('mk_iv'); if(IVS[saved]) iv=saved }catch(e){}
+
   function fmtPx(x){
     x=+x; if(!isFinite(x))return '–';
     var d=x>=1000?2:x>=1?4:x>=0.01?6:10;
@@ -51,6 +59,7 @@
     return x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' $';
   }
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function parisHeure(){return new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})}
 
   var usdc={id:'USDC',sym:'USDCUSDT',nom:'dollar'};
   (function makeUsdc(){
@@ -61,7 +70,7 @@
       '<div class="mk-px" data-px>Chargement…</div>'+
       '<div class="mk-chg"><span>1 h <b data-h1 class="sk">–</b></span><span>24 h <b data-h24 class="sk">–</b></span></div>'+
       '<div class="mk-hold"><span>Solde <b data-usdc class="sk">Chargement…</b></span><span>Portefeuille <b data-tot class="sk">Chargement…</b></span></div>'+
-      '<canvas height="120" aria-label="Courbe 48 h de USDC"></canvas>';
+      '<canvas height="120" aria-label="Courbe de USDC"></canvas>';
     grid.appendChild(el);
     usdc.el=el; usdc.cv=el.querySelector('canvas');
   })();
@@ -73,10 +82,14 @@
     el.innerHTML='<div class="mk-head"><span class="mk-name">'+esc(a.id)+' <span class="sk" style="font-weight:400;font-size:11px">'+esc(a.nom)+'</span></span><span class="mk-tag wait" data-tag>—</span></div>'+
       '<div class="mk-px" data-px>Chargement…</div>'+
       '<div class="mk-chg"><span>1 h <b data-h1 class="sk">–</b></span><span>24 h <b data-h24 class="sk">–</b></span></div>'+
-      '<canvas height="120" aria-label="Courbe 1 h de '+esc(a.id)+'"></canvas>';
+      '<canvas height="120" aria-label="Courbe de '+esc(a.id)+'"></canvas>';
     grid.appendChild(el);
     a.el=el; a.cv=el.querySelector('canvas');
   });
+
+  var ALL=[usdc].concat(ASSETS);
+  var bySym={};
+  ALL.forEach(function(a){ bySym[a.sym]=a });
 
   function draw(cv, rows){
     var w=cv.clientWidth||(cv.parentNode&&cv.parentNode.clientWidth)||280, h=120, dp=window.devicePixelRatio||1;
@@ -101,14 +114,114 @@
     });
     x.fillStyle='#8a94c4';
     x.font='10px ui-monospace,Menlo,Consolas,monospace';
-    x.fillText('48 h · bougies 1 h', pad, h-2);
+    x.fillText((IVS[iv]&&IVS[iv].cap)||'', pad, h-2);
   }
 
-  async function klines(sym){
+  var drawQ={};
+  function scheduleDraw(a){
+    if(drawQ[a.id])return;
+    drawQ[a.id]=1;
+    requestAnimationFrame(function(){
+      drawQ[a.id]=0;
+      if(a._last) draw(a.cv, a._last);
+    });
+  }
+
+  function ref1hFrom(rows){
+    if(!rows||!rows.length)return null;
+    var ago=Date.now()-3600000, found=null;
+    for(var i=0;i<rows.length;i++){
+      if(rows[i].t<=ago) found=rows[i].c;
+    }
+    if(found!=null)return found;
+    if(iv==='1h'&&rows.length>=2)return rows[rows.length-2].c;
+    if(iv==='15m'&&rows.length>=5)return rows[rows.length-5].c;
+    if(iv==='1m'&&rows.length>=60)return rows[0].c;
+    return rows[0].c;
+  }
+
+  function paint(a){
+    var el=a.el; if(!el)return;
+    var px=a._px;
+    if(px==null&&a._last&&a._last.length) px=a._last[a._last.length-1].c;
+    el.querySelector('[data-px]').textContent=px==null?'–':fmtPx(px);
+    var h1=null, h24=null;
+    if(px!=null&&a._ref1h) h1=(px/a._ref1h-1)*100;
+    else if(a._h1!=null) h1=a._h1;
+    if(px!=null&&a._o24) h24=(px/a._o24-1)*100;
+    else if(a._h24!=null) h24=a._h24;
+    var b1=el.querySelector('[data-h1]'), b24=el.querySelector('[data-h24]');
+    b1.textContent=fmtPct(h1); b1.className=(h1==null)?'sk':(h1>=0?'ok':'ko');
+    b24.textContent=fmtPct(h24); b24.className=(h24==null)?'sk':(h24>=0?'ok':'ko');
+    if(a!==usdc){
+      var tag=el.querySelector('[data-tag]');
+      if(h1==null){ tag.textContent='—'; tag.className='mk-tag wait' }
+      else{ tag.textContent=h1>=0?'Ça monte':'Ça baisse'; tag.className='mk-tag '+(h1>=0?'up':'dn') }
+    }
+  }
+
+  var holdT;
+  function scheduleFillHold(){
+    clearTimeout(holdT);
+    holdT=setTimeout(fillHold, 400);
+  }
+
+  function apply(a, d, opts){
+    var rows=d.map(function(x){return {t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4]}});
+    a._last=rows;
+    if(rows.length){
+      a._px=rows[rows.length-1].c;
+      var r1=ref1hFrom(rows);
+      if(r1!=null) a._ref1h=r1;
+    }
+    paint(a);
+    if(!(opts&&opts.silentDraw)) draw(a.cv, rows);
+  }
+
+  function fail(a, msg){
+    if(a._last&&a._last.length) return;
+    var el=a.el;
+    el.querySelector('[data-px]').textContent='Indisponible';
+    if(a!==usdc){
+      el.querySelector('[data-tag]').textContent='Pas de données';
+      el.querySelector('[data-tag]').className='mk-tag wait';
+    }
+    var cv=a.cv, w=cv.clientWidth||280, x=cv.getContext('2d');
+    if(x){cv.width=w; cv.height=120; x.fillStyle='#121a23'; x.fillRect(0,0,w,120); x.fillStyle='#8a94c4'; x.font='12px sans-serif'; x.fillText(msg||'Données indisponibles',10,64)}
+  }
+
+  function onTicker(a, t){
+    var px=+(t.c), o=+(t.o);
+    if(isFinite(px)) a._px=px;
+    if(isFinite(o)&&o>0) a._o24=o;
+    paint(a);
+    scheduleFillHold();
+  }
+
+  function onKline(a, k){
+    var row={t:+k.t,o:+k.o,h:+k.h,l:+k.l,c:+k.c};
+    if(!isFinite(row.c)||!isFinite(row.t))return;
+    if(!a._last) a._last=[];
+    var last=a._last[a._last.length-1];
+    if(last&&last.t===row.t) a._last[a._last.length-1]=row;
+    else if(!last||row.t>last.t){
+      a._last.push(row);
+      var lim=(IVS[iv]&&IVS[iv].limit)||60;
+      if(a._last.length>lim) a._last=a._last.slice(-lim);
+      var r1=ref1hFrom(a._last);
+      if(r1!=null) a._ref1h=r1;
+    } else return;
+    a._px=row.c;
+    paint(a);
+    scheduleDraw(a);
+    scheduleFillHold();
+  }
+
+  async function klines(sym, interval, limit){
     var lastErr;
     for(var i=0;i<BASES.length;i++){
       try{
-        var r=await fetch(BASES[i]+'/api/v3/klines?symbol='+sym+'&interval=1h&limit=48');
+        var r=await fetch(BASES[i]+'/api/v3/klines?symbol='+sym+'&interval='+interval+'&limit='+limit);
         if(!r.ok) throw new Error('HTTP '+r.status);
         var d=await r.json();
         if(!Array.isArray(d)||!d.length) throw new Error('vide');
@@ -118,37 +231,22 @@
     throw lastErr||new Error('indisponible');
   }
 
-  function apply(a, d, opts){
-    var rows=d.map(function(x){return {t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4]}});
-    a._last=rows;
-    var cl=rows.map(function(r){return r.c});
-    var px=cl[cl.length-1];
-    var h1=cl.length>=2?(px/cl[cl.length-2]-1)*100:null;
-    var h24=cl.length>24?(px/cl[cl.length-25]-1)*100:null;
-    var e9=ema(cl,9), e21=ema(cl,21);
-    var up=e9[e9.length-1]>e21[e21.length-1];
-    var el=a.el;
-    el.querySelector('[data-px]').textContent=fmtPx(px);
-    var b1=el.querySelector('[data-h1]'), b24=el.querySelector('[data-h24]');
-    b1.textContent=fmtPct(h1); b1.className=h1>=0?'ok':'ko';
-    b24.textContent=fmtPct(h24); b24.className=h24>=0?'ok':'ko';
-    var tag=el.querySelector('[data-tag]');
-    if(!(opts&&opts.keepTag)){
-      tag.textContent=up?'Ça monte':'Ça baisse';
-      tag.className='mk-tag '+(up?'up':'dn');
+  async function ticker24(){
+    var list=ALL.map(function(a){return a.sym});
+    var q='symbols='+encodeURIComponent(JSON.stringify(list));
+    var lastErr;
+    for(var i=0;i<BASES.length;i++){
+      try{
+        var r=await fetch(BASES[i]+'/api/v3/ticker/24hr?'+q);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        var d=await r.json();
+        if(!Array.isArray(d)) throw new Error('vide');
+        var map={};
+        d.forEach(function(t){ map[t.symbol]=t });
+        return map;
+      }catch(e){ lastErr=e }
     }
-    draw(a.cv, rows);
-  }
-
-  function fail(a, msg){
-    var el=a.el;
-    el.querySelector('[data-px]').textContent='Indisponible';
-    if(a!==usdc){
-      el.querySelector('[data-tag]').textContent='Pas de données';
-      el.querySelector('[data-tag]').className='mk-tag wait';
-    }
-    var cv=a.cv, w=cv.clientWidth||280, x=cv.getContext('2d');
-    if(x){cv.width=w; cv.height=120; x.fillStyle='#121a23'; x.fillRect(0,0,w,120); x.fillStyle='#8a94c4'; x.font='12px sans-serif'; x.fillText(msg||'Données indisponibles',10,64)}
+    throw lastErr||new Error('ticker indisponible');
   }
 
   async function rpc(method, params){
@@ -166,28 +264,27 @@
     throw lastErr||new Error('rpc indisponible');
   }
 
-  function addAccounts(res, hold){
+  function addAccounts(res, holdMap){
     var vals=(res&&res.value)||[];
-    vals.forEach(function(a){
-      var info=a.account&&a.account.data&&a.account.data.parsed&&a.account.data.parsed.info;
+    vals.forEach(function(acc){
+      var info=acc.account&&acc.account.data&&acc.account.data.parsed&&acc.account.data.parsed.info;
       if(!info||!info.tokenAmount)return;
       var id=MINTS[info.mint], ui=+info.tokenAmount.uiAmount;
       if(!id||!isFinite(ui)||ui<=0)return;
-      hold[id]=(hold[id]||0)+ui;
+      holdMap[id]=(holdMap[id]||0)+ui;
     });
   }
 
   var hold=null, holdErr=null;
   function pxOf(id){
-    if(id==='USDC'){
-      if(usdc._last&&usdc._last.length)return usdc._last[usdc._last.length-1].c;
-      return 1;
+    var a=id==='USDC'?usdc:null;
+    if(!a){
+      for(var i=0;i<ASSETS.length;i++){ if(ASSETS[i].id===id){ a=ASSETS[i]; break } }
     }
-    for(var i=0;i<ASSETS.length;i++){
-      var a=ASSETS[i];
-      if(a.id===id&&a._last&&a._last.length)return a._last[a._last.length-1].c;
-    }
-    return null;
+    if(!a){ return id==='USDC'?1:null }
+    if(a._px!=null&&isFinite(a._px)) return a._px;
+    if(a._last&&a._last.length) return a._last[a._last.length-1].c;
+    return id==='USDC'?1:null;
   }
   function fillHold(){
     var el=usdc.el; if(!el)return;
@@ -224,7 +321,6 @@
       if(sol>0)h.SOL=sol;
       addAccounts(tok,h);
       addAccounts(tok2,h);
-      // Au cas où l'USDC n'apparaîtrait pas dans la liste complète, on le relit par mint.
       if(h.USDC==null){
         try{
           var only=await rpc('getTokenAccountsByOwner',[WALLET,{mint:USDC_MINT},{encoding:'jsonParsed'}]);
@@ -238,37 +334,147 @@
     fillHold();
   }
 
-  var loading=false;
-  async function load(){
-    if(loading)return; loading=true;
-    var ok=0, ko=0;
-    var jobs=[
-      (async function(){
-        try{ apply(usdc, await klines(usdc.sym), {keepTag:true}); ok++ }
-        catch(e){ fail(usdc, 'Paire '+usdc.sym+' absente ou réseau coupé'); ko++ }
-      })(),
-      loadWallet()
-    ].concat(ASSETS.map(async function(a){
-      try{ apply(a, await klines(a.sym)); ok++ }
-      catch(e){ fail(a, 'Paire '+a.sym+' absente ou réseau coupé'); ko++ }
-    }));
+  var chartsOk=0, chartsKo=0, chartsLoading=false;
+  async function loadCharts(){
+    if(chartsLoading)return; chartsLoading=true;
+    chartsOk=0; chartsKo=0;
+    var meta=IVS[iv];
+    var jobs=ALL.map(async function(a){
+      try{ apply(a, await klines(a.sym, iv, meta.limit)); chartsOk++ }
+      catch(e){ fail(a, 'Paire '+a.sym+' absente ou réseau coupé'); chartsKo++ }
+    });
+    try{
+      var tmap=await ticker24();
+      ALL.forEach(function(a){
+        var t=tmap[a.sym]; if(!t)return;
+        var px=+t.lastPrice, o=+t.openPrice;
+        if(isFinite(px)) a._px=px;
+        if(isFinite(o)&&o>0) a._o24=o;
+        if(isFinite(+t.priceChangePercent)) a._h24=+t.priceChangePercent;
+        paint(a);
+      });
+    }catch(e){}
     await Promise.all(jobs);
     fillHold();
-    if(st){
-      var wtxt=hold&&hold.USDC!=null?('solde '+hold.USDC.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDC'): (holdErr?'solde USDC indisponible':'');
-      st.textContent=(ok?ok+' courbes à jour':'Aucune donnée')+(ko?' · '+ko+' indisponible(s)':'')+(wtxt?' · '+wtxt:'')+' · '+new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+' (heure de Paris) · rafraîchi toutes les 60 s';
-    }
-    loading=false;
+    setStatus();
+    chartsLoading=false;
   }
 
-  load();
-  setInterval(load, 60000);
+  var ws=null, wsOk=false, wsTimer=null, wsHost=0, backoff=1000, lastMsg=0, stopWs=false;
+  function setLive(on, txt){
+    wsOk=!!on;
+    var pill=document.getElementById('mklive');
+    if(pill){
+      pill.textContent=txt||(on?'EN DIRECT':'HORS LIGNE');
+      pill.className='mk-live '+(on?'on':'off');
+    }
+    setStatus();
+  }
+  function setStatus(){
+    if(!st)return;
+    var wtxt=hold&&hold.USDC!=null?('solde '+hold.USDC.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' USDC'):(holdErr?'solde USDC indisponible':'');
+    var n=chartsOk||ALL.filter(function(a){return a._last&&a._last.length}).length;
+    var head=wsOk?(n+' courbes en direct'):(n?n+' courbes à jour (repli)':'Aucune donnée');
+    var tail=wsOk?'en direct':(ws?'reconnexion au direct…':'rafraîchi toutes les 60 s');
+    st.textContent=head+(chartsKo?' · '+chartsKo+' indisponible(s)':'')+(wtxt?' · '+wtxt:'')+' · '+parisHeure()+' (heure de Paris) · '+tail;
+  }
+  function wsUrl(host){
+    var parts=[];
+    ALL.forEach(function(a){
+      var s=a.sym.toLowerCase();
+      parts.push(s+'@miniTicker');
+      parts.push(s+'@kline_'+iv);
+    });
+    return host+'/stream?streams='+parts.join('/');
+  }
+  function closeWs(){
+    if(!ws)return;
+    var old=ws; ws=null;
+    try{ old.onclose=null; old.onerror=null; old.onmessage=null; old.close() }catch(e){}
+  }
+  function scheduleReconnect(){
+    if(stopWs)return;
+    clearTimeout(wsTimer);
+    setLive(false, 'RECONNEXION…');
+    wsTimer=setTimeout(connect, backoff);
+    backoff=Math.min(backoff*2, 30000);
+    wsHost=(wsHost+1)%WS_HOSTS.length;
+  }
+  function connect(){
+    if(stopWs)return;
+    closeWs();
+    var url=wsUrl(WS_HOSTS[wsHost]);
+    var sock;
+    try{ sock=new WebSocket(url) }catch(e){ scheduleReconnect(); return }
+    ws=sock;
+    sock.onopen=function(){ if(ws!==sock)return; backoff=1000; lastMsg=Date.now(); setLive(true) };
+    sock.onmessage=function(ev){
+      if(ws!==sock)return;
+      lastMsg=Date.now();
+      var msg;
+      try{ msg=JSON.parse(ev.data) }catch(e){ return }
+      var stream=msg&&msg.stream, data=msg&&msg.data;
+      if(!stream||!data)return;
+      var sym=(stream.split('@')[0]||'').toUpperCase();
+      var a=bySym[sym]; if(!a)return;
+      if(stream.indexOf('@miniTicker')!==-1) onTicker(a, data);
+      else if(stream.indexOf('@kline_')!==-1&&data.k) onKline(a, data.k);
+    };
+    sock.onerror=function(){ if(ws===sock){ try{ sock.close() }catch(e){} } };
+    sock.onclose=function(){ if(ws===sock){ ws=null; scheduleReconnect() } };
+  }
+
+  function bindInterval(){
+    var bar=document.getElementById('mkiv'); if(!bar)return;
+    function sync(){
+      var btns=bar.querySelectorAll('button[data-iv]');
+      for(var i=0;i<btns.length;i++){
+        btns[i].className=btns[i].getAttribute('data-iv')===iv?'on':'';
+      }
+    }
+    sync();
+    bar.addEventListener('click', function(e){
+      var b=e.target.closest('button[data-iv]'); if(!b)return;
+      e.preventDefault(); e.stopPropagation();
+      var next=b.getAttribute('data-iv');
+      if(!IVS[next]||next===iv)return;
+      iv=next;
+      try{ localStorage.setItem('mk_iv', iv) }catch(err){}
+      sync();
+      ALL.forEach(function(a){
+        if(a.cv) a.cv.setAttribute('aria-label','Courbe '+IVS[iv].label+' de '+a.id);
+      });
+      closeWs();
+      clearTimeout(wsTimer);
+      setLive(false, 'RECONNEXION…');
+      loadCharts().then(function(){
+        wsHost=0; backoff=1000; connect();
+      });
+    });
+  }
+
+  bindInterval();
+  loadCharts().then(function(){ connect() });
+  loadWallet();
+  setInterval(function(){
+    loadWallet();
+    if(!wsOk) loadCharts();
+  }, 60000);
+  setInterval(function(){
+    if(wsOk&&lastMsg&&Date.now()-lastMsg>20000){
+      try{ if(ws) ws.close() }catch(e){}
+    }
+  }, 5000);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState!=='visible')return;
+    if(!wsOk){ backoff=1000; connect() }
+    loadWallet();
+  });
   var resizeT;
   window.addEventListener('resize', function(){
     clearTimeout(resizeT);
     resizeT=setTimeout(function(){
-      if(usdc._last) draw(usdc.cv, usdc._last);
-      ASSETS.forEach(function(a){ if(a._last) draw(a.cv, a._last) });
+      ALL.forEach(function(a){ if(a._last) draw(a.cv, a._last) });
     }, 150);
   });
 })();

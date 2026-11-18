@@ -65,6 +65,13 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 .mk-card.mk-usdc{grid-column:1/-1;border-color:#22d3ee55;box-shadow:0 0 12px #22d3ee22}
 .mk-hold{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin:6px 0 2px;color:#cbd5ff}
 .mk-hold b{color:#fff;font-size:16px}
+.mk-live{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.3px;vertical-align:middle;margin-left:8px;text-transform:uppercase}
+.mk-live.on{background:#14532d;color:var(--gr);box-shadow:0 0 8px #4ade8066}
+.mk-live.off{background:#1e2650;color:#8a94c4}
+.mk-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0 2px}
+.mk-iv{display:flex;gap:6px;flex-wrap:wrap}
+.mk-iv button{padding:8px 12px;min-height:36px;min-width:64px}
+.mk-iv button.on{background:var(--cy);color:#070a14;box-shadow:0 0 8px #22d3ee66}
 </style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
@@ -80,8 +87,9 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <button class="grey" id="reset">Remettre à zéro</button></div>
 <div class="pn" id="marches">
-<h2>📊 Marchés — USDC et une carte par crypto</h2>
-<div class="sk">En tête : ton solde USDC et la valeur du portefeuille. Ensuite, le prix, la variation et la courbe de chaque crypto (bougies 1 h, 48 h). Mise à jour toutes les 60 s.</div>
+<h2>📊 Marchés — USDC et une carte par crypto <span id="mklive" class="mk-live off">HORS LIGNE</span></h2>
+<div class="sk">En tête : ton solde USDC et la valeur du portefeuille. Ensuite, le prix, la variation et la courbe de chaque crypto, en direct. Tu peux choisir l'intervalle de la courbe.</div>
+<div class="mk-bar"><span class="sk">Courbe</span><div class="mk-iv" id="mkiv"><button type="button" data-iv="1m" class="on">1 min</button><button type="button" data-iv="15m">15 min</button><button type="button" data-iv="1h">1 h</button></div></div>
 <div id="mkgrid" class="mk-grid"></div>
 <div id="mkst" class="sk" style="font-size:11px;margin-top:6px">Chargement…</div>
 </div>
@@ -145,4 +153,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=38"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script></body></html>
