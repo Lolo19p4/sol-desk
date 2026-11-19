@@ -1,7 +1,7 @@
 {
-  "maj": "2026-11-19T14:05:26+01:00",
+  "maj": "2026-11-19T15:49:32+01:00",
   "fuseau": "Europe/Paris",
-  "dernier_passage": "2026-11-19T14:06:00+01:00",
+  "dernier_passage": "2026-11-19T15:48:00+01:00",
   "intervalle_min": 10,
   "mode": "Cassure 24 h + régime 4 h (variante C)",
   "nb_positions": 6,
@@ -20,14 +20,6 @@
       "qte": 0.00998483,
       "entree": 1806.72,
       "stop": 1680.25,
-      "source_prix": null
-    },
-    {
-      "actif": "BTC",
-      "mint": "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
-      "qte": 0.00014088,
-      "entree": 64025.37,
-      "stop": 59543.59,
       "source_prix": null
     },
     {
@@ -52,6 +44,14 @@
       "qte": 37.390426,
       "entree": 0.267448,
       "stop": 0.248727,
+      "source_prix": "binance"
+    },
+    {
+      "actif": "PYTH",
+      "mint": "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
+      "qte": 158.801966,
+      "entree": 0.05674,
+      "stop": 0.052768,
       "source_prix": "binance"
     }
   ]

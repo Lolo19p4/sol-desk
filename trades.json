@@ -1,5 +1,5 @@
 {
-  "maj": "2026-11-19T13:50:37+01:00",
+  "maj": "2026-11-19T15:49:32+01:00",
   "fuseau": "Europe/Paris",
   "mode": {
     "nom": "Cassure 24 h + régime 4 h (variante C)",
@@ -47,19 +47,6 @@
     },
     {
       "date": "2026-11-19T12:59:00+01:00",
-      "actif": "BTC",
-      "mint": "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
-      "qte": 0.00014088,
-      "usdc": 9.019894,
-      "entree": 64025.37,
-      "prix": 64025.37,
-      "stop": 59543.59,
-      "source_prix": null,
-      "solscan": "https://solscan.io/tx/4yvjdzEETwSbHEVZ7ha4mg7h54Qr8WrhCnfgNELcoBzim1yyDckFscJPHitP5snaP54hT5jW6MJ8NCw3kTxV11gC",
-      "motif": "Achat manuel demandé par Loïc le 19/11 12:56, puis partage du reste d'USDC avec BONK (12:58). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
-    },
-    {
-      "date": "2026-11-19T12:59:00+01:00",
       "actif": "BONK",
       "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
       "qte": 3790900,
@@ -96,10 +83,23 @@
       "source_prix": "binance",
       "solscan": "https://solscan.io/tx/3c5CGp3bra3DSufcdZqcMhzCp4EZRzKLw7Ud5ByCTSb7BiSZ358ubE4ES8cfixNXMnoqRoiMjPgxBfHFDx9bBUuA",
       "motif": "Achat manuel demandé par Loïc le 19/11 13:46 (10 $ de SOL → JUP, en plus du VVV). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance JUPUSDT."
+    },
+    {
+      "date": "2026-11-19T15:48:00+01:00",
+      "actif": "PYTH",
+      "mint": "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
+      "qte": 158.801966,
+      "usdc": 9.010424,
+      "entree": 0.05674,
+      "prix": 0.05674,
+      "stop": 0.052768,
+      "source_prix": "binance",
+      "solscan": "https://solscan.io/tx/3tq463ERKciySG4PVb6neEf9KpeRxVfxJCCrHPN3yt5wWh5X4zUVCBDdn7SnkGXqAcC842Dr8DqXHGSFXBdT3TZh",
+      "motif": "Achat manuel demandé par Loïc le 19/11 15:47 (tout le wBTC → PYTH). Mint officiel vérifié Jupiter HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3. Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance PYTHUSDT."
     }
   ],
   "resume": {
-    "nb_trades": 50,
+    "nb_trades": 51,
     "nb_ventes_avec_pnl": 19,
     "gagnants": 5,
     "perdants": 14,
@@ -681,7 +681,7 @@
       "usdc": 9.019894,
       "prix": 64025.37,
       "solscan": "https://solscan.io/tx/4yvjdzEETwSbHEVZ7ha4mg7h54Qr8WrhCnfgNELcoBzim1yyDckFscJPHitP5snaP54hT5jW6MJ8NCw3kTxV11gC",
-      "motif": "Achat manuel demandé par Loïc le 19/11 12:56, puis partage du reste d'USDC avec BONK (12:58). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
+      "motif": "wBTC : 9,019894 USDC -> 0,00014088 wBTC (prix 64 025,37, route Whirlpool directe, 0 frais plateforme, impact 0).",
       "pnl_usd": null,
       "pnl_pct": null
     },
@@ -709,6 +709,18 @@
       "pnl_usd": null,
       "pnl_pct": 6,
       "paye": "0,134084205 SOL"
+    },
+    {
+      "date": "2026-11-19T15:48:00+01:00",
+      "actif": "PYTH",
+      "sens": "achat",
+      "qte": 158.801966,
+      "usdc": 9.010424,
+      "prix": 0.05674,
+      "solscan": "https://solscan.io/tx/3tq463ERKciySG4PVb6neEf9KpeRxVfxJCCrHPN3yt5wWh5X4zUVCBDdn7SnkGXqAcC842Dr8DqXHGSFXBdT3TZh",
+      "motif": "Achat manuel demandé par Loïc le 19/11 15:47 (tout le wBTC → PYTH). Mint officiel vérifié Jupiter HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3. Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance PYTHUSDT.",
+      "pnl_usd": null,
+      "pnl_pct": 6
     }
   ]
 }
