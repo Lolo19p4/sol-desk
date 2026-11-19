@@ -2,8 +2,9 @@
 """Exporte un trades.json public depuis l'état et le journal du bot.
 
 Lit auto_state.json et journal_auto.md à côté de ce script (ou indiqués
-en arguments). N'écrit que des champs publics : date, actif, sens,
-montants, prix, lien Solscan, motif, gain/perte.
+en arguments). Écrit trades.json et status.json. N'écrit que des champs
+publics : date, actif, sens, montants, prix, lien Solscan, motif,
+gain/perte, heure du dernier passage, mode, nombre de positions.
 Aucune clé, aucun secret, aucun chemin local.
 """
 from __future__ import annotations
@@ -18,6 +19,22 @@ HERE = Path(__file__).resolve().parent
 STATE_PATH = HERE / "auto_state.json"
 JOURNAL_PATH = HERE / "journal_auto.md"
 OUT_PATH = HERE / "trades.json"
+STATUS_PATH = HERE / "status.json"
+INTERVALLE_MIN = 10
+
+MODE_PUBLIC = {
+    "nom": "Cassure 24 h + régime 4 h (variante C)",
+    "actifs": ["SOL", "ETH", "BTC"],
+    "taille_pct": 47,
+    "max_positions": 2,
+    "execution": "Jupiter direct, glissement 1 %",
+    "conditions_achat": [
+        "Clôture 4 h supérieure à l'EMA50 4 h",
+        "EMA9 4 h supérieure à l'EMA21 4 h",
+        "Clôture 1 h supérieure au plus haut des 24 heures précédentes",
+        "Pas de vente du même actif depuis moins de 6 heures",
+    ],
+}
 
 SIG_RE = re.compile(r"\b([1-9A-HJ-NP-Za-km-z]{86,90})\b")
 URL_RE = re.compile(r"https://solscan\.io/tx/([1-9A-HJ-NP-Za-km-z]{80,90})")
@@ -772,6 +789,97 @@ def stats(trades):
     }
 
 
+
+def parse_dt(s):
+    iso = iso_paris(s) if s else None
+    if not iso:
+        return None
+    try:
+        return datetime.fromisoformat(iso)
+    except ValueError:
+        return None
+
+
+def last_passage_iso(journal_text, state):
+    """Dernier passage : en-têtes du journal, sinon dates publiques de l'état."""
+    best = None
+    if journal_text:
+        for m in re.finditer(r"^##\s+(.+)$", journal_text, re.M):
+            head = m.group(1).strip()
+            # Prend seulement l'horodatage en tête de ligne, pas le reste du texte.
+            token = head.split(" — ", 1)[0].split(" —", 1)[0].strip()
+            dt = parse_dt(token)
+            if dt and (best is None or dt > best):
+                best = dt
+    # Dates de passage éventuelles dans l'état (liste blanche, pas un parcours libre).
+    candidates = []
+    if isinstance(state, dict):
+        candidates.append(state.get("maj"))
+        rp = state.get("reactive_params")
+        if isinstance(rp, dict):
+            candidates.append(rp.get("dernier_passage"))
+        dc = state.get("dernier_controle")
+        if isinstance(dc, dict):
+            candidates.append(dc.get("date"))
+        sv = state.get("soldes_verifies")
+        if isinstance(sv, dict):
+            candidates.append(sv.get("date"))
+        al = state.get("allocation")
+        if isinstance(al, dict):
+            candidates.append(al.get("maj"))
+    for raw in candidates:
+        if not isinstance(raw, str):
+            continue
+        dt = parse_dt(raw)
+        if dt and (best is None or dt > best):
+            best = dt
+    if best is None:
+        return None
+    off = best.utcoffset()
+    if off is None:
+        return best.strftime("%Y-%m-%dT%H:%M:%S+01:00")
+    total = int(off.total_seconds())
+    sign = "+" if total >= 0 else "-"
+    total = abs(total)
+    hours, rem = divmod(total, 3600)
+    mins = rem // 60
+    return f"{best.strftime('%Y-%m-%dT%H:%M:%S')}{sign}{hours:02d}:{mins:02d}"
+
+
+def nb_positions_ouvertes(state):
+    n = 0
+    if not isinstance(state, dict):
+        return 0
+    for pos in state.get("positions") or []:
+        if isinstance(pos, dict) and (pos.get("actif") or pos.get("qte")):
+            n += 1
+    return n
+
+
+def assert_public(text):
+    if PATH_RE.search(text) or SECRET_RE.search(text):
+        raise SystemExit("Refus d'écrire : un chemin local ou un secret a été détecté dans la sortie.")
+    if any(s in text.upper() for s in ("PRIVATE KEY", "BEGIN RSA", "API_KEY", "SECRET_KEY")):
+        raise SystemExit("Refus d'écrire : un motif sensible a été détecté dans la sortie.")
+
+
+def write_public_json(path, payload, ignore_for_change=("maj",)):
+    """Écrit un JSON public. Ne réécrit pas si seul maj a changé."""
+    text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+    assert_public(text)
+    if path.exists():
+        try:
+            old = json.loads(path.read_text())
+            if isinstance(old, dict) and isinstance(payload, dict):
+                old_cmp = {k: v for k, v in old.items() if k not in ignore_for_change}
+                new_cmp = {k: v for k, v in payload.items() if k not in ignore_for_change}
+                if old_cmp == new_cmp:
+                    return False
+        except (OSError, json.JSONDecodeError):
+            pass
+    path.write_text(text)
+    return True
+
 def main():
     state_path = Path(sys.argv[1]) if len(sys.argv) > 1 else STATE_PATH
     journal_path = Path(sys.argv[2]) if len(sys.argv) > 2 else JOURNAL_PATH
@@ -791,23 +899,12 @@ def main():
         print(f"Avertissement : {journal_path} introuvable", file=sys.stderr)
 
     trades = enrich_sell_pnl(merge(rows))
+    journal_text = journal_path.read_text() if journal_path.exists() else ""
     # Never leak paths
     payload = {
         "maj": now_paris(),
         "fuseau": "Europe/Paris",
-        "mode": {
-            "nom": "Cassure 24 h + régime 4 h (variante C)",
-            "actifs": ["SOL", "ETH", "BTC"],
-            "taille_pct": 47,
-            "max_positions": 2,
-            "execution": "Jupiter direct, glissement 1 %",
-            "conditions_achat": [
-                "Clôture 4 h supérieure à l'EMA50 4 h",
-                "EMA9 4 h supérieure à l'EMA21 4 h",
-                "Clôture 1 h supérieure au plus haut des 24 heures précédentes",
-                "Pas de vente du même actif depuis moins de 6 heures",
-            ],
-        },
+        "mode": MODE_PUBLIC,
         "positions_ouvertes": [],
         "resume": stats(trades),
         "trades": trades,
@@ -830,14 +927,26 @@ def main():
         )
     payload["positions_ouvertes"] = [p for p in ouvertes if p.get("actif")]
 
-    text = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
-    # Safety net
-    if PATH_RE.search(text) or SECRET_RE.search(text):
-        raise SystemExit("Refus d'écrire : un chemin local ou un secret a été détecté dans la sortie.")
-    if any(s in text.upper() for s in ("PRIVATE KEY", "BEGIN RSA", "API_KEY", "SECRET_KEY")):
-        raise SystemExit("Refus d'écrire : un motif sensible a été détecté dans la sortie.")
-    out_path.write_text(text)
-    print(f"Écrit {out_path} — {len(trades)} trades, {payload['resume']}")
+    wrote_trades = write_public_json(out_path, payload)
+    print(
+        f"{'Écrit' if wrote_trades else 'Inchangé'} {out_path} — {len(trades)} trades, {payload['resume']}"
+    )
+
+    status_path = out_path.with_name("status.json")
+    status = {
+        "maj": now_paris(),
+        "fuseau": "Europe/Paris",
+        "dernier_passage": last_passage_iso(journal_text, state),
+        "intervalle_min": INTERVALLE_MIN,
+        "mode": MODE_PUBLIC["nom"],
+        "nb_positions": nb_positions_ouvertes(state),
+    }
+    wrote_status = write_public_json(status_path, status)
+    print(
+        f"{'Écrit' if wrote_status else 'Inchangé'} {status_path} — "
+        f"dernier_passage={status['dernier_passage']} mode={status['mode']} "
+        f"nb_positions={status['nb_positions']}"
+    )
 
 
 if __name__ == "__main__":

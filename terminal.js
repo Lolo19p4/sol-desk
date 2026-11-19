@@ -156,6 +156,7 @@
   }
 
   var tradesData=null, hold=null, holdErr=null, scan={}, lastOk=0, prices={};
+  var statusData=null, statusErr=null, botTick=null;
 
   function lastSellMs(actif){
     if(!tradesData||!tradesData.trades) return null;
@@ -173,6 +174,92 @@
     if(!pill) return;
     pill.textContent=on?'EN DIRECT':'HORS LIGNE';
     pill.className='mk-live '+(on?'on':'off');
+  }
+
+  function pad2(n){ return (n<10?'0':'')+n }
+
+  function passageMs(data){
+    if(!data||!data.dernier_passage) return null;
+    var ms=Date.parse(data.dernier_passage);
+    return isFinite(ms)?ms:null;
+  }
+
+  function fmtAgo(ms){
+    var sec=Math.max(0,Math.floor((Date.now()-ms)/1000));
+    var min=Math.floor(sec/60);
+    if(min<1) return "à l'instant";
+    if(min===1) return 'il y a 1 min';
+    if(min<60) return 'il y a '+min+' min';
+    var h=Math.floor(min/60), r=min%60;
+    if(r===0) return 'il y a '+h+' h';
+    return 'il y a '+h+' h '+r+' min';
+  }
+
+  function fmtNext(ms, intervalMin){
+    var iv=(intervalMin||10)*60*1000;
+    var remain=ms+iv-Date.now();
+    if(remain<=0) return 'prochain passage imminent';
+    var min=Math.max(1, Math.round(remain/60000));
+    if(min===1) return 'prochain passage dans ~1 min';
+    return 'prochain passage dans ~'+min+' min';
+  }
+
+  function fmtTick(ms){
+    var sec=Math.max(0,Math.floor((Date.now()-ms)/1000));
+    var h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+    return (h>0?h+':':'')+pad2(m)+':'+pad2(s);
+  }
+
+  function botLevel(ms){
+    if(ms==null) return 'off';
+    var min=(Date.now()-ms)/60000;
+    if(min>60) return 'stop';
+    if(min>25) return 'late';
+    return 'on';
+  }
+
+  function renderBot(){
+    var el=document.getElementById('tmbot');
+    if(!el) return;
+    if(statusErr||!statusData){
+      el.className='tm-bot off';
+      el.innerHTML='<span class="tm-bot-dot" aria-hidden="true"></span><div class="tm-bot-label">ÉTAT INDISPONIBLE</div><div class="tm-bot-meta">Impossible de lire le dernier passage. Recharge la page.</div>';
+      return;
+    }
+    var ms=passageMs(statusData);
+    if(ms==null){
+      el.className='tm-bot off';
+      el.innerHTML='<span class="tm-bot-dot" aria-hidden="true"></span><div class="tm-bot-label">ÉTAT INDISPONIBLE</div><div class="tm-bot-meta">Pas encore d\'heure de passage.</div>';
+      return;
+    }
+    var level=botLevel(ms);
+    var label=level==='stop'?'ARRÊTÉ':level==='late'?'EN RETARD':'BOT EN MARCHE';
+    var n=statusData.nb_positions;
+    if(n==null) n=0;
+    var posTxt=n===0?'aucune position':(n===1?'1 position':n+' positions');
+    var mode=statusData.mode||'';
+    var interval=statusData.intervalle_min||10;
+    el.className='tm-bot '+(level==='on'?'':level);
+    el.innerHTML=
+      '<span class="tm-bot-dot" aria-hidden="true"></span>'+
+      '<div class="tm-bot-label">'+esc(label)+'</div>'+
+      '<div class="tm-bot-count" id="tmbotcount">'+fmtTick(ms)+'</div>'+
+      '<div class="tm-bot-meta">'+
+        '<div>dernier passage '+esc(fmtAgo(ms))+'</div>'+
+        '<div>'+esc(fmtNext(ms, interval))+'</div>'+
+        '<div class="tm-bot-sub">'+(mode?esc(mode)+' · ':'')+esc(posTxt)+'</div>'+
+      '</div>';
+  }
+
+  async function loadStatus(){
+    try{
+      var data=await getJson(['status.json?t='+Date.now()]);
+      statusData=data;
+      statusErr=null;
+    }catch(e){
+      statusErr=e;
+    }
+    renderBot();
   }
 
   function renderBalance(){
@@ -308,6 +395,7 @@
   }
 
   function renderAll(){
+    renderBot();
     renderBalance();
     renderPosition();
     renderSteps();
@@ -368,9 +456,16 @@
   }
 
   bindMenu();
+  loadStatus();
   refresh();
   setInterval(refresh, 60000);
+  setInterval(loadStatus, 60000);
+  if(botTick) clearInterval(botTick);
+  botTick=setInterval(function(){ renderBot(); }, 1000);
   document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState==='visible') refresh();
+    if(document.visibilityState==='visible'){
+      loadStatus();
+      refresh();
+    }
   });
 })();

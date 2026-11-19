@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="data:,"><title>Sol Desk — Terminal v40</title>
+<link rel="icon" href="data:,"><title>Sol Desk — Terminal v41</title>
 <style>
 :root{--bg:#070a14;--pn:#0d1224;--bd:#26305a;--cy:#22d3ee;--pk:#f472b6;--vi:#a78bfa;--gr:#4ade80;--ye:#facc15;--bl:#60a5fa}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#141a3a,#070a14 60%);color:#d6e2ee;font:13px ui-monospace,Menlo,Consolas,monospace}
@@ -98,6 +98,24 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 #tmtrades{font-size:11px}#tmtrades a{color:var(--ye)}
 #terminal{scroll-margin-top:58px}#marches{scroll-margin-top:58px}
 
+.tm-bot{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;border:1px solid #4ade8055;border-radius:14px;padding:14px 16px;margin:10px 0 12px;background:linear-gradient(180deg,#0a1a12,#0a1020);box-shadow:0 0 22px #4ade8033}
+.tm-bot.late{border-color:#facc1555;box-shadow:0 0 22px #facc1533;background:linear-gradient(180deg,#1a1808,#0a1020)}
+.tm-bot.stop{border-color:#ef444455;box-shadow:0 0 22px #ef444433;background:linear-gradient(180deg,#1a0a0a,#0a1020)}
+.tm-bot.off{border-color:#26305a;box-shadow:none;background:#0a1020}
+.tm-bot-dot{width:18px;height:18px;border-radius:50%;background:var(--gr);box-shadow:0 0 14px var(--gr);flex:0 0 auto;animation:tm-pulse 1.4s ease-in-out infinite}
+.tm-bot.late .tm-bot-dot{background:var(--ye);box-shadow:0 0 14px var(--ye);animation:none}
+.tm-bot.stop .tm-bot-dot{background:#f87171;box-shadow:0 0 14px #f87171;animation:none}
+.tm-bot.off .tm-bot-dot{background:#8a94c4;box-shadow:none;animation:none}
+@keyframes tm-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.28);opacity:.6}}
+.tm-bot-label{font-size:22px;font-weight:800;letter-spacing:1.2px;color:var(--gr);text-transform:uppercase}
+.tm-bot.late .tm-bot-label{color:var(--ye)}
+.tm-bot.stop .tm-bot-label{color:#f87171}
+.tm-bot.off .tm-bot-label{color:#8a94c4;font-size:16px}
+.tm-bot-meta{display:flex;flex-direction:column;gap:2px;color:#cbd5ff;font-size:13px;flex:1;min-width:180px}
+.tm-bot-count{font-size:26px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:2px;text-shadow:0 0 10px #fff4}
+.tm-bot-sub{color:#8a94c4;font-size:11px}
+
+
 </style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
@@ -105,7 +123,7 @@ window.__err=function(m){var e=document.getElementById('errbar');if(e){e.style.d
 window.onerror=function(m){window.__err(m);};window.addEventListener('unhandledrejection',function(e){window.__err(e.reason&&e.reason.message||e.reason);});
 try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var M={};window.__ls={getItem:function(k){return k in M?M[k]:null},setItem:function(k,v){M[k]=String(v)},removeItem:function(k){delete M[k]}};try{Object.defineProperty(window,'localStorage',{value:window.__ls});}catch(_){}}
 </script>
-<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · v40 · variante C · SOL / ETH / BTC</span><span id="clk"></span></div>
+<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · v41 · variante C · SOL / ETH / BTC</span><span id="clk"></span></div>
 <nav class="menu" aria-label="Sections du site">
 <a href="#terminal">Terminal de trading</a>
 <a href="#marches">Marchés</a>
@@ -125,6 +143,7 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 </div>
 <div class="pn" id="terminal">
 <h2>🖥 Terminal de trading — variante C <span id="tmlive" class="mk-live off">HORS LIGNE</span></h2>
+<div id="tmbot" class="tm-bot off"><span class="tm-bot-dot" aria-hidden="true"></span><div class="tm-bot-label">CHARGEMENT</div><div class="tm-bot-meta">État du bot…</div></div>
 <div class="sk">Les étapes du bot, tes soldes en direct, et tes vrais trades. Pour SOL, ETH et BTC, chaque condition d'achat est cochée ou barrée d'après les bougies Binance 1 h et 4 h (clôturées).</div>
 <div id="tmbal" class="tm-bal">Chargement des soldes…</div>
 <div id="tmpos" class="sk" style="margin:4px 0 8px">Chargement de la position…</div>
@@ -197,4 +216,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=40"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=41"></script></body></html>
