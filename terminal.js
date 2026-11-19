@@ -1,0 +1,376 @@
+// Terminal de trading : étapes de la variante C, soldes et vrais trades. Affichage seulement, aucune clé.
+(function(){
+  var ROOT=document.getElementById('terminal');
+  if(!ROOT) return;
+
+  var WALLET='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx';
+  var USDC_MINT='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+  var RPCS=['https://solana-rpc.publicnode.com','https://api.mainnet-beta.solana.com'];
+  var TOKEN_PROG='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+  var TOKEN_2022='TokenzQdBNbLqP5VEhdkAS6EtFNwCb2EB4yF4bFUH5vcg';
+  var MINTS={
+    'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v':'USDC',
+    'So11111111111111111111111111111111111111112':'SOL',
+    '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh':'BTC',
+    '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs':'ETH'
+  };
+  var ASSETS=[
+    {id:'SOL',sym:'SOLUSDT',nom:'Solana'},
+    {id:'ETH',sym:'ETHUSDT',nom:'Ethereum'},
+    {id:'BTC',sym:'BTCUSDT',nom:'Bitcoin'}
+  ];
+  var BASES=['https://api.binance.com','https://data-api.binance.vision'];
+  var RESERVE_SOL=0.02;
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function parisHeure(d){
+    return (d||new Date()).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+  function fmtUsd(x,d){
+    if(x==null||!isFinite(x)) return '–';
+    d=d==null?2:d;
+    return x.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d})+' $';
+  }
+  function fmtPx(x){
+    if(x==null||!isFinite(x)) return '–';
+    var d=x>=1000?2:x>=1?4:x>=0.01?6:8;
+    return x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:d})+' $';
+  }
+  function fmtQty(x){
+    if(x==null||!isFinite(x)) return '–';
+    var d=x>=1000?2:x>=1?4:x>=0.01?6:8;
+    return x.toLocaleString('fr-FR',{maximumFractionDigits:d});
+  }
+  function fmtPct(x){
+    if(x==null||!isFinite(x)) return '–';
+    return (x>=0?'+':'')+x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
+  }
+  function mark(ok){
+    return ok?'<span class="tm-yes">✓</span>':'<span class="tm-no">✗</span>';
+  }
+  function ema(values, period){
+    if(!values||values.length<period) return null;
+    var k=2/(period+1), e=0, i;
+    for(i=0;i<period;i++) e+=values[i];
+    e/=period;
+    var out=new Array(values.length).fill(null);
+    out[period-1]=e;
+    for(i=period;i<values.length;i++){
+      e=values[i]*k+e*(1-k);
+      out[i]=e;
+    }
+    return out;
+  }
+  function last(arr){
+    if(!arr) return null;
+    for(var i=arr.length-1;i>=0;i--) if(arr[i]!=null&&isFinite(arr[i])) return arr[i];
+    return null;
+  }
+
+  async function getJson(urls, opts){
+    var lastErr;
+    for(var i=0;i<urls.length;i++){
+      try{
+        var r=await fetch(urls[i], opts);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return await r.json();
+      }catch(e){ lastErr=e }
+    }
+    throw lastErr||new Error('réseau');
+  }
+
+  async function klines(sym, interval, limit){
+    var q='/api/v3/klines?symbol='+encodeURIComponent(sym)+'&interval='+interval+'&limit='+limit;
+    var rows=await getJson(BASES.map(function(b){return b+q}));
+    var now=Date.now(), out=[];
+    (rows||[]).forEach(function(k){
+      var closeTime=+k[6];
+      if(!isFinite(closeTime)||closeTime>now) return; // bougie encore ouverte : ignorée
+      out.push({t:+k[0], o:+k[1], h:+k[2], l:+k[3], c:+k[4], closeTime:closeTime});
+    });
+    return out;
+  }
+
+  function evalAsset(rows1h, rows4h, lastSellAt){
+    var r={ok:false, c4h:null, ema9:null, ema21:null, ema50:null, close1h:null, ph24:null};
+    r.reg4h=false; r.croise=false; r.cassure=false; r.pause6h=true;
+    if(lastSellAt){
+      r.pause6h=(Date.now()-lastSellAt)>=6*3600*1000;
+    }
+    if(rows4h&&rows4h.length>=50){
+      var c4=rows4h.map(function(x){return x.c});
+      var e9=ema(c4,9), e21=ema(c4,21), e50=ema(c4,50);
+      r.c4h=c4[c4.length-1];
+      r.ema9=last(e9); r.ema21=last(e21); r.ema50=last(e50);
+      r.reg4h=r.c4h!=null&&r.ema50!=null&&r.c4h>r.ema50;
+      r.croise=r.ema9!=null&&r.ema21!=null&&r.ema9>r.ema21;
+    }
+    if(rows1h&&rows1h.length>=25){
+      var lastC=rows1h[rows1h.length-1];
+      r.close1h=lastC.c;
+      var highs=[];
+      for(var i=rows1h.length-25;i<rows1h.length-1;i++){
+        if(i>=0) highs.push(rows1h[i].h);
+      }
+      r.ph24=highs.length?Math.max.apply(null,highs):null;
+      r.cassure=r.close1h!=null&&r.ph24!=null&&r.close1h>r.ph24;
+    }
+    r.ok=r.reg4h&&r.croise&&r.cassure&&r.pause6h;
+    return r;
+  }
+
+  async function rpc(method, params){
+    var body=JSON.stringify({jsonrpc:'2.0',id:1,method:method,params:params});
+    return getJson(RPCS, {method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(d){
+      if(d&&d.error) throw new Error(d.error.message||'rpc');
+      return d.result;
+    });
+  }
+  function addAccounts(res, hold){
+    ((res&&res.value)||[]).forEach(function(acc){
+      var info=acc.account&&acc.account.data&&acc.account.data.parsed&&acc.account.data.parsed.info;
+      if(!info||!info.tokenAmount) return;
+      var id=MINTS[info.mint], ui=+info.tokenAmount.uiAmount;
+      if(!id||!isFinite(ui)||ui<=0) return;
+      hold[id]=(hold[id]||0)+ui;
+    });
+  }
+  async function loadWallet(){
+    var parts=await Promise.all([
+      rpc('getBalance',[WALLET]),
+      rpc('getTokenAccountsByOwner',[WALLET,{programId:TOKEN_PROG},{encoding:'jsonParsed'}]),
+      rpc('getTokenAccountsByOwner',[WALLET,{programId:TOKEN_2022},{encoding:'jsonParsed'}])
+    ]);
+    var h={};
+    var sol=((parts[0]&&parts[0].value)||0)/1e9;
+    if(sol>0) h.SOL=sol;
+    addAccounts(parts[1],h);
+    addAccounts(parts[2],h);
+    if(h.USDC==null){
+      try{
+        var only=await rpc('getTokenAccountsByOwner',[WALLET,{mint:USDC_MINT},{encoding:'jsonParsed'}]);
+        addAccounts(only,h);
+      }catch(e){}
+    }
+    return h;
+  }
+
+  var tradesData=null, hold=null, holdErr=null, scan={}, lastOk=0, prices={};
+
+  function lastSellMs(actif){
+    if(!tradesData||!tradesData.trades) return null;
+    var max=null;
+    tradesData.trades.forEach(function(t){
+      if(t.sens!=='vente'||t.actif!==actif||!t.date) return;
+      var ms=Date.parse(t.date);
+      if(isFinite(ms)&&(max==null||ms>max)) max=ms;
+    });
+    return max;
+  }
+
+  function setLive(on){
+    var pill=document.getElementById('tmlive');
+    if(!pill) return;
+    pill.textContent=on?'EN DIRECT':'HORS LIGNE';
+    pill.className='mk-live '+(on?'on':'off');
+  }
+
+  function renderBalance(){
+    var el=document.getElementById('tmbal');
+    if(!el) return;
+    if(holdErr||!hold){
+      el.innerHTML='<div class="ko">Solde indisponible pour le moment.</div>';
+      return;
+    }
+    var ids=['USDC','SOL','ETH','BTC'];
+    var labels={USDC:'USDC',SOL:'SOL',ETH:'wETH',BTC:'wBTC'};
+    var tot=0, parts='';
+    ids.forEach(function(id){
+      var q=hold[id]||0;
+      var px=id==='USDC'?1:prices[id];
+      var usd=(px!=null&&isFinite(px))?q*px:null;
+      if(usd!=null) tot+=usd;
+      parts+='<div class="tm-kpi"><small>'+esc(labels[id])+'</small><b>'+fmtQty(q)+'</b><span class="sk">'+(usd==null?'–':fmtUsd(usd))+'</span></div>';
+    });
+    el.innerHTML='<div class="tm-kpi tm-total"><small>Solde total</small><b>'+fmtUsd(tot)+'</b><span class="sk">'+parisHeure()+' (heure de Paris)</span></div>'+parts;
+  }
+
+  function renderPosition(){
+    var el=document.getElementById('tmpos');
+    if(!el) return;
+    var open=[];
+    if(tradesData&&tradesData.positions_ouvertes){
+      tradesData.positions_ouvertes.forEach(function(p){ if(p&&p.actif) open.push(p) });
+    }
+    if(!open.length&&hold){
+      if((hold.ETH||0)>0.001) open.push({actif:'ETH',qte:hold.ETH,source:'portefeuille'});
+      if((hold.BTC||0)>0.00002) open.push({actif:'BTC',qte:hold.BTC,source:'portefeuille'});
+    }
+    if(!open.length){
+      el.innerHTML='<div class="sk">Aucune position ouverte. L\'argent est en USDC, en attente d\'un signal.</div>';
+      return;
+    }
+    el.innerHTML=open.map(function(p){
+      var px=prices[p.actif], usd=(px!=null&&p.qte)?px*p.qte:null;
+      return '<div><b class="ok">Position '+esc(p.actif)+'</b> — '+fmtQty(p.qte)+' · '+(usd==null?'–':fmtUsd(usd))+(p.prix?(' · entrée '+fmtPx(p.prix)):'')+'</div>';
+    }).join('');
+  }
+
+  function renderSteps(){
+    var el=document.getElementById('tmsteps');
+    if(!el) return;
+    var nOk=0, details='';
+    ASSETS.forEach(function(a){
+      var s=scan[a.id];
+      if(s&&s.ok) nOk++;
+      details+='<div class="tm-check"><span>'+esc(a.id)+'</span>'+mark(s&&s.ok)+'</div>';
+    });
+    var pauseOk=ASSETS.every(function(a){return !scan[a.id]||scan[a.id].pause6h});
+    var motifs=(tradesData&&tradesData.trades||[]).slice().reverse().filter(function(t){return t.motif}).slice(0,3);
+    var motifTxt=motifs.length?motifs.map(function(t){return esc(t.actif)+' : '+esc(t.motif)}).join('<br>'):'Pas encore de motif.';
+    var etat;
+    if(!hold&&holdErr) etat='Soldes indisponibles.';
+    else if(nOk) etat='Signal d\'achat sur '+nOk+' actif'+(nOk>1?'s':'')+'.';
+    else etat='En USDC, aucune condition d\'achat complète.';
+    el.innerHTML=
+      '<div class="tm-card c1"><h3>SCANNER</h3><div class="sk">SOL, ETH, BTC — tendance 4 h (EMA9 / EMA21 / EMA50) et cassure du plus haut 24 h.</div>'+details+'</div>'+
+      '<div class="tm-card c2"><h3>CONTRÔLE</h3><div class="sk">Filtres de la variante C.</div>'+
+        '<div class="tm-check"><span>Uniquement SOL, ETH, BTC</span>'+mark(true)+'</div>'+
+        '<div class="tm-check"><span>Pas de rachat avant 6 h</span>'+mark(pauseOk)+'</div>'+
+        '<div class="tm-check"><span>Disjoncteur −5 % / jour</span><span class="sk">règle active</span></div>'+
+        '<div class="tm-check"><span>Minimum 8 $</span>'+mark(true)+'</div></div>'+
+      '<div class="tm-card c3"><h3>TAILLE</h3><div class="sk">47 % de la valeur totale par position, au plus 2 positions, plafonné à l\'USDC disponible, minimum 8 $. Réserve 0,02 SOL.</div></div>'+
+      '<div class="tm-card c4"><h3>EXÉCUTION</h3><div class="sk">Jupiter direct, glissement 1 %, sans frais de plateforme. Paiement en USDC.</div></div>'+
+      '<div class="tm-card c5"><h3>JOURNAL</h3><div class="tm-mini">'+motifTxt+'</div></div>'+
+      '<div class="tm-card c6"><h3>ÉTAT</h3><div class="sk">'+esc(etat)+'</div><div class="sk" style="margin-top:6px">Mode : cassure 24 h + régime 4 h.</div></div>';
+  }
+
+  function renderAssets(){
+    var el=document.getElementById('tmassets');
+    if(!el) return;
+    el.innerHTML=ASSETS.map(function(a){
+      var s=scan[a.id]||{};
+      var head=s.ok?'<span class="mk-tag up">SIGNAL</span>':'<span class="mk-tag dn">PAS D\'ACHAT</span>';
+      return '<div class="tm-card '+(s.ok?'tm-go':'')+'"><div class="mk-head"><span class="mk-name">'+esc(a.id)+' <span class="sk" style="font-weight:400;font-size:11px">'+esc(a.nom)+'</span></span>'+head+'</div>'+
+        '<div class="mk-px">'+fmtPx(prices[a.id]!=null?prices[a.id]:s.close1h)+'</div>'+
+        '<div class="tm-check"><span>Clôture 4 h &gt; EMA50 4 h</span>'+mark(!!s.reg4h)+'</div>'+
+        '<div class="sk">clôture '+fmtPx(s.c4h)+' · EMA50 '+fmtPx(s.ema50)+'</div>'+
+        '<div class="tm-check"><span>EMA9 4 h &gt; EMA21 4 h</span>'+mark(!!s.croise)+'</div>'+
+        '<div class="sk">EMA9 '+fmtPx(s.ema9)+' · EMA21 '+fmtPx(s.ema21)+'</div>'+
+        '<div class="tm-check"><span>Clôture 1 h &gt; plus haut 24 h</span>'+mark(!!s.cassure)+'</div>'+
+        '<div class="sk">clôture 1 h '+fmtPx(s.close1h)+' · plus haut 24 h '+fmtPx(s.ph24)+'</div>'+
+        '<div class="tm-check"><span>Pas de vente depuis 6 h</span>'+mark(!!s.pause6h)+'</div>'+
+        '</div>';
+    }).join('');
+  }
+
+  function renderTrades(){
+    var box=document.getElementById('tmresume');
+    var motifs=document.getElementById('tmmotifs');
+    var table=document.getElementById('tmtrades');
+    if(!tradesData||!tradesData.trades){
+      if(box) box.textContent='Historique des trades indisponible.';
+      return;
+    }
+    var r=tradesData.resume||{};
+    var pnl=r.pnl_total_usd;
+    var cls=pnl>0?'ok':pnl<0?'ko':'sk';
+    if(box){
+      box.innerHTML='<div class="tm-kpis">'+
+        '<div class="tm-kpi"><small>Trades</small><b>'+esc(r.nb_trades||0)+'</b></div>'+
+        '<div class="tm-kpi"><small>Gagnants</small><b class="ok">'+(r.gagnants||0)+'</b></div>'+
+        '<div class="tm-kpi"><small>Perdants</small><b class="ko">'+(r.perdants||0)+'</b></div>'+
+        '<div class="tm-kpi"><small>Résultat total</small><b class="'+cls+'">'+fmtUsd(pnl)+'</b></div>'+
+        '</div>';
+    }
+    var last=(tradesData.trades||[]).slice().reverse().filter(function(t){return t.motif}).slice(0,8);
+    if(motifs){
+      motifs.innerHTML='<h3>Derniers motifs</h3><ul class="tm-ul">'+last.map(function(t){
+        return '<li><span class="sk">'+esc(parisHeure(t.date?new Date(t.date):null))+'</span> <b>'+esc(t.sens)+' '+esc(t.actif)+'</b> — '+esc(t.motif)+'</li>';
+      }).join('')+'</ul>';
+    }
+    if(table){
+      var rows=(tradesData.trades||[]).slice().reverse();
+      table.innerHTML='<thead><tr><th>Date</th><th>Sens</th><th>Actif</th><th>Quantité</th><th>USDC</th><th>Prix</th><th>Gain / perte</th><th>Lien</th></tr></thead><tbody>'+
+        rows.map(function(t){
+          var pcls=t.pnl_usd>0?'ok':t.pnl_usd<0?'ko':'sk';
+          var pnlTxt=t.pnl_usd==null?'–':(fmtUsd(t.pnl_usd)+(t.pnl_pct!=null?' ('+fmtPct(t.pnl_pct)+')':''));
+          var usdc=t.usdc!=null?fmtUsd(t.usdc):(t.paye?esc(t.paye):'–');
+          var link=t.solscan?'<a href="'+esc(t.solscan)+'" target="_blank" rel="noopener">Solscan</a>':'–';
+          return '<tr><td>'+esc(parisHeure(t.date?new Date(t.date):null))+'</td><td class="'+(t.sens==='achat'?'ok':'c5')+'">'+esc(t.sens)+'</td><td>'+esc(t.actif)+'</td><td>'+fmtQty(t.qte)+'</td><td>'+usdc+'</td><td>'+fmtPx(t.prix)+'</td><td class="'+pcls+'">'+pnlTxt+'</td><td>'+link+'</td></tr>';
+        }).join('')+'</tbody>';
+    }
+  }
+
+  function setStatus(txt){
+    var st=document.getElementById('tmst');
+    if(st) st.textContent=txt+' · '+parisHeure()+' (heure de Paris)';
+  }
+
+  function renderAll(){
+    renderBalance();
+    renderPosition();
+    renderSteps();
+    renderAssets();
+    renderTrades();
+  }
+
+  async function loadTrades(){
+    tradesData=await getJson(['trades.json?v=40']);
+  }
+
+  async function loadScan(){
+    var jobs=ASSETS.map(function(a){
+      return Promise.all([klines(a.sym,'1h',120), klines(a.sym,'4h',100)]).then(function(rows){
+        scan[a.id]=evalAsset(rows[0], rows[1], lastSellMs(a.id));
+        var last1=rows[0]&&rows[0][rows[0].length-1];
+        if(last1) prices[a.id]=last1.c;
+      });
+    });
+    // prix USDC = 1 ; ticker pour un prix plus frais si possible
+    try{
+      var tick=await getJson(BASES.map(function(b){return b+'/api/v3/ticker/price?symbols='+encodeURIComponent(JSON.stringify(ASSETS.map(function(a){return a.sym})))}));
+      if(Array.isArray(tick)){
+        tick.forEach(function(t){
+          var a=ASSETS.find(function(x){return x.sym===t.symbol});
+          if(a&&isFinite(+t.price)) prices[a.id]=+t.price;
+        });
+      }
+    }catch(e){}
+    await Promise.all(jobs);
+  }
+
+  async function refresh(){
+    var errors=[];
+    try{ if(!tradesData) await loadTrades() }catch(e){ errors.push('journal') }
+    try{ await loadScan() }catch(e){ errors.push('bougies') }
+    try{ hold=await loadWallet(); holdErr=null }catch(e){ hold=null; holdErr=e; errors.push('portefeuille') }
+    if(!errors.length||scan.SOL||scan.ETH||scan.BTC) lastOk=Date.now();
+    setLive(Date.now()-lastOk<90000);
+    renderAll();
+    setStatus(errors.length?('Chargé avec manque : '+errors.join(', ')):'Conditions et soldes à jour');
+  }
+
+  function bindMenu(){
+    function sync(){
+      var hash=(location.hash||'').replace('#','')||'';
+      var links=document.querySelectorAll('.menu a');
+      for(var i=0;i<links.length;i++){
+        var href=(links[i].getAttribute('href')||'').replace('#','');
+        links[i].className=(href&&href===hash)?'on':'';
+      }
+    }
+    sync();
+    window.addEventListener('hashchange', sync);
+    if(location.hash==='#terminal'){
+      setTimeout(function(){ ROOT.scrollIntoView({behavior:'smooth',block:'start'}) }, 50);
+    }
+  }
+
+  bindMenu();
+  refresh();
+  setInterval(refresh, 60000);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') refresh();
+  });
+})();
