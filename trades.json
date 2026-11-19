@@ -1,5 +1,5 @@
 {
-  "maj": "2026-11-19T15:49:32+01:00",
+  "maj": "2026-11-19T16:08:10+01:00",
   "fuseau": "Europe/Paris",
   "mode": {
     "nom": "Cassure 24 h + régime 4 h (variante C)",
@@ -20,90 +20,25 @@
   },
   "positions_ouvertes": [
     {
-      "date": "2026-11-19T12:45:00+01:00",
-      "actif": "SOL",
-      "mint": "So11111111111111111111111111111111111111112",
-      "qte": 0.066245043,
-      "usdc": 4.960429,
-      "entree": 74.88,
-      "prix": 74.88,
-      "stop": 69.64,
-      "source_prix": null,
-      "solscan": "https://solscan.io/tx/4xM8nC8gaaRaHtcGgaB3n4hkhLat6XgkdwiyYXXcjVCvrVEBaZ8pBgTsULSW1AzLmD1qg6A8xenShr4dnh6Mxq8y",
-      "motif": "Achat manuel demandé par Loïc le 19/11 12:44 (30 USDC → SOL). Le 19/11 13:44, moitié de la position (0,200329248 SOL) vendue pour acheter du VVV. Le 19/11 13:47, 0,134084205 SOL (~10 $) vendus pour acheter du JUP. Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
-    },
-    {
-      "date": "2026-11-19T12:58:00+01:00",
-      "actif": "ETH",
-      "mint": "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
-      "qte": 0.00998483,
-      "usdc": 18.039788,
-      "entree": 1806.72,
-      "prix": 1806.72,
-      "stop": 1680.25,
-      "source_prix": null,
-      "solscan": "https://solscan.io/tx/5d9qREbtVMuxMEhMr1FvioBq7EBCbtwyExKVYNWR4C6w7yCDVKuDLQxrNnXpqJBPqmrht5y85WtBvxeLFQnLwtV7",
-      "motif": "Achat manuel demandé par Loïc le 19/11 12:56 (USDC restant à partager, wETH d'abord). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
-    },
-    {
-      "date": "2026-11-19T12:59:00+01:00",
-      "actif": "BONK",
-      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-      "qte": 3790900,
-      "usdc": 9.019895,
-      "entree": 2.3794e-06,
-      "prix": 2.3794e-06,
-      "stop": 2.2128e-06,
-      "source_prix": null,
-      "solscan": "https://solscan.io/tx/2qJeLzdrnGKYdaFEUpuEbB2SFtWDwxtP27njahi7Vs36vh4RBvtR5h496C4qNdyLGE1TP1Xboh6iF13hFsxjSCPK",
-      "motif": "Achat manuel demandé par Loïc le 19/11 12:58 (part du reste d'USDC, à parts égales avec wBTC). Mint officiel BONK (compte jeton déjà existant). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
-    },
-    {
-      "date": "2026-11-19T13:44:00+01:00",
+      "date": "2026-11-19T16:06:00+01:00",
       "actif": "VVV",
       "mint": "VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c",
-      "qte": 0.65282016,
-      "usdc": 14.904516,
-      "entree": 22.83097,
-      "prix": 22.83097,
-      "stop": 21.2328,
+      "qte": 2.87340252,
+      "usdc": 67.090271,
+      "entree": 23.34872,
+      "prix": 23.34872,
+      "stop": 21.71431,
       "source_prix": "jupiter",
-      "solscan": "https://solscan.io/tx/5aSV6WvKJEdTqNUocH5BFr9bMz2Sk3md5LXcZ1DsjB3v2S8uzvuQJ4gpZJ68dJAmNzug1zh7uxfdm8Quh1XSwKk5",
-      "motif": "Achat manuel demandé par Loïc le 19/11 13:40 (moitié du SOL → VVV au comptant, pas de perp ni de levier). Mint officiel Sunrise/Wormhole NTT, vérifié Jupiter : VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c. BONK laissé intact (ordre 13:41). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
-    },
-    {
-      "date": "2026-11-19T13:47:00+01:00",
-      "actif": "JUP",
-      "mint": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-      "qte": 37.390426,
-      "usdc": 10,
-      "entree": 0.267448,
-      "prix": 0.267448,
-      "stop": 0.248727,
-      "source_prix": "binance",
-      "solscan": "https://solscan.io/tx/3c5CGp3bra3DSufcdZqcMhzCp4EZRzKLw7Ud5ByCTSb7BiSZ358ubE4ES8cfixNXMnoqRoiMjPgxBfHFDx9bBUuA",
-      "motif": "Achat manuel demandé par Loïc le 19/11 13:46 (10 $ de SOL → JUP, en plus du VVV). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance JUPUSDT."
-    },
-    {
-      "date": "2026-11-19T15:48:00+01:00",
-      "actif": "PYTH",
-      "mint": "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
-      "qte": 158.801966,
-      "usdc": 9.010424,
-      "entree": 0.05674,
-      "prix": 0.05674,
-      "stop": 0.052768,
-      "source_prix": "binance",
-      "solscan": "https://solscan.io/tx/3tq463ERKciySG4PVb6neEf9KpeRxVfxJCCrHPN3yt5wWh5X4zUVCBDdn7SnkGXqAcC842Dr8DqXHGSFXBdT3TZh",
-      "motif": "Achat manuel demandé par Loïc le 19/11 15:47 (tout le wBTC → PYTH). Mint officiel vérifié Jupiter HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3. Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance PYTHUSDT."
+      "solscan": "https://solscan.io/tx/4H2wi8sbyMuyrdzfHHA5Yk57xsXJ3ffyGQYKnHwzHkzht3BUq94aFJ5xrfkxNhN4rJcsMgohf969AvCpH9aF8nS",
+      "motif": "Position unique fusionnée le 19/11 16:06 : VVV déjà détenu (sol_manuel_vvv_19_11_1340) plus tout le wETH, BONK, JUP, PYTH, 0,50 USDC et le SOL hors réserve 0,02, sur ordre de Loïc (16:00). Prix d'entrée = moyenne pondérée des coûts. Stop −7 %, stop suiveur 4 % dès +6 %."
     }
   ],
   "resume": {
-    "nb_trades": 51,
-    "nb_ventes_avec_pnl": 19,
-    "gagnants": 5,
-    "perdants": 14,
-    "pnl_total_usd": -8.6014
+    "nb_trades": 57,
+    "nb_ventes_avec_pnl": 25,
+    "gagnants": 6,
+    "perdants": 19,
+    "pnl_total_usd": -8.8168
   },
   "trades": [
     {
@@ -681,21 +616,9 @@
       "usdc": 9.019894,
       "prix": 64025.37,
       "solscan": "https://solscan.io/tx/4yvjdzEETwSbHEVZ7ha4mg7h54Qr8WrhCnfgNELcoBzim1yyDckFscJPHitP5snaP54hT5jW6MJ8NCw3kTxV11gC",
-      "motif": "wBTC : 9,019894 USDC -> 0,00014088 wBTC (prix 64 025,37, route Whirlpool directe, 0 frais plateforme, impact 0).",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:56, puis partage du reste d'USDC avec BONK (12:58). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
       "pnl_usd": null,
       "pnl_pct": null
-    },
-    {
-      "date": "2026-11-19T13:44:00+01:00",
-      "actif": "VVV",
-      "sens": "achat",
-      "qte": 0.65282016,
-      "usdc": 14.904516,
-      "prix": 22.83097,
-      "solscan": "https://solscan.io/tx/5aSV6WvKJEdTqNUocH5BFr9bMz2Sk3md5LXcZ1DsjB3v2S8uzvuQJ4gpZJ68dJAmNzug1zh7uxfdm8Quh1XSwKk5",
-      "motif": "Achat manuel demandé par Loïc le 19/11 13:40 (moitié du SOL → VVV au comptant, pas de perp ni de levier). Mint officiel Sunrise/Wormhole NTT, vérifié Jupiter : VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c. BONK laissé intact (ordre 13:41). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
-      "pnl_usd": null,
-      "pnl_pct": 6
     },
     {
       "date": "2026-11-19T13:47:00+01:00",
@@ -707,8 +630,7 @@
       "solscan": "https://solscan.io/tx/3c5CGp3bra3DSufcdZqcMhzCp4EZRzKLw7Ud5ByCTSb7BiSZ358ubE4ES8cfixNXMnoqRoiMjPgxBfHFDx9bBUuA",
       "motif": "Achat manuel demandé par Loïc le 19/11 13:46 (10 $ de SOL → JUP, en plus du VVV). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance JUPUSDT.",
       "pnl_usd": null,
-      "pnl_pct": 6,
-      "paye": "0,134084205 SOL"
+      "pnl_pct": null
     },
     {
       "date": "2026-11-19T15:48:00+01:00",
@@ -720,7 +642,91 @@
       "solscan": "https://solscan.io/tx/3tq463ERKciySG4PVb6neEf9KpeRxVfxJCCrHPN3yt5wWh5X4zUVCBDdn7SnkGXqAcC842Dr8DqXHGSFXBdT3TZh",
       "motif": "Achat manuel demandé par Loïc le 19/11 15:47 (tout le wBTC → PYTH). Mint officiel vérifié Jupiter HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3. Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance. Prix de surveillance : Binance PYTHUSDT.",
       "pnl_usd": null,
-      "pnl_pct": 6
+      "pnl_pct": null
+    },
+    {
+      "date": "2026-11-19T15:48:00+01:00",
+      "actif": "BTC",
+      "sens": "vente",
+      "qte": 0.00014088,
+      "usdc": 9.010424,
+      "prix": 63958,
+      "solscan": "https://solscan.io/tx/3tq463ERKciySG4PVb6neEf9KpeRxVfxJCCrHPN3yt5wWh5X4zUVCBDdn7SnkGXqAcC842Dr8DqXHGSFXBdT3TZh",
+      "motif": "Échange de tout le wBTC contre du PYTH demandé par Loïc (19/11 15:47 Paris)",
+      "pnl_usd": -0.0095,
+      "pnl_pct": -0.1
+    },
+    {
+      "date": "2026-11-19T16:06:00+01:00",
+      "actif": "VVV",
+      "sens": "achat",
+      "qte": 2.87340252,
+      "usdc": 67.090271,
+      "prix": 23.34872,
+      "solscan": "https://solscan.io/tx/4H2wi8sbyMuyrdzfHHA5Yk57xsXJ3ffyGQYKnHwzHkzht3BUq94aFJ5xrfkxNhN4rJcsMgohf969AvCpH9aF8nS",
+      "motif": "Position unique fusionnée le 19/11 16:06 : VVV déjà détenu (sol_manuel_vvv_19_11_1340) plus tout le wETH, BONK, JUP, PYTH, 0,50 USDC et le SOL hors réserve 0,02, sur ordre de Loïc (16:00). Prix d'entrée = moyenne pondérée des coûts. Stop −7 %, stop suiveur 4 % dès +6 %.",
+      "pnl_usd": null,
+      "pnl_pct": null
+    },
+    {
+      "date": "2026-11-19T16:06:00+01:00",
+      "actif": "ETH",
+      "sens": "vente",
+      "qte": 0.00998483,
+      "usdc": 18.01624,
+      "prix": 1804.36,
+      "solscan": "https://solscan.io/tx/23JdJvyS7rRjiqWNAfTQAMLt43Srstf8MN7f8Ep7J4uQ9diwm2BEYxJcvq8cwPwuPoKEpik9oDzC2pCuJJhUxNPB",
+      "motif": "Vente de tout le wETH contre du VVV demandée par Loïc (19/11 16:00 Paris)",
+      "pnl_usd": -0.0235,
+      "pnl_pct": -0.13
+    },
+    {
+      "date": "2026-11-19T16:06:00+01:00",
+      "actif": "JUP",
+      "sens": "vente",
+      "qte": 37.390426,
+      "usdc": 9.870192,
+      "prix": 0.264,
+      "solscan": "https://solscan.io/tx/3Jdt8R4i1mxDLt7WoYBEbv8y44RS1VfCHfxZk4tygzPvR9CoPbji5wttXu7sTkBMhUAMd1Grre3EeryDgwm3tDpS",
+      "motif": "Vente de tout le JUP contre du VVV demandée par Loïc (19/11 16:00 Paris)",
+      "pnl_usd": -0.1298,
+      "pnl_pct": -1.3
+    },
+    {
+      "date": "2026-11-19T16:06:00+01:00",
+      "actif": "SOL",
+      "sens": "vente",
+      "qte": 0.066245043,
+      "usdc": 4.97985,
+      "prix": 75.16566,
+      "solscan": "https://solscan.io/tx/4H2wi8sbyMuyrdzfHHA5Yk57xsXJ3ffyGQYKnHwzHkzht3BUq94aFJ5xrfkxNhN4rJcsMgohf969AvCpH9aF8nS",
+      "motif": "Vente du SOL (hors réserve 0,02) contre du VVV demandée par Loïc (19/11 16:00 Paris)",
+      "pnl_usd": 0.0194,
+      "pnl_pct": 0.39
+    },
+    {
+      "date": "2026-11-19T16:06:00+01:00",
+      "actif": "PYTH",
+      "sens": "vente",
+      "qte": 158.801966,
+      "usdc": 8.990092,
+      "prix": 0.05661,
+      "solscan": "https://solscan.io/tx/4yXb5fXkrV2NQMFmoj9hEwHZYvBE6niR9TNXemuxQJEcrXuh5BxpyLZfxRV26FN8gJxerXGxFAwA27zqzRvaymsM",
+      "motif": "Vente de tout le PYTH contre du VVV demandée par Loïc (19/11 16:00 Paris)",
+      "pnl_usd": -0.0203,
+      "pnl_pct": -0.23
+    },
+    {
+      "date": "2026-11-19T16:06:00+01:00",
+      "actif": "BONK",
+      "sens": "vente",
+      "qte": 3790900,
+      "usdc": 8.968221,
+      "prix": 2.37e-06,
+      "solscan": "https://solscan.io/tx/WEfKzQfMwNhMwAa9Kpwg3aoGBZ5e581oEiWEw8ENU2dXtb1BvdHxsdhgoU7f4d6APbr2X3WkQpzdPgoyVcsUsHb",
+      "motif": "Vente de tout le BONK contre du VVV demandée par Loïc (19/11 16:00 Paris)",
+      "pnl_usd": -0.0517,
+      "pnl_pct": -0.57
     }
   ]
 }

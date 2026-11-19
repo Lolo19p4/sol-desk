@@ -1,58 +1,18 @@
 {
-  "maj": "2026-11-19T16:02:13+01:00",
+  "maj": "2026-11-19T16:07:56+01:00",
   "fuseau": "Europe/Paris",
-  "dernier_passage": "2026-11-19T16:02:00+01:00",
+  "dernier_passage": "2026-11-19T16:06:00+01:00",
   "intervalle_min": 10,
   "mode": "Cassure 24 h + régime 4 h (variante C)",
-  "nb_positions": 6,
+  "nb_positions": 1,
   "positions_ouvertes": [
-    {
-      "actif": "SOL",
-      "mint": "So11111111111111111111111111111111111111112",
-      "qte": 0.066245043,
-      "entree": 74.88,
-      "stop": 69.64,
-      "source_prix": null
-    },
-    {
-      "actif": "ETH",
-      "mint": "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
-      "qte": 0.00998483,
-      "entree": 1806.72,
-      "stop": 1680.25,
-      "source_prix": null
-    },
-    {
-      "actif": "BONK",
-      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-      "qte": 3790900,
-      "entree": 2.3794e-06,
-      "stop": 2.2128e-06,
-      "source_prix": null
-    },
     {
       "actif": "VVV",
       "mint": "VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c",
-      "qte": 0.65282016,
-      "entree": 22.83097,
-      "stop": 21.2328,
+      "qte": 2.87340252,
+      "entree": 23.34872,
+      "stop": 21.71431,
       "source_prix": "jupiter"
-    },
-    {
-      "actif": "JUP",
-      "mint": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
-      "qte": 37.390426,
-      "entree": 0.267448,
-      "stop": 0.248727,
-      "source_prix": "binance"
-    },
-    {
-      "actif": "PYTH",
-      "mint": "HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3",
-      "qte": 158.801966,
-      "entree": 0.05674,
-      "stop": 0.052768,
-      "source_prix": "binance"
     }
   ]
 }
