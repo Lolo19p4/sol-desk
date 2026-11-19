@@ -66,6 +66,8 @@ SKIP_TX = {
     # tx jamais arrivées (première tentative VVV, essai ETH→JUP annulé)
     "3se93d663WSJLDc1bwCBczJmf6R3Sfek8YoZj5BQeaBTkv2ugJoHz6CBpx82PcGvNBQFo6u5whT36GRBv6YnVwU5",
     "2NJwUCHUtyxTnNx9f1gGNWYDnixtF7j2yWYR2eCdxKfxR2J8BnxzeaNuDer37BQTjS31KBhYCiWqSuxUn5HdYvJa",
+    "5sAfcfcKkuzc1fCtvssegTVW5yWcNywLDrpEaLdhJXWHSRc5TKwYSoTy8puArxXW9SvUYnjtGgX9zRVu1apQ6Q9h",
+    "5siUkVxXRj7zvNNYX3koHRPEaA1bgzmFtX4YqW3epqV35pE1Ni3JWBNwCUXakgkauGiUKrvBDiig3K7AzVyt3eX3",
 }
 
 
@@ -432,6 +434,12 @@ def walk_state(state, rows):
         "cloture_sol_manuel_jup_18_11_1946",
         "cloture_jup_18_11_2040",
         "cloture_jup_19_11_0700",
+        "cloture_sol_manuel_btc_19_11_1548",
+        "cloture_sol_manuel_eth_19_11_1603",
+        "cloture_sol_manuel_bonk_19_11_1603",
+        "cloture_sol_manuel_jup_19_11_1604",
+        "cloture_sol_manuel_pyth_19_11_1605",
+        "cloture_sol_manuel_19_11_1605",
     ):
         default = "JUP" if "jup" in key else "SOL"
         close_block(state.get(key) or {}, default)
@@ -716,9 +724,10 @@ def merge(rows):
             no_tx.append(r)
             continue
         sig = tx_id(link)
-        prev = by.get(sig)
+        key = (sig, r.get("sens"), r.get("actif"))
+        prev = by.get(key)
         if not prev:
-            by[sig] = r
+            by[key] = r
             continue
         # Prefer record with more filled fields, and larger usdc for same sens (combined)
         def score(x):
@@ -729,20 +738,20 @@ def merge(rows):
 
         # Ne pas écraser un champ déjà rempli (l'état structuré est ajouté en premier).
         for k, v in r.items():
-            cur = by[sig].get(k)
+            cur = by[key].get(k)
             if k == "date" and not looks_like_date(cur) and looks_like_date(v):
-                by[sig][k] = iso_paris(v) or v
+                by[key][k] = iso_paris(v) or v
                 continue
             if k in ("qte", "usdc") and isinstance(v, (int, float)) and isinstance(cur, (int, float)):
                 if abs(v) > abs(cur):
-                    by[sig][k] = v
+                    by[key][k] = v
                     if k == "usdc":
                         for f in ("pnl_usd", "pnl_pct", "prix", "motif"):
                             if r.get(f) not in (None, ""):
-                                by[sig][f] = r[f]
+                                by[key][f] = r[f]
                 continue
             if cur in (None, "") and v not in (None, ""):
-                by[sig][k] = v
+                by[key][k] = v
     out = list(by.values()) + no_tx
     def key(r):
         d = r.get("date")
@@ -756,6 +765,9 @@ def merge(rows):
         if not r.get("actif") or not r.get("sens"):
             continue
         if r.get("solscan") is None and r.get("qte") is None and r.get("usdc") is None:
+            continue
+        # Vente incomplète (souvent un faux positif du journal) : sans montant ni P&L.
+        if r.get("sens") == "vente" and r.get("usdc") is None and r.get("pnl_usd") is None:
             continue
         # drop leftover empty paye
         if "paye" in r and not r["paye"]:
