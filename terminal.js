@@ -16,9 +16,10 @@
     'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263':'BONK',
     'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN':'JUP',
     'VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c':'VVV',
-    'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm':'WIF'
+    'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm':'WIF',
+    'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3':'PYTH'
   };
-  var BINANCE_SYM={SOL:'solusdt',ETH:'ethusdt',BTC:'btcusdt',BONK:'bonkusdt',JUP:'jupusdt',WIF:'wifusdt'};
+  var BINANCE_SYM={SOL:'solusdt',ETH:'ethusdt',BTC:'btcusdt',BONK:'bonkusdt',JUP:'jupusdt',WIF:'wifusdt',PYTH:'pythusdt'};
   var JUP_PRICE='https://lite-api.jup.ag/price/v3?ids=';
   var ASSETS=[
     {id:'SOL',sym:'SOLUSDT',nom:'Solana'},
@@ -472,7 +473,7 @@
   }
 
   async function loadTrades(){
-    tradesData=await getJson(['trades.json?v=42']);
+    tradesData=await getJson(['trades.json?v=43']);
   }
 
   async function loadScan(){
@@ -527,7 +528,7 @@
 
   function startBinanceWs(){
     if(ws){ try{ ws.close(); }catch(e){} ws=null; }
-    var streams=['solusdt','ethusdt','btcusdt','bonkusdt','jupusdt','wifusdt'].map(function(s){return s+'@ticker'}).join('/');
+    var streams=['solusdt','ethusdt','btcusdt','bonkusdt','jupusdt','wifusdt','pythusdt'].map(function(s){return s+'@ticker'}).join('/');
     var urls=[
       'wss://stream.binance.com:9443/stream?streams='+streams,
       'wss://data-stream.binance.vision/stream?streams='+streams

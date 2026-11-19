@@ -55,6 +55,7 @@ ACTIF_MAP = {
     "WBTC": "BTC",
     "VVV": "VVV",
     "WIF": "WIF",
+    "PYTH": "PYTH",
     "PERCOLATOR": "Percolator",
 }
 
