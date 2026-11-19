@@ -1,5 +1,5 @@
 {
-  "maj": "2026-11-19T12:29:36+01:00",
+  "maj": "2026-11-19T12:46:27+01:00",
   "fuseau": "Europe/Paris",
   "mode": {
     "nom": "Cassure 24 h + régime 4 h (variante C)",
@@ -18,9 +18,19 @@
       "Pas de vente du même actif depuis moins de 6 heures"
     ]
   },
-  "positions_ouvertes": [],
+  "positions_ouvertes": [
+    {
+      "date": "2026-11-19T12:45:00+01:00",
+      "actif": "SOL",
+      "qte": 0.400658496,
+      "usdc": 30,
+      "prix": 74.88,
+      "solscan": "https://solscan.io/tx/4xM8nC8gaaRaHtcGgaB3n4hkhLat6XgkdwiyYXXcjVCvrVEBaZ8pBgTsULSW1AzLmD1qg6A8xenShr4dnh6Mxq8y",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:44 (30 USDC → SOL). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
+    }
+  ],
   "resume": {
-    "nb_trades": 44,
+    "nb_trades": 45,
     "nb_ventes_avec_pnl": 19,
     "gagnants": 5,
     "perdants": 14,
@@ -557,6 +567,18 @@
       "motif": "EMA9<EMA21 et clôture<EMA21 5 min sur 2 bougies",
       "pnl_usd": 1.5493,
       "pnl_pct": 2.4
+    },
+    {
+      "date": "2026-11-19T12:45:00+01:00",
+      "actif": "SOL",
+      "sens": "achat",
+      "qte": 0.400658496,
+      "usdc": 30,
+      "prix": 74.88,
+      "solscan": "https://solscan.io/tx/4xM8nC8gaaRaHtcGgaB3n4hkhLat6XgkdwiyYXXcjVCvrVEBaZ8pBgTsULSW1AzLmD1qg6A8xenShr4dnh6Mxq8y",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:44 (30 USDC → SOL). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
+      "pnl_usd": null,
+      "pnl_pct": null
     }
   ]
 }
