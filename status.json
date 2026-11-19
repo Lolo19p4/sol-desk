@@ -1,8 +1,8 @@
 {
-  "maj": "2026-11-19T12:58:10+01:00",
+  "maj": "2026-11-19T13:01:04+01:00",
   "fuseau": "Europe/Paris",
   "dernier_passage": "2026-11-19T13:00:00+01:00",
   "intervalle_min": 10,
   "mode": "Cassure 24 h + régime 4 h (variante C)",
-  "nb_positions": 1
+  "nb_positions": 4
 }

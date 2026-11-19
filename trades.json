@@ -1,5 +1,5 @@
 {
-  "maj": "2026-11-19T12:46:27+01:00",
+  "maj": "2026-11-19T13:01:04+01:00",
   "fuseau": "Europe/Paris",
   "mode": {
     "nom": "Cassure 24 h + régime 4 h (variante C)",
@@ -27,10 +27,37 @@
       "prix": 74.88,
       "solscan": "https://solscan.io/tx/4xM8nC8gaaRaHtcGgaB3n4hkhLat6XgkdwiyYXXcjVCvrVEBaZ8pBgTsULSW1AzLmD1qg6A8xenShr4dnh6Mxq8y",
       "motif": "Achat manuel demandé par Loïc le 19/11 12:44 (30 USDC → SOL). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
+    },
+    {
+      "date": "2026-11-19T12:58:00+01:00",
+      "actif": "ETH",
+      "qte": 0.00998483,
+      "usdc": 18.039788,
+      "prix": 1806.72,
+      "solscan": "https://solscan.io/tx/5d9qREbtVMuxMEhMr1FvioBq7EBCbtwyExKVYNWR4C6w7yCDVKuDLQxrNnXpqJBPqmrht5y85WtBvxeLFQnLwtV7",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:56 (USDC restant à partager, wETH d'abord). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
+    },
+    {
+      "date": "2026-11-19T12:59:00+01:00",
+      "actif": "BTC",
+      "qte": 0.00014088,
+      "usdc": 9.019894,
+      "prix": 64025.37,
+      "solscan": "https://solscan.io/tx/4yvjdzEETwSbHEVZ7ha4mg7h54Qr8WrhCnfgNELcoBzim1yyDckFscJPHitP5snaP54hT5jW6MJ8NCw3kTxV11gC",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:56, puis partage du reste d'USDC avec BONK (12:58). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
+    },
+    {
+      "date": "2026-11-19T12:59:00+01:00",
+      "actif": "BONK",
+      "qte": 3790900,
+      "usdc": 9.019895,
+      "prix": 2.38e-06,
+      "solscan": "https://solscan.io/tx/2qJeLzdrnGKYdaFEUpuEbB2SFtWDwxtP27njahi7Vs36vh4RBvtR5h496C4qNdyLGE1TP1Xboh6iF13hFsxjSCPK",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:58 (part du reste d'USDC, à parts égales avec wBTC). Mint officiel BONK (compte jeton déjà existant). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance."
     }
   ],
   "resume": {
-    "nb_trades": 45,
+    "nb_trades": 48,
     "nb_ventes_avec_pnl": 19,
     "gagnants": 5,
     "perdants": 14,
@@ -577,6 +604,42 @@
       "prix": 74.88,
       "solscan": "https://solscan.io/tx/4xM8nC8gaaRaHtcGgaB3n4hkhLat6XgkdwiyYXXcjVCvrVEBaZ8pBgTsULSW1AzLmD1qg6A8xenShr4dnh6Mxq8y",
       "motif": "Achat manuel demandé par Loïc le 19/11 12:44 (30 USDC → SOL). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
+      "pnl_usd": null,
+      "pnl_pct": null
+    },
+    {
+      "date": "2026-11-19T12:58:00+01:00",
+      "actif": "ETH",
+      "sens": "achat",
+      "qte": 0.00998483,
+      "usdc": 18.039788,
+      "prix": 1806.72,
+      "solscan": "https://solscan.io/tx/5d9qREbtVMuxMEhMr1FvioBq7EBCbtwyExKVYNWR4C6w7yCDVKuDLQxrNnXpqJBPqmrht5y85WtBvxeLFQnLwtV7",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:56 (USDC restant à partager, wETH d'abord). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
+      "pnl_usd": null,
+      "pnl_pct": null
+    },
+    {
+      "date": "2026-11-19T12:59:00+01:00",
+      "actif": "BONK",
+      "sens": "achat",
+      "qte": 3790900,
+      "usdc": 9.019895,
+      "prix": 2.38e-06,
+      "solscan": "https://solscan.io/tx/2qJeLzdrnGKYdaFEUpuEbB2SFtWDwxtP27njahi7Vs36vh4RBvtR5h496C4qNdyLGE1TP1Xboh6iF13hFsxjSCPK",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:58 (part du reste d'USDC, à parts égales avec wBTC). Mint officiel BONK (compte jeton déjà existant). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
+      "pnl_usd": null,
+      "pnl_pct": null
+    },
+    {
+      "date": "2026-11-19T12:59:00+01:00",
+      "actif": "BTC",
+      "sens": "achat",
+      "qte": 0.00014088,
+      "usdc": 9.019894,
+      "prix": 64025.37,
+      "solscan": "https://solscan.io/tx/4yvjdzEETwSbHEVZ7ha4mg7h54Qr8WrhCnfgNELcoBzim1yyDckFscJPHitP5snaP54hT5jW6MJ8NCw3kTxV11gC",
+      "motif": "Achat manuel demandé par Loïc le 19/11 12:56, puis partage du reste d'USDC avec BONK (12:58). Règles manuelles : stop −7 %, stop suiveur 4 % dès +6 %, pas de sortie sur tendance.",
       "pnl_usd": null,
       "pnl_pct": null
     }
