@@ -1,8 +1,58 @@
 {
-  "maj": "2026-11-19T13:40:43+01:00",
+  "maj": "2026-11-19T13:50:37+01:00",
   "fuseau": "Europe/Paris",
-  "dernier_passage": "2026-11-19T13:41:00+01:00",
+  "dernier_passage": "2026-11-19T13:48:00+01:00",
   "intervalle_min": 10,
   "mode": "Cassure 24 h + régime 4 h (variante C)",
-  "nb_positions": 4
+  "nb_positions": 6,
+  "positions_ouvertes": [
+    {
+      "actif": "SOL",
+      "mint": "So11111111111111111111111111111111111111112",
+      "qte": 0.066245043,
+      "entree": 74.88,
+      "stop": 69.64,
+      "source_prix": null
+    },
+    {
+      "actif": "ETH",
+      "mint": "7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",
+      "qte": 0.00998483,
+      "entree": 1806.72,
+      "stop": 1680.25,
+      "source_prix": null
+    },
+    {
+      "actif": "BTC",
+      "mint": "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
+      "qte": 0.00014088,
+      "entree": 64025.37,
+      "stop": 59543.59,
+      "source_prix": null
+    },
+    {
+      "actif": "BONK",
+      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "qte": 3790900,
+      "entree": 2.3794e-06,
+      "stop": 2.2128e-06,
+      "source_prix": null
+    },
+    {
+      "actif": "VVV",
+      "mint": "VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c",
+      "qte": 0.65282016,
+      "entree": 22.83097,
+      "stop": 21.2328,
+      "source_prix": "jupiter"
+    },
+    {
+      "actif": "JUP",
+      "mint": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      "qte": 37.390426,
+      "entree": 0.267448,
+      "stop": 0.248727,
+      "source_prix": "binance"
+    }
+  ]
 }
