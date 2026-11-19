@@ -53,6 +53,8 @@ ACTIF_MAP = {
     "WETH": "ETH",
     "BTC": "BTC",
     "WBTC": "BTC",
+    "VVV": "VVV",
+    "WIF": "WIF",
     "PERCOLATOR": "Percolator",
 }
 
@@ -60,6 +62,9 @@ ACTIF_MAP = {
 SKIP_TX = {
     "5WDQwdvM7dUJDs6hnnCREVJabgc4Tb4M7wNF4D9aXTcVQV2ZaH9v1zFpkuZxBEwKq3rZqVyXymVYjFtbigWFfHxf",
     "LpeKxHnr5jr534kKAXh76GB1FD6R5Cv5gXwHX3qR3aQStU4DpKTdULf9JxFJZPa65jbEz437BEyxXS1iP5yjPZS",
+    # tx jamais arrivées (première tentative VVV, essai ETH→JUP annulé)
+    "3se93d663WSJLDc1bwCBczJmf6R3Sfek8YoZj5BQeaBTkv2ugJoHz6CBpx82PcGvNBQFo6u5whT36GRBv6YnVwU5",
+    "2NJwUCHUtyxTnNx9f1gGNWYDnixtF7j2yWYR2eCdxKfxR2J8BnxzeaNuDer37BQTjS31KBhYCiWqSuxUn5HdYvJa",
 }
 
 
@@ -846,6 +851,76 @@ def last_passage_iso(journal_text, state):
     return f"{best.strftime('%Y-%m-%dT%H:%M:%S')}{sign}{hours:02d}:{mins:02d}"
 
 
+
+def entry_price(pos):
+    px = round_num(pos.get("prix_entree"), 12)
+    if px is not None:
+        return px
+    ent = pos.get("entree")
+    if isinstance(ent, (int, float)):
+        return round_num(ent, 12)
+    qte = to_num(pos.get("qte"))
+    cout = to_num(pos.get("cout_usdc") or pos.get("cout") or pos.get("usdc"))
+    if qte and cout and qte != 0:
+        return round_num(cout / qte, 12)
+    return None
+
+
+def public_position(pos):
+    if not isinstance(pos, dict):
+        return {}
+    qte = round_num(pos.get("qte"), 9)
+    cout = round_num(pos.get("cout_usdc") or pos.get("cout"), 6)
+    actif = norm_actif(pos.get("actif"))
+    mint = pos.get("mint")
+    if mint is not None:
+        mint = str(mint).strip() or None
+        if mint and (PATH_RE.search(mint) or len(mint) > 64):
+            mint = None
+    source = pos.get("source_prix")
+    if source:
+        source = str(source).strip().lower()
+        if source not in ("binance", "jupiter"):
+            source = None
+    return {
+        "date": iso_paris(pos.get("date") or pos.get("entree") or pos.get("ouverte")),
+        "actif": actif,
+        "mint": mint,
+        "qte": qte,
+        "usdc": cout,
+        "entree": entry_price(pos),
+        "prix": entry_price(pos),
+        "stop": round_num(pos.get("stop"), 12),
+        "source_prix": source,
+        "solscan": solscan(pos.get("tx")),
+        "motif": clean_text(pos.get("demande") or pos.get("note") or pos.get("motif")),
+    }
+
+
+def public_open_positions(state):
+    out = []
+    if not isinstance(state, dict):
+        return out
+    for pos in state.get("positions") or []:
+        if not isinstance(pos, dict):
+            continue
+        row = public_position(pos)
+        if not row.get("actif"):
+            continue
+        # Champs demandés pour status.json : actif, mint, quantité, entrée, stop.
+        out.append(
+            {
+                "actif": row["actif"],
+                "mint": row.get("mint"),
+                "qte": row.get("qte"),
+                "entree": row.get("entree"),
+                "stop": row.get("stop"),
+                "source_prix": row.get("source_prix"),
+            }
+        )
+    return out
+
+
 def nb_positions_ouvertes(state):
     n = 0
     if not isinstance(state, dict):
@@ -914,17 +989,7 @@ def main():
     for pos in state.get("positions") or []:
         if not isinstance(pos, dict):
             continue
-        ouvertes.append(
-            {
-                "date": iso_paris(pos.get("date") or pos.get("entree") or pos.get("ouverte")),
-                "actif": norm_actif(pos.get("actif")),
-                "qte": round_num(pos.get("qte"), 9),
-                "usdc": round_num(pos.get("cout_usdc") or pos.get("cout"), 6),
-                "prix": round_num(pos.get("prix_entree") or (pos.get("entree") if isinstance(pos.get("entree"), (int, float)) else None), 8),
-                "solscan": solscan(pos.get("tx")),
-                "motif": clean_text(pos.get("demande") or pos.get("note") or pos.get("motif")),
-            }
-        )
+        ouvertes.append(public_position(pos))
     payload["positions_ouvertes"] = [p for p in ouvertes if p.get("actif")]
 
     wrote_trades = write_public_json(out_path, payload)
@@ -940,6 +1005,7 @@ def main():
         "intervalle_min": INTERVALLE_MIN,
         "mode": MODE_PUBLIC["nom"],
         "nb_positions": nb_positions_ouvertes(state),
+        "positions_ouvertes": public_open_positions(state),
     }
     wrote_status = write_public_json(status_path, status)
     print(

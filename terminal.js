@@ -12,8 +12,14 @@
     'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v':'USDC',
     'So11111111111111111111111111111111111111112':'SOL',
     '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh':'BTC',
-    '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs':'ETH'
+    '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs':'ETH',
+    'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263':'BONK',
+    'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN':'JUP',
+    'VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c':'VVV',
+    'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm':'WIF'
   };
+  var BINANCE_SYM={SOL:'solusdt',ETH:'ethusdt',BTC:'btcusdt',BONK:'bonkusdt',JUP:'jupusdt',WIF:'wifusdt'};
+  var JUP_PRICE='https://lite-api.jup.ag/price/v3?ids=';
   var ASSETS=[
     {id:'SOL',sym:'SOLUSDT',nom:'Solana'},
     {id:'ETH',sym:'ETHUSDT',nom:'Ethereum'},
@@ -44,6 +50,43 @@
   function fmtPct(x){
     if(x==null||!isFinite(x)) return '–';
     return (x>=0?'+':'')+x.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' %';
+  }
+  function normActif(a){
+    a=String(a||'').toUpperCase().replace(/\s+/g,'').replace(/^\$/,'');
+    if(a==='WETH') return 'ETH';
+    if(a==='WBTC') return 'BTC';
+    return a;
+  }
+  function entryOf(p){
+    var e=p&& (p.entree!=null?p.entree:p.prix);
+    e=+e;
+    return isFinite(e)?e:null;
+  }
+  function positionList(){
+    var list=[], seen={};
+    function add(arr){
+      (arr||[]).forEach(function(p){
+        if(!p||!p.actif||!(+p.qte>0)) return;
+        var id=normActif(p.actif)+'|'+(p.mint||'');
+        if(seen[id]) return;
+        seen[id]=1;
+        list.push(p);
+      });
+    }
+    if(statusData) add(statusData.positions_ouvertes);
+    if(!list.length&&tradesData) add(tradesData.positions_ouvertes);
+    return list;
+  }
+  function pxOf(p){
+    var id=normActif(p&&p.actif);
+    if(prices[id]!=null&&isFinite(prices[id])) return prices[id];
+    return null;
+  }
+  function usesBinance(p){
+    var id=normActif(p&&p.actif);
+    if(p&&p.source_prix==='jupiter') return false;
+    if(p&&p.source_prix==='binance') return true;
+    return !!BINANCE_SYM[id];
   }
   function mark(ok){
     return ok?'<span class="tm-yes">✓</span>':'<span class="tm-no">✗</span>';
@@ -260,6 +303,7 @@
       statusErr=e;
     }
     renderBot();
+    renderPosition();
   }
 
   function renderBalance(){
@@ -285,22 +329,46 @@
   function renderPosition(){
     var el=document.getElementById('tmpos');
     if(!el) return;
-    var open=[];
-    if(tradesData&&tradesData.positions_ouvertes){
-      tradesData.positions_ouvertes.forEach(function(p){ if(p&&p.actif) open.push(p) });
-    }
-    if(!open.length&&hold){
-      if((hold.ETH||0)>0.001) open.push({actif:'ETH',qte:hold.ETH,source:'portefeuille'});
-      if((hold.BTC||0)>0.00002) open.push({actif:'BTC',qte:hold.BTC,source:'portefeuille'});
-    }
+    var open=positionList();
     if(!open.length){
       el.innerHTML='<div class="sk">Aucune position ouverte. L\'argent est en USDC, en attente d\'un signal.</div>';
       return;
     }
-    el.innerHTML=open.map(function(p){
-      var px=prices[p.actif], usd=(px!=null&&p.qte)?px*p.qte:null;
-      return '<div><b class="ok">Position '+esc(p.actif)+'</b> — '+fmtQty(p.qte)+' · '+(usd==null?'–':fmtUsd(usd))+(p.prix?(' · entrée '+fmtPx(p.prix)):'')+'</div>';
-    }).join('');
+    var body='', totVal=0, totCost=0, known=0, haveVal=0;
+    open.forEach(function(p){
+      var id=normActif(p.actif);
+      var q=+p.qte;
+      var ent=entryOf(p);
+      var px=pxOf(p);
+      var stop=(p.stop!=null&&isFinite(+p.stop))?+p.stop:null;
+      var val=(px!=null&&isFinite(q))?px*q:null;
+      var cost=(ent!=null&&isFinite(q))?ent*q:(p.usdc!=null?+p.usdc:null);
+      var pnl=(val!=null&&cost!=null)?val-cost:null;
+      var pct=(pnl!=null&&cost)?(pnl/cost*100):null;
+      if(cost!=null&&isFinite(cost)){ totCost+=cost; known++; }
+      if(val!=null){ totVal+=val; haveVal++; }
+      var cls=pnl==null?'':(pnl>=0?'ok':'ko');
+      var src=usesBinance(p)?'Binance':'Jupiter';
+      body+='<tr>'+
+        '<td><b>'+esc(id)+'</b> <span class="src">'+esc(src)+'</span></td>'+
+        '<td class="num">'+fmtQty(q)+'</td>'+
+        '<td class="num">'+fmtPx(ent)+'</td>'+
+        '<td class="num">'+fmtPx(px)+'</td>'+
+        '<td class="num">'+(val==null?'–':fmtUsd(val))+'</td>'+
+        '<td class="num '+cls+'">'+(pnl==null?'–':((pnl>=0?'+':'')+fmtUsd(pnl).replace(' $','')+' $ · '+fmtPct(pct)))+'</td>'+
+        '<td class="num">'+fmtPx(stop)+'</td>'+
+      '</tr>';
+    });
+    var totPnl=(haveVal===open.length&&known===open.length)?totVal-totCost:null;
+    var totPct=(totPnl!=null&&totCost)?(totPnl/totCost*100):null;
+    var tcls=totPnl==null?'':(totPnl>=0?'ok':'ko');
+    el.innerHTML='<table id="tmpos-table"><thead><tr>'+
+      '<th>Actif</th><th class="num">Quantité</th><th class="num">Prix d\'entrée</th><th class="num">Prix actuel</th><th class="num">Valeur</th><th class="num">Gain / perte</th><th class="num">Stop</th>'+
+      '</tr></thead><tbody>'+body+
+      '<tr class="tm-total"><td>Total</td><td></td><td></td><td></td>'+
+      '<td class="num">'+(haveVal===open.length?fmtUsd(totVal):'–')+'</td>'+
+      '<td class="num '+tcls+'">'+(totPnl==null?'–':((totPnl>=0?'+':'')+fmtUsd(totPnl).replace(' $','')+' $ · '+fmtPct(totPct)))+'</td>'+
+      '<td></td></tr></tbody></table>';
   }
 
   function renderSteps(){
@@ -404,7 +472,7 @@
   }
 
   async function loadTrades(){
-    tradesData=await getJson(['trades.json?v=40']);
+    tradesData=await getJson(['trades.json?v=42']);
   }
 
   async function loadScan(){
@@ -455,17 +523,95 @@
     }
   }
 
+  var ws=null, wsTimer=null, jupTimer=null, jupBusy=false;
+
+  function startBinanceWs(){
+    if(ws){ try{ ws.close(); }catch(e){} ws=null; }
+    var streams=['solusdt','ethusdt','btcusdt','bonkusdt','jupusdt','wifusdt'].map(function(s){return s+'@ticker'}).join('/');
+    var urls=[
+      'wss://stream.binance.com:9443/stream?streams='+streams,
+      'wss://data-stream.binance.vision/stream?streams='+streams
+    ];
+    var idx=0;
+    function connect(){
+      if(document.visibilityState==='hidden') return;
+      var url=urls[idx%urls.length];
+      var sock;
+      try{ sock=new WebSocket(url); }catch(e){ idx++; wsTimer=setTimeout(connect, 2000); return; }
+      ws=sock;
+      sock.onopen=function(){ setLive(true); };
+      sock.onmessage=function(ev){
+        try{
+          var msg=JSON.parse(ev.data);
+          var d=msg.data||msg;
+          var sym=String(d.s||'').toLowerCase();
+          var px=+d.c;
+          var id=null;
+          Object.keys(BINANCE_SYM).forEach(function(k){ if(BINANCE_SYM[k]===sym) id=k; });
+          if(id&&isFinite(px)&&px>0){
+            prices[id]=px;
+            lastOk=Date.now();
+            setLive(true);
+            renderPosition();
+            renderBalance();
+          }
+        }catch(e){}
+      };
+      sock.onclose=function(){
+        if(ws===sock) ws=null;
+        setLive(Date.now()-lastOk<90000);
+        wsTimer=setTimeout(function(){ idx++; connect(); }, 2000);
+      };
+      sock.onerror=function(){ try{ sock.close(); }catch(e){} };
+    }
+    connect();
+  }
+
+  async function loadJupPrices(){
+    if(jupBusy) return;
+    var ids=[], seen={};
+    positionList().forEach(function(p){
+      if(usesBinance(p)) return;
+      var mint=p.mint;
+      if(!mint){
+        var id=normActif(p.actif);
+        Object.keys(MINTS).forEach(function(m){ if(MINTS[m]===id) mint=m; });
+      }
+      if(mint&&!seen[mint]){ seen[mint]=1; ids.push(mint); }
+    });
+    if(!ids.length) return;
+    jupBusy=true;
+    try{
+      var data=await getJson([JUP_PRICE+ids.map(encodeURIComponent).join(',')]);
+      Object.keys(data||{}).forEach(function(mint){
+        var px=data[mint]&&data[mint].usdPrice;
+        var id=MINTS[mint];
+        if(id&&isFinite(+px)&&+px>0) prices[id]=+px;
+      });
+      renderPosition();
+      renderBalance();
+    }catch(e){}
+    jupBusy=false;
+  }
+
   bindMenu();
   loadStatus();
   refresh();
+  startBinanceWs();
+  loadJupPrices();
   setInterval(refresh, 60000);
   setInterval(loadStatus, 60000);
+  setInterval(loadJupPrices, 30000);
   if(botTick) clearInterval(botTick);
   botTick=setInterval(function(){ renderBot(); }, 1000);
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='visible'){
       loadStatus();
       refresh();
+      loadJupPrices();
+      startBinanceWs();
+    }else if(ws){
+      try{ ws.close(); }catch(e){}
     }
   });
 })();
