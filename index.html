@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="data:,"><title>Sol Desk — Terminal v43</title>
+<link rel="icon" href="data:,"><title>Sol Desk — Terminal v47</title>
 <style>
 :root{--bg:#070a14;--pn:#0d1224;--bd:#26305a;--cy:#22d3ee;--pk:#f472b6;--vi:#a78bfa;--gr:#4ade80;--ye:#facc15;--bl:#60a5fa}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#141a3a,#070a14 60%);color:#d6e2ee;font:13px ui-monospace,Menlo,Consolas,monospace}
@@ -13,6 +13,14 @@ h1{font-size:22px;margin:0;color:var(--cy);text-shadow:0 0 10px var(--cy)}h1 spa
 .bal{margin-left:auto;text-align:right;font-size:30px;font-weight:800;color:#fff;text-shadow:0 0 12px #fff8}.bal small{display:block;font-size:11px;color:#8a94c4;font-weight:400;text-shadow:none}
 .ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 10px}
 button{background:transparent;color:var(--cy);border:1px solid var(--cy);border-radius:8px;padding:7px 12px;font:700 12px inherit;font-family:inherit;box-shadow:0 0 8px #22d3ee44}
+.funds-live{font:inherit;font-variant-numeric:tabular-nums;min-width:min(100%,285px);width:min(390px,100%);background:#0c1c2b;border:1px solid #36576f;border-radius:13px;padding:12px 15px;box-shadow:0 0 14px #22d3ee22;text-align:right}
+.funds-live small{font-size:10px;font-weight:700;color:#9fddee;letter-spacing:.4px;text-shadow:none}
+.funds-live strong{display:block;color:#fff;font-size:clamp(27px,4vw,37px);line-height:1.2;margin:4px 0;text-shadow:0 0 12px #70d5f944}
+.funds-detail{font-size:12px;color:#cde9f7;font-weight:600;overflow-wrap:anywhere;text-shadow:none}
+.funds-sub{font-size:10px;color:#b4c8d9;line-height:1.4;margin-top:5px;text-shadow:none}
+.funds-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px;margin-top:9px}
+.funds-actions button{font-size:11px;padding:7px 9px;box-shadow:none}
+@media(max-width:700px){.funds-live{margin-left:0;width:100%;text-align:left}.funds-actions{justify-content:flex-start}}
 button.grey{color:#8a94c4;border-color:#3a4370;box-shadow:none}#realbtn{color:#fca5a5;border-color:#ef4444;box-shadow:0 0 8px #ef444466}
 select,input{background:#070a14;color:#fff;border:1px solid var(--bd);border-radius:6px;padding:6px;font-family:inherit}
 .grid{display:grid;grid-template-columns:1fr;gap:10px;padding:0 10px 10px}@media(min-width:820px){.grid{grid-template-columns:260px 1fr}}
@@ -139,6 +147,13 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 </nav>
 <header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">SIM</span></h1>
 <div class="sub"><span class="run" id="runst">● en pause</span> · un contrôle toutes les 5 s (RÉEL) · 6 agents</div></div>
+<div class="bal funds-live" id="funds-header">
+<small>MONNAIE SUR SOLANA · LECTURE BLOCKCHAIN</small>
+<strong id="funds-header-amount" aria-live="polite">—</strong>
+<div id="funds-header-detail" class="funds-detail">Lecture publique SOL + USDC…</div>
+<div id="funds-header-status" class="funds-sub" role="status">Vérification des soldes réels…</div>
+<div class="funds-actions"><button type="button" id="funds-header-refresh">Actualiser</button><button type="button" id="funds-header-connect">Connecter Phantom</button></div>
+</div>
 <div class="hk" style="display:none" aria-hidden="true"><div><b id="hT" style="color:#fff">0</b><small>trades</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div><div class="bal" style="display:none" aria-hidden="true"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
 <div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
@@ -250,4 +265,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=46"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=46"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=44"></script><script src="expert-scanner.js?v=2"></script><script src="expert-background.js?v=1"></script><script src="performance-core.js?v=1"></script><script src="performance-dashboard.js?v=1"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=46"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=46"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=44"></script><script src="expert-scanner.js?v=2"></script><script src="expert-background.js?v=1"></script><script src="performance-core.js?v=1"></script><script src="performance-dashboard.js?v=1"></script><script src="funds-header.js?v=1"></script></body></html>
