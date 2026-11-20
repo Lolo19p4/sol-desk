@@ -5,7 +5,7 @@ const MAJ={SOL:SOLM,BTC:'3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',ETH:'7vfC
 const XT={BONK:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',WIF:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',RAY:'4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',LTC:'cbLTC4T5NpzSUtQ7ekgEMZGaUPVJY1ko6BUikqa4gGf'};
 const NAME={[SOLM]:'SOL',[MAJ.BTC]:'wBTC',[MAJ.ETH]:'wETH',[USDC]:'USDC',[XT.BONK]:'BONK',[XT.WIF]:'WIF',[XT.RAY]:'RAY',[XT.LTC]:'cbLTC'};
 const LK='soldesk_real_limits',PK='soldesk_real_day';
-const L={pct:100,loss:Infinity,slip:1,pru:false};try{localStorage.removeItem(LK)}catch(e){}
+const L={pct:25,loss:5,slip:0.5,pru:true}; // garde-fous; signature Phantom obligatoire
 const R=window.REAL={on:false,MAJ,pk:null,bal:{},pend:{},stopped:false,pos:JSON.parse(localStorage.getItem('soldesk_real_pos')||'{}')};
 const el=id=>document.getElementById(id);
 const sp=()=>localStorage.setItem('soldesk_real_pos',JSON.stringify(R.pos));
@@ -24,18 +24,18 @@ el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
  try{const r=await p.connect();R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){el('wal').innerHTML='<span class=ko>Connexion Phantom échouée : '+String(e&&e.message||e).replace(/</g,'&lt;')+'</span>'}};
 async function price(ids){const d=await j(JUP+'/price/v3?ids='+ids.join(','));return d||{}}
-async function bal(){const W=R.watch||R.pk;if(!W)return;const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
- R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}
+async function bal(){const W=R.pk||R.watch;R.balAddress=null;R.balAt=0;if(!W){R.bal={};return}const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){R.bal={};el('wbal').innerHTML='<span class=ko>Soldes indisponibles : aucune opération possible</span>';return}
+ R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}R.balAddress=W;R.balAt=Date.now();
  const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
  R.tot=tot;R.px=pr;el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;showWal();
  const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==W){D={dk,pk:W,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
- const dd=D.start?(tot/D.start-1)*100:0;R.stopped=false;
+ const dd=D.start?(tot/D.start-1)*100:0;R.stopped=!!(D.start>0&&dd<=-L.loss);
  el('rstat').innerHTML=`Début de journée : $${(+D.start).toFixed(2)} · Variation : <span class=${dd>=0?'ok':'ko'}>${dd.toFixed(2)} %</span>`+(R.stopped?` <b class=ko>— PERTE MAX DU JOUR ATTEINTE : bot arrêté jusqu'à demain</b>`:'');
  // stops réels -6 % / suiveur
  for(const[m,P]of Object.entries(R.pos)){const px=pr[m]?.usdPrice;if(!px)continue;if(!R.bal[m]){delete R.pos[m];continue}P.peak=Math.max(P.peak,px);const ch=px/P.entry-1;
   }sp()}
-const MIN=0,FEE=3e7;R.cool={};R.st={};
+const MIN=8,FEE=5e7;R.cool={};R.st={};
 // calcule le trade proposé (montant brut) ou la raison de ne rien proposer
 R.plan=(sym,mint,bull,bear)=>{const px=(R.px||{})[mint]?.usdPrice,tot=R.tot||0,cap=tot*L.pct/100;
  if(!bull&&!bear)return{r:'pas de signal'};
@@ -43,7 +43,7 @@ R.plan=(sym,mint,bull,bear)=>{const px=(R.px||{})[mint]?.usdPrice,tot=R.tot||0,c
   const dec=+b.raw/b.ui,free=+b.raw-(mint===SOLM?FEE:0);let raw=free;
   const usd=raw/dec*px;if(raw<=0)return{r:'solde trop petit (il faut plus de 0,03 SOL)'};return{side:'sell',raw,usd}}
  const u=R.bal[USDC];if(!u)return{r:'signal achat mais pas d’USDC'};if(R.pos[mint])return{r:'déjà en position'};
- const raw=+u.raw,usd=raw/1e6;if(raw<=0)return{r:'solde trop petit'};return{side:'buy',raw,usd}};
+ const raw=Math.min(+u.raw,Math.floor(cap*1e6)),usd=raw/1e6;if(raw<=0||usd<MIN)return{r:'achat sous le minimum de 8 $ ou solde insuffisant'};return{side:'buy',raw,usd}};
 R.check=(sym,mint,bull,bear,why)=>{if(!R.on)return;const P=R.plan(sym,mint,bull,bear);const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
  R.st[sym]=`${sym} : signal ${bear?'baisse':bull?'hausse':'neutre'} (${why}) → `+(P.side?`${P.side==='buy'?'achat':'vente'} ~${P.usd.toFixed(2)} $ proposé`:P.r);
  el('rchk').innerHTML='Dernier contrôle '+t+'<br>'+Object.values(R.st).join('<br>');
@@ -54,7 +54,7 @@ R.TK=TK;R.NM=NM;R.NAME=NAME;R.SC={};R.DEC={};
 R.pick=list=>{const up=list.filter(x=>x.bull).sort((a,b)=>b.force-a.force);return up.length?up[0].s:'USDC'};
 R.free=s=>{const m=TK[s],b=R.bal[m];if(!b)return 0;return Math.max(0,+b.raw-(m===SOLM?FEE:0))};
 R.val=s=>{const m=TK[s],b=R.bal[m],px=s==='USDC'?1:(R.px||{})[m]?.usdPrice;if(!b||!px)return 0;return R.free(s)/(+b.raw/b.ui)*px};
-R.rotate=list=>{if(!R.on)return;const tgt=R.pick(list);const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+R.rotate=list=>{if(!R.on)return;const tgt=R.pick(list);const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});if(R.stopped&&tgt!=='USDC'){el('rchk').textContent='Coupe-circuit actif : achats et rotations vers des cryptos bloqués.';return}
  const det=list.map(x=>`${NM[x.s]} : ${x.bull?'hausse':'pas de hausse'} (${x.why}, force ${x.force.toFixed(2)})`).join('<br>');
  const src=Object.keys(TK).filter(s=>s!==tgt&&R.val(s)>0.01).sort((a,b)=>R.val(b)-R.val(a))[0];
  let msg;if(!src)msg=R.val(tgt)>0?`on garde ${NM[tgt]}`:'solde trop petit';
@@ -73,9 +73,9 @@ async function quote(inM,outM,amt,sl){sl=sl||L.slip;const u=`${JUP}/swap/v1/quot
 R.quote=quote;
 async function exec(k){const p=R.pend[k];if(!p||R.busy)return;R.busy=1;const pv=prov();try{
  if(!R.pk||!pv)throw'Connecte Phantom d’abord';
- await bal();let q;
- if(p.side==='swap'){await bal();const amt=R.free(p.src);if(amt<=0)throw'Rien à échanger';q=await quote(TK[p.src],TK[p.tgt],amt,(R.SC[p.src]||R.SC[p.tgt])?2:0)}
- else if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC';const amt=+u.raw;q=await quote(USDC,p.mint,amt)}
+ await bal();if(R.balAddress!==R.pk||!R.balAt||Date.now()-R.balAt>60000)throw'Portefeuille connecté non vérifié. Aucune opération possible.';let q;
+ if(p.side==='swap'){await bal();const free=R.free(p.src),availableUsd=R.val(p.src);const budgetUsd=Math.min(availableUsd,(R.tot||0)*L.pct/100);const amt=availableUsd>0?Math.floor(free*budgetUsd/availableUsd):0;if(amt<=0||budgetUsd<MIN)throw'Rotation plafonnée ou montant inférieur à 8 $';q=await quote(TK[p.src],TK[p.tgt],amt,L.slip)}
+ else if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC';const amt=Math.min(+u.raw,Math.floor((R.tot||0)*L.pct*10000),+p.raw||0);if(!(amt>0&&amt>=MIN*1e6))throw'Achat plafonné ou montant inférieur à 8 $';q=await quote(USDC,p.mint,amt)}
  else{const b=R.bal[p.mint];if(!b)throw'Rien à vendre';let amt=+b.raw-(p.mint===SOLM?FEE:0);if(p.raw)amt=Math.min(amt,p.raw);if(amt<=0)throw'Rien à vendre';q=await quote(p.mint,USDC,amt)}
  const out=p.side==='swap'?`${p.sym} (reçu ~${(+q.outAmount/10**({USDC:6,SOL:9,BTC:8,ETH:8,BONK:5,WIF:6,RAY:6,LTC:8,...R.DEC}[p.tgt])).toPrecision(4)} ${NM[p.tgt]})`:p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
  log('RÉEL : devis Jupiter '+out+' — signe dans Phantom');
@@ -91,7 +91,7 @@ setInterval(()=>{if(R.pk||R.watch)bal()},30000);
 let hooked=0;function hook(p){if(hooked||!p.on)return;hooked=1;p.on('disconnect',()=>{R.pk=null;showWal()});p.on('accountChanged',k=>{R.pk=k?k.toString():null;showWal();bal()})}
 if(gs(RK)==='1')setReal(true,true);
 (function auto(n){const p=prov();if(p){p.connect({onlyIfTrusted:true}).then(r=>{R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom reconnecté '+R.pk.slice(0,4)+'…');bal()}).catch(()=>{})}else if(n<10)setTimeout(()=>auto(n+1),300)})(0);
-const WK='soldesk_watch';const DEF_W='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx';if(localStorage.getItem(WK)!==DEF_W)localStorage.setItem(WK,DEF_W);R.watch=DEF_W;
+const WK='soldesk_watch';const DEF_W='FoFjucbrcvAK8bqYM3W4iKkorFJD6b2YuSScT2CzActx';R.watch=gs(WK)||DEF_W;
 const short=a=>a.slice(0,4)+'…'+a.slice(-4);
 function wshow(){el('wmsg').innerHTML=R.watch?`<span class=ok>Portefeuille enregistré (lecture seule)</span> : <b>${short(R.watch)}</b>`:'<span class=sk>Aucun portefeuille enregistré.</span>'}
 el('wsave').onclick=()=>{const v=el('waddr').value.trim();el('waddr').value='';
@@ -99,7 +99,7 @@ el('wsave').onclick=()=>{const v=el('waddr').value.trim();el('waddr').value='';
  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){el('wmsg').innerHTML='<span class=ko>Adresse Solana invalide.</span>';return}
  R.watch=v;localStorage.setItem(WK,v);wshow();showWal();log('Portefeuille enregistré (lecture seule) '+short(v));bal()};
 el('wdel').onclick=()=>{R.watch=null;localStorage.removeItem(WK);el('wbal').innerHTML='';wshow()};
-wshow();if(R.watch)bal();
+wshow();if(R.watch||R.pk)bal();
 // Rendement USDC en RÉEL : conseil seulement
 setInterval(()=>{if(R.on&&el('yc')&&!el('yc').innerHTML.includes('RÉEL'))el('yc').innerHTML='<b>RÉEL : conseil</b> — meilleur taux Aave USDC : '+(rates[0]?rates[0].chain+' ('+rates[0].apy.toFixed(2)+' %)':'(données indisponibles)')+'.<br>'+el('yc').innerHTML},1000);
 })();
