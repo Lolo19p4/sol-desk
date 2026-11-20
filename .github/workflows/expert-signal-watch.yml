@@ -9,6 +9,10 @@ on:
     paths:
       - 'expert-scanner.js'
       - 'real.js'
+      - 'swap.js'
+      - 'live-layout.js'
+      - 'live-summary.js'
+      - 'tools/test-live-ui.mjs'
       - 'funds-header.js'
       - 'tools/test-funds-header.mjs'
       - 'performance-core.js'
@@ -38,6 +42,10 @@ jobs:
         run: |
           node --check expert-scanner.js
           node --check real.js
+          node --check swap.js
+          node --check live-layout.js
+          node --check live-summary.js
+          node --check tools/test-live-ui.mjs
           node --check funds-header.js
           node --check tools/test-funds-header.mjs
           node --check performance-core.js
@@ -52,6 +60,8 @@ jobs:
           grep -q 'performance-dashboard.js?v=1' index.html
           grep -q 'id="funds-header-amount"' index.html
           grep -q 'funds-header.js?v=1' index.html
+      - name: Vérifier la cotation Jupiter et la protection Phantom
+        run: node tools/test-live-ui.mjs
       - name: Tester le montant réel en haut
         run: node tools/test-funds-header.mjs
       - name: Valider le journal P&L et les gardes Phantom
