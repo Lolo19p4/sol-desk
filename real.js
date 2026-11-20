@@ -59,7 +59,7 @@ async function solanaHoldings(wallet){
     for(const record of block.value){
       const info=record.account?.data?.parsed?.info;
       const mint=info?.mint,raw=info?.tokenAmount?.amount,dec=Number(info?.tokenAmount?.decimals);
-      if(!mint||!/^\\d+$/.test(String(raw))||!Number.isSafeInteger(dec)||dec<0||dec>18)continue;
+      if(!mint||!/^[0-9]+$/.test(String(raw))||!Number.isSafeInteger(dec)||dec<0||dec>18)continue;
       const name=String(mint),q=BigInt(raw);
       if(!out[name])out[name]={rawSum:0n,decimals:dec};
       if(out[name].decimals!==dec)throw Error('Incohérence des décimales');
