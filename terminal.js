@@ -200,7 +200,7 @@
   }
 
   var tradesData=null, hold=null, holdErr=null, scan={}, lastOk=0, prices={};
-  var statusData=null, statusErr=null, botTick=null;
+  var statusData=null, statusErr=null, botTick=null, lastTradeLoad=0,refreshBusy=false;
 
   function lastSellMs(actif){
     if(!tradesData||!tradesData.trades) return null;
@@ -277,7 +277,7 @@
       return;
     }
     var level=botLevel(ms);
-    var label=level==='stop'?'ARRÊTÉ':level==='late'?'EN RETARD':'BOT EN MARCHE';
+    var label=level==='stop'?'SIGNAL OBSOLÈTE':level==='late'?'SIGNAL EN RETARD':'DERNIER SIGNAL RÉCENT';
     var n=statusData.nb_positions;
     if(n==null) n=0;
     var posTxt=n===0?'aucune position':(n===1?'1 position':n+' positions');
@@ -473,7 +473,7 @@
   }
 
   async function loadTrades(){
-    tradesData=await getJson(['trades.json?v=43']);
+    tradesData=await getJson(['trades.json?t='+Date.now()]);lastTradeLoad=Date.now();
   }
 
   async function loadScan(){
@@ -498,14 +498,17 @@
   }
 
   async function refresh(){
+    if(refreshBusy||document.hidden)return;
+    refreshBusy=true;
     var errors=[];
-    try{ if(!tradesData) await loadTrades() }catch(e){ errors.push('journal') }
+    try{ if(!tradesData||Date.now()-lastTradeLoad>60000) await loadTrades() }catch(e){ errors.push('journal') }
     try{ await loadScan() }catch(e){ errors.push('bougies') }
     try{ hold=await loadWallet(); holdErr=null }catch(e){ hold=null; holdErr=e; errors.push('portefeuille') }
     if(!errors.length||scan.SOL||scan.ETH||scan.BTC) lastOk=Date.now();
     setLive(Date.now()-lastOk<90000);
     renderAll();
     setStatus(errors.length?('Chargé avec manque : '+errors.join(', ')):'Conditions et soldes à jour');
+    refreshBusy=false;
   }
 
   function bindMenu(){
@@ -600,7 +603,7 @@
   refresh();
   startBinanceWs();
   loadJupPrices();
-  setInterval(refresh, 60000);
+  setInterval(refresh, 30000);
   setInterval(loadStatus, 60000);
   setInterval(loadJupPrices, 30000);
   if(botTick) clearInterval(botTick);
