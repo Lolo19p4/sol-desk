@@ -109,7 +109,11 @@ $("ct_devisBtn").onclick=async()=>{
 $("ct_connect").onclick=async()=>{
   if(busy)return;
   const p=provider();
-  if(!p){msg("Ouvre le terminal dans le navigateur Phantom pour connecter le portefeuille.",true);return;}
+  if(!p){
+    const deep="https://phantom.app/ul/browse/"+encodeURIComponent(location.href)+"?ref="+encodeURIComponent(location.origin);
+    msg("Phantom non détecté : ouverture du terminal dans le navigateur Phantom.");
+    location.href=deep;return;
+  }
   try{const response=await p.connect();wallet=response.publicKey.toString();
     $("ct_connect").textContent="Phantom "+wallet.slice(0,5)+"…"+wallet.slice(-4);
     msg("Phantom connecté. Tu peux consulter un devis ; tout envoi exigera une signature.");
