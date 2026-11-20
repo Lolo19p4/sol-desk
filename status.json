@@ -1,18 +1,9 @@
 {
-  "maj": "2026-11-20T01:34:38+01:00",
+  "maj": "2026-11-20T01:38:52+01:00",
   "fuseau": "Europe/Paris",
   "dernier_passage": "2026-11-20T01:36:00+01:00",
   "intervalle_min": 10,
   "mode": "Cassure 24 h + régime 4 h (variante C)",
-  "nb_positions": 1,
-  "positions_ouvertes": [
-    {
-      "actif": "VVV",
-      "mint": "VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c",
-      "qte": 2.87340252,
-      "entree": 23.34872,
-      "stop": 21.71431,
-      "source_prix": "jupiter"
-    }
-  ]
+  "nb_positions": 0,
+  "positions_ouvertes": []
 }

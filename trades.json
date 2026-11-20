@@ -1,5 +1,5 @@
 {
-  "maj": "2026-11-19T16:08:10+01:00",
+  "maj": "2026-11-20T01:39:08+01:00",
   "fuseau": "Europe/Paris",
   "mode": {
     "nom": "Cassure 24 h + régime 4 h (variante C)",
@@ -18,27 +18,13 @@
       "Pas de vente du même actif depuis moins de 6 heures"
     ]
   },
-  "positions_ouvertes": [
-    {
-      "date": "2026-11-19T16:06:00+01:00",
-      "actif": "VVV",
-      "mint": "VVV4UdRywr7SLafPHzqXwRCw7myXkmgCtitXUvj8g8c",
-      "qte": 2.87340252,
-      "usdc": 67.090271,
-      "entree": 23.34872,
-      "prix": 23.34872,
-      "stop": 21.71431,
-      "source_prix": "jupiter",
-      "solscan": "https://solscan.io/tx/4H2wi8sbyMuyrdzfHHA5Yk57xsXJ3ffyGQYKnHwzHkzht3BUq94aFJ5xrfkxNhN4rJcsMgohf969AvCpH9aF8nS",
-      "motif": "Position unique fusionnée le 19/11 16:06 : VVV déjà détenu (sol_manuel_vvv_19_11_1340) plus tout le wETH, BONK, JUP, PYTH, 0,50 USDC et le SOL hors réserve 0,02, sur ordre de Loïc (16:00). Prix d'entrée = moyenne pondérée des coûts. Stop −7 %, stop suiveur 4 % dès +6 %."
-    }
-  ],
+  "positions_ouvertes": [],
   "resume": {
-    "nb_trades": 57,
-    "nb_ventes_avec_pnl": 25,
+    "nb_trades": 58,
+    "nb_ventes_avec_pnl": 26,
     "gagnants": 6,
-    "perdants": 19,
-    "pnl_total_usd": -8.8168
+    "perdants": 20,
+    "pnl_total_usd": -14.2964
   },
   "trades": [
     {
@@ -727,6 +713,18 @@
       "motif": "Vente de tout le BONK contre du VVV demandée par Loïc (19/11 16:00 Paris)",
       "pnl_usd": -0.0517,
       "pnl_pct": -0.57
+    },
+    {
+      "date": "2026-11-20T01:36:00+01:00",
+      "actif": "VVV",
+      "sens": "vente",
+      "qte": 2.87340252,
+      "usdc": 61.610658,
+      "prix": 21.44170807,
+      "solscan": "https://solscan.io/tx/2gqfbnWak6ftPT3PxMu4Ntv16aGKRiuGoz6XZnheRsV6jiyqRA2MpatESj5oRVkNRnggHF2P4RYVA2URSWDkeRNs",
+      "motif": "Vente sur stop (−7 %)",
+      "pnl_usd": -5.4796,
+      "pnl_pct": -8.17
     }
   ]
 }
