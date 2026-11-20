@@ -19,7 +19,17 @@ function setReal(on,quiet){R.on=on;ss(RK,on?'1':'0');const b=document.querySelec
 function showWal(){const w=R.watch||gs('soldesk_watch'),s=a=>a.slice(0,4)+'…'+a.slice(-4);
  el('wal').innerHTML=R.pk?'<span class=ok>Connecté : '+s(R.pk)+'</span>':(w?'Portefeuille enregistré : <b>'+s(w)+'</b> (lecture seule) — appuie sur Connecter Phantom pour signer':'Non connecté');
  const rb=el('rbal');if(rb)rb.innerHTML=(R.pk||w)?el('wbal').innerHTML:''}
-el('realbtn').onclick=()=>{if(R.on){setReal(false);return}setReal(true)};
+el('realbtn').onclick=()=>{
+  const start=el('go');
+  if(R.on){
+    if(start&&/pause/i.test(start.textContent||''))start.click();
+    setReal(false);return;
+  }
+  setReal(true);
+  // L'activation lance seulement l'analyse et prépare des propositions à signer.
+  // Aucune transaction n'est jamais envoyée à ce stade.
+  if(start&&!/pause/i.test(start.textContent||''))start.click();
+};
 const prov=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.solana?.isPhantom?window.solana:null);
 el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator.userAgent)||!!(window.phantom&&window.phantom.solana)||!!(window.solana&&window.solana.isPhantom);
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
