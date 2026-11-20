@@ -139,7 +139,7 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 </nav>
 <header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">SIM</span></h1>
 <div class="sub"><span class="run" id="runst">● en pause</span> · un contrôle toutes les 5 s (RÉEL) · 6 agents</div></div>
-<div class="hk"><div><b id="hT" style="color:#fff">0</b><small>trades</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div><div class="bal"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
+<div class="hk" style="display:none" aria-hidden="true"><div><b id="hT" style="color:#fff">0</b><small>trades</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div><div class="bal" style="display:none" aria-hidden="true"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
 <div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <button class="grey" id="reset">Remettre à zéro</button></div>
@@ -153,6 +153,8 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="pn" id="terminal">
 <h2>🖥 Terminal de trading — variante C <span id="tmlive" class="mk-live off">HORS LIGNE</span></h2>
 <div id="tmbot" class="tm-bot off"><span class="tm-bot-dot" aria-hidden="true"></span><div class="tm-bot-label">CHARGEMENT</div><div class="tm-bot-meta">État du bot…</div></div>
+<h2>Scanner expert — SOL, ETH, BTC</h2><div class="sk">Détection avancée des cassures et alertes de proximité. Les signaux marché sont indépendants des opérations réalisées par le bot.</div>
+<div id="tmexpert" role="status" aria-live="polite" style="margin:10px 0">Analyse des marchés…</div>
 <div class="tm-pos-wrap">
 <h3>Mes positions</h3>
 <div id="tmpos">Chargement des positions…</div>
@@ -195,7 +197,7 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div id="realbox" style="display:none;margin:6px 0;padding:10px;border-radius:8px;background:#1a0f14">
 <h2>Mode RÉEL — validation dans Phantom</h2><button id="conn">Connecter Phantom</button> <span id="wal">Non connecté</span>
 <div id="rbal" style="margin:6px 0;max-height:220px;overflow:auto"></div>
-<div class="sk">Rotation automatique vers l’actif qui monte le plus (SOL, wBTC, wETH) sinon USDC · 0,03 SOL gardé pour les frais · chaque trade signé dans Phantom</div>
+<div class="sk">Gestion prudente : achats et rotations plafonnés à 25 % des avoirs valorisés, 0,05 SOL réservé, achats de 8 $ minimum, coupe-circuit à −5 % de variation des avoirs valorisés. Seuls SOL, wBTC et wETH sont autorisés à l’achat par le moteur prudent ; chaque opération nécessite une validation dans Phantom.</div>
 <div id="rstat" style="margin:6px 0"></div><div id="rchk" style="margin:6px 0;color:#aab3dc">Dernier contrôle : pas encore (appuie sur Démarrer)</div>
 <h2>Trades en cours</h2><div id="pend" class="sk">Aucun pour l'instant.</div></div>
 <select id="sel"></select><div id="chart" class="chart"></div></div>
@@ -228,4 +230,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=43"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=44"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="expert-signals.js?v=44"></script><script src="terminal.js?v=44"></script></body></html>
