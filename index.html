@@ -1,5 +1,5 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="icon" href="data:,"><title>Sol Desk — Terminal v43</title>
+<link rel="icon" href="data:,"><title>Sol Desk — Terminal v45</title>
 <style>
 :root{--bg:#070a14;--pn:#0d1224;--bd:#26305a;--cy:#22d3ee;--pk:#f472b6;--vi:#a78bfa;--gr:#4ade80;--ye:#facc15;--bl:#60a5fa}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#141a3a,#070a14 60%);color:#d6e2ee;font:13px ui-monospace,Menlo,Consolas,monospace}
@@ -156,6 +156,21 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="mk-bar"><button type="button" id="expert-refresh">Actualiser les signaux</button><span id="expert-state" class="sk" aria-live="polite">Chargement des données du marché…</span></div>
 <div style="overflow-x:auto"><table style="min-width:670px"><thead><tr><th>Actif</th><th>Prix réel</th><th>Écart sommet 24 h</th><th>RSI 15 min</th><th>État</th><th>Raison</th></tr></thead><tbody id="expert-rows"><tr><td colspan="6">En attente de données vérifiées…</td></tr></tbody></table></div>
 </div>
+<div class="pn" id="perf-history" style="margin:10px 0">
+<h2>📊 Performances enregistrées — journal des opérations</h2>
+<p class="sk">Résultats calculés sur les ventes avec gain ou perte inscrits dans trades.json. Ce ne sont pas des soldes Phantom ni une rentabilité future.</p>
+<div class="tm-kpis" style="margin:10px 0">
+<div class="tm-kpi"><small>Résultat cumulé déclaré</small><b id="perf-total">—</b></div>
+<div class="tm-kpi"><small>Taux de réussite</small><b id="perf-rate">—</b></div>
+<div class="tm-kpi"><small>Facteur de profit</small><b id="perf-profit">—</b></div>
+<div class="tm-kpi"><small>Ventes évaluées</small><b id="perf-closed">—</b></div>
+</div>
+<div class="mk-bar"><button type="button" id="perf-refresh">Actualiser les résultats</button><span id="perf-losses" class="sk">—</span></div>
+<div id="perf-status" class="sk" role="status" aria-live="polite">Lecture du journal…</div>
+<h2 style="margin-top:14px">Résultat par crypto</h2>
+<div style="overflow-x:auto"><table><thead><tr><th>Crypto</th><th>Ventes</th><th>Gagnants</th><th>Perdants</th><th>P&amp;L déclaré</th></tr></thead><tbody id="perf-assets"><tr><td colspan="5">Chargement…</td></tr></tbody></table></div>
+<p class="sk">Protections : aucune rotation sur un signal neutre ; nouvelles propositions limitées à SOL, wBTC et wETH depuis USDC ; plafond d'entrée 25 %, réserve 0,05 SOL et coupe-circuit journalier persistant. Les ordres exigent une action distincte et une signature dans Phantom.</p>
+</div>
 <div class="pn" id="terminal">
 <h2>🖥 Terminal de trading — variante C <span id="tmlive" class="mk-live off">HORS LIGNE</span></h2>
 <div id="tmbot" class="tm-bot off"><span class="tm-bot-dot" aria-hidden="true"></span><div class="tm-bot-label">CHARGEMENT</div><div class="tm-bot-meta">État du bot…</div></div>
@@ -234,4 +249,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=36"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=44"></script><script src="expert-scanner.js?v=1"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=45"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=45"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=44"></script><script src="expert-scanner.js?v=1"></script><script src="performance-core.js?v=1"></script><script src="performance-dashboard.js?v=1"></script></body></html>
