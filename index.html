@@ -133,6 +133,22 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px;borde
 #tmpos-table tr.tm-total td{border-bottom:none;font-weight:800;color:#fff;background:#0a1020}
 #tmpos-table .src{font-size:10px;color:#8a94c4;font-weight:400}
 
+
+/* Interface principale : données publiques et wallet, anciens exercices masqués. */
+.ctl,.grid{display:none!important}
+#live-summary,#live-wallet{margin:12px 0;padding:15px;border-radius:13px;background:#0d1426;border:1px solid #2c4266}
+.live-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.live-card{display:flex;flex-direction:column;gap:5px;min-width:0;background:#111d32;border:1px solid #314564;padding:12px;border-radius:10px}
+.live-card small{font-size:10px;font-weight:800;color:#aab8d5;letter-spacing:.7px}
+.live-card strong{color:#d3f6f8;font-size:19px;overflow-wrap:anywhere}
+.live-card span,.live-note{color:#b5c1dd;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.live-card.ancien{border-color:#8a5d32}.live-card.ancien strong{color:#ffca80}
+.live-note{grid-column:1/-1;margin:9px 0 0}
+.live-wallet-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+#live-wallet #realbox{display:block!important;background:#121b2b!important}
+#live-wallet #ct_swap{margin:12px 0}
+@media(max-width:850px){.live-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.live-cards{grid-template-columns:1fr 1fr}.live-card{padding:9px}.live-card strong{font-size:16px}#live-summary,#live-wallet{padding:10px}}
 </style></head><body>
 <div id="errbar" style="display:none;background:#b91c1c;color:#fff;padding:8px;font-size:13px"></div>
 <script>
@@ -140,13 +156,13 @@ window.__err=function(m){var e=document.getElementById('errbar');if(e){e.style.d
 window.onerror=function(m){window.__err(m);};window.addEventListener('unhandledrejection',function(e){window.__err(e.reason&&e.reason.message||e.reason);});
 try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var M={};window.__ls={getItem:function(k){return k in M?M[k]:null},setItem:function(k,v){M[k]=String(v)},removeItem:function(k){delete M[k]}};try{Object.defineProperty(window,'localStorage',{value:window.__ls});}catch(_){}}
 </script>
-<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · v43 · variante C · SOL / ETH / BTC / BONK / VVV / JUP</span><span id="clk"></span></div>
+<div class="win"><div class="tb"><i style="background:#ef4444"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><span class="t">grok-bot · sol-desk · v44 · état vérifiable · SOL / ETH / BTC / BONK / VVV / JUP</span><span id="clk"></span></div>
 <nav class="menu" aria-label="Sections du site">
-<a href="#terminal">Terminal de trading</a>
+<a href="#live-summary">État du bot</a><a href="#live-wallet">Phantom / Jupiter</a><a href="#terminal">Terminal de trading</a>
 <a href="#marches">Marchés</a>
 </nav>
-<header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">SIM</span></h1>
-<div class="sub"><span class="run" id="runst">● en pause</span> · un contrôle toutes les 5 s (RÉEL) · 6 agents</div></div>
+<header><div class="av"></div><div><h1>Grok Bot <span>Terminal</span> <span class="badge">PHANTOM EN PAUSE</span></h1>
+<div class="sub"><span class="run" id="runst">● en pause</span> · radar de marché public · aucun ordre automatique</div></div>
 <div class="bal funds-live" id="funds-header">
 <small>MONNAIE SUR SOLANA · LECTURE BLOCKCHAIN</small>
 <strong id="funds-header-amount" aria-live="polite">—</strong>
@@ -155,6 +171,8 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="funds-actions"><button type="button" id="funds-header-refresh">Actualiser</button><button type="button" id="funds-header-connect">Connecter Phantom</button></div>
 </div>
 <div class="hk" style="display:none" aria-hidden="true"><div><b id="hT" style="color:#fff">0</b><small>trades</small></div><div><b id="hW" class="ok">0</b><small>gagnés</small></div><div><b id="hL" class="ko">0</b><small>perdus</small></div></div><div class="bal" style="display:none" aria-hidden="true"><span id="bal">+$0.00</span><small>Gains des bots · capital fictif $60</small></div></header>
+<section id="live-summary" aria-label="État vérifié du terminal"><div class="live-note">Lecture des informations publiques du bot et du marché…</div></section>
+<section id="live-wallet" aria-label="Phantom et Jupiter"></section>
 <div class="ctl"><button id="go">▶ Démarrer</button><button id="realbtn">Passer en RÉEL</button>
 <label class="sub">Stratégie <select id="mode"><option value="prudent">Prudent (SOL, BTC, ETH)</option><option value="risque">Risqué (memecoins)</option></select></label>
 <button class="grey" id="reset">Remettre à zéro</button></div>
@@ -265,4 +283,4 @@ try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){var
 <div class="two"><div class="pn"><h2>💵 Rendement USDC (Aave, info seulement)</h2><div id="yield">Chargement…</div></div>
 <div class="pn"><h2>🔎 Dernières paires vues (mode Risqué)</h2><table id="seen"></table></div></div>
 </div></div></div>
-<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=46"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="auto.js?v=46"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=44"></script><script src="expert-scanner.js?v=2"></script><script src="expert-background.js?v=1"></script><script src="performance-core.js?v=1"></script><script src="performance-dashboard.js?v=1"></script><script src="funds-header.js?v=1"></script></body></html>
+<script src="lib/lwc.js?v=36"></script><script src="lib/web3.js?v=36"></script><script src="app.js?v=36"></script><script src="real.js?v=46"></script><script src="cmp.js?v=36"></script><script src="ui.js?v=36"></script><script src="bt.js?v=36"></script><script src="scan.js?v=36"></script><script src="swap.js?v=36"></script><script src="markets.js?v=39"></script><script src="terminal.js?v=44"></script><script src="expert-scanner.js?v=2"></script><script src="expert-background.js?v=1"></script><script src="performance-core.js?v=1"></script><script src="performance-dashboard.js?v=1"></script><script src="funds-header.js?v=1"></script><script src="live-summary.js?v=1"></script><script src="live-layout.js?v=1"></script></body></html>
