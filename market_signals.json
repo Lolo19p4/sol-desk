@@ -1,0 +1,44 @@
+{
+  "checked_at": "2026-11-20T11:01:22.442Z",
+  "source": "Binance cours spot et bougies closes",
+  "trading_executed": false,
+  "status": "ok",
+  "assets": {
+    "SOL": {
+      "status": "ok",
+      "code": "REGIME_4H_INSUFFISANT",
+      "price": 72.48,
+      "high24": 75.65,
+      "distance_pct": -4.19,
+      "rsi15": 48.58,
+      "regime_4h": false,
+      "fast_trend_5m": true,
+      "confirmed_1h": false,
+      "latest_closed_1h": 1795172399999
+    },
+    "BTC": {
+      "status": "ok",
+      "code": "REGIME_4H_INSUFFISANT",
+      "price": 62070.71,
+      "high24": 64080.8,
+      "distance_pct": -3.137,
+      "rsi15": 54.88,
+      "regime_4h": false,
+      "fast_trend_5m": true,
+      "confirmed_1h": false,
+      "latest_closed_1h": 1795172399999
+    },
+    "ETH": {
+      "status": "ok",
+      "code": "REGIME_4H_INSUFFISANT",
+      "price": 1757.93,
+      "high24": 1817.57,
+      "distance_pct": -3.281,
+      "rsi15": 57.89,
+      "regime_4h": false,
+      "fast_trend_5m": true,
+      "confirmed_1h": false,
+      "latest_closed_1h": 1795172399999
+    }
+  }
+}
