@@ -1,140 +1,170 @@
-/* Adapté du swap Jupiter du Terminal Crypto : mêmes frais 3 % et même compte de frais. */
-// ===== Échange Jupiter (Swap API v2 /build) avec frais du site =====
-// Les frais vont sur le compte USDC de Loïc (propriétaire BSxnWLQadUHMW3uS1uiG7EbEdLbdfdX72Wq4RJ7bd13q).
-const FEE_ACCOUNT = "FdmsMDUwUQ5fcouLXKrwuc8gLuMLYVm5qxtuYHa7bmeg";
-const FEE_BPS = 300; // 3 %
-const USDC = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const JETONS = [
+/* Échanges réels Solana : Jupiter Swap v2 /order + /execute, signature Phantom.
+ * Lecture gratuite sans clé, 0 % de commission propre à Sol Desk.
+ * Chaque envoi est volontaire et exige une signature sur l'appareil.
+ * Ni phrase secrète, ni clé privée, ni envoi automatique.
+ */
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const USDC="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const BASE="https://api.jup.ag/swap/v2";
+const TOKENS=[
   ["SOL","So11111111111111111111111111111111111111112",9],
   ["JUP","JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",6],
   ["BONK","DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",5],
   ["WIF","EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",6],
   ["TRUMP","6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",6],
   ["RAY","4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",6],
-  // Mint USDT tradable côté Jupiter (novembre 2026)
-  ["USDT","Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",6]
+  ["USDT","Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",6],
+  ["wBTC","3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",8],
+  ["wETH","7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs",8]
 ];
-const API = "https://api.jup.ag/swap/v2/build";
-(function(){
-const $=id=>document.getElementById(id);
-let wallet=null, sens="achat", busy=false;
-function setBusy(v){
-  busy=v;
-  ["ct_devisBtn","ct_echanger","ct_connect","ct_btnAchat","ct_btnVente","ct_jeton","ct_montant"].forEach(id=>{
-    const el=$(id);if(el)el.disabled=!!v;
-  });
+const provider=()=>window.phantom?.solana?.isPhantom?window.phantom.solana:(window.solana?.isPhantom?window.solana:null);
+const format=(n,d=6)=>Number(n).toLocaleString("fr-FR",{maximumFractionDigits:d});
+const root=$("ct_swap");
+if(!root)return;
+let wallet=null,side="achat",busy=false,lastQuote=null;
+const ids=["ct_devisBtn","ct_echanger","ct_connect","ct_btnAchat","ct_btnVente","ct_jeton","ct_montant"];
+const fee=$("ct_frais");
+if(fee)fee.textContent="Commission Sol Desk : 0 % · frais réseau et frais Jupiter éventuels affichés par le devis. Vérifie toujours les montants dans Phantom.";
+const selection=$("ct_jeton");
+selection.replaceChildren(...TOKENS.map((row,i)=>{const opt=document.createElement("option");opt.value=String(i);opt.textContent=row[0];return opt;}));
+const setBusy=b=>{busy=b;for(const id of ids){const el=$(id);if(el)el.disabled=b;}};
+const msg=(t,err=false)=>{const e=$("ct_swapMsg");if(e){e.textContent=t;e.className=err?"err":"";}};
+function current(){
+  const token=TOKENS[Number(selection.value)];
+  const raw=String($("ct_montant").value||"").trim().replace(",",".");
+  if(!/^\d+(?:\.\d+)?$/.test(raw))throw Error("Montant invalide : indique un nombre positif.");
+  const n=Number(raw);if(!Number.isFinite(n)||n<=0||n>1e9)throw Error("Montant hors limites.");
+  const decimals=side==="achat"?6:token[2];
+  const [integer,fraction=""]=raw.split(".");
+  if(fraction.length>decimals)throw Error("Maximum "+decimals+" décimales pour cet actif.");
+  const amount=BigInt(integer)*10n**BigInt(decimals)+BigInt(fraction.padEnd(decimals,"0")||"0");
+  if(amount<=0n)throw Error("Montant trop faible.");
+  return {token,side,amount:amount.toString(),
+    inputMint:side==="achat"?USDC:token[1],
+    outputMint:side==="achat"?token[1]:USDC,
+    outputDecimals:side==="achat"?token[2]:6,
+    inputDecimals:decimals};
 }
-$("ct_frais").textContent="Frais du site : "+(FEE_BPS/100).toLocaleString("fr-FR")+" % par échange (payés en USDC), + frais réseau Solana";
-$("ct_jeton").innerHTML=JETONS.map((j,i)=>`<option value="${i}">${j[0]}</option>`).join("");
-function majSens(){
-  $("ct_btnAchat").classList.toggle("on",sens==="achat");
-  $("ct_btnVente").classList.toggle("on",sens==="vente");
-  $("ct_btnAchat").setAttribute("aria-pressed",sens==="achat"?"true":"false");
-  $("ct_btnVente").setAttribute("aria-pressed",sens==="vente"?"true":"false");
-  $("ct_lblMontant").textContent=sens==="achat"?"Je paie (USDC)":"Je vends (quantité de "+JETONS[$("ct_jeton").value][0]+")";
-  $("ct_devis").textContent="";
+function updateSide(){
+  $("ct_btnAchat").classList.toggle("on",side==="achat");
+  $("ct_btnVente").classList.toggle("on",side==="vente");
+  $("ct_lblMontant").textContent=side==="achat"?"Je paie en USDC":"Je vends (quantité de "+TOKENS[Number(selection.value)][0]+")";
+  $("ct_devis").textContent="";lastQuote=null;
 }
-$("ct_btnAchat").onclick=()=>{sens="achat";majSens()};
-$("ct_btnVente").onclick=()=>{sens="vente";majSens()};
-$("ct_jeton").onchange=majSens;majSens();
-window.ajouterJeton=function(sym,mint,dec){
-  const clean=(sym||"TOKEN").replace(/[<>&"']/g,"").slice(0,16);
-  let i=JETONS.findIndex(j=>j[1]===mint);
-  if(i<0){JETONS.push([clean,mint,Number(dec)||6]);i=JETONS.length-1;$("ct_jeton").insertAdjacentHTML("beforeend",`<option value="${i}">${clean}</option>`)}
-  $("ct_jeton").value=i;sens="achat";majSens();
-  if(!$("ct_montant").value)$("ct_montant").value="10";
-  $("ct_swap").scrollIntoView({behavior:"smooth"});
-  msg("Vérifiez le prix puis échangez. Token risqué !",true);
+$("ct_btnAchat").onclick=()=>{side="achat";updateSide();};
+$("ct_btnVente").onclick=()=>{side="vente";updateSide();};
+selection.onchange=updateSide;
+$("ct_montant").addEventListener("input",()=>{lastQuote=null;$("ct_devis").textContent="";});
+updateSide();
+window.ajouterJeton=(symbol,mint,decimals)=>{
+  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(String(mint))) {msg("Adresse de token invalide",true);return;}
+  let i=TOKENS.findIndex(t=>t[1]===mint);
+  if(i<0){i=TOKENS.length;TOKENS.push([String(symbol||"TOKEN").replace(/[<>&"']/g,"").slice(0,16),mint,Number(decimals)||6]);
+    const o=document.createElement("option");o.value=String(i);o.textContent=TOKENS[i][0];selection.append(o);}
+  selection.value=String(i);side="achat";updateSide();
+  root.scrollIntoView({behavior:"smooth",block:"start"});
+  msg("Jeton sélectionné. Vérifie son contrat et demande un devis avant de signer.");
 };
-function msg(t,err){$("ct_swapMsg").textContent=t;$("ct_swapMsg").className=err?"err":""}
-function provider(){return window.phantom&&window.phantom.solana&&window.phantom.solana.isPhantom?window.phantom.solana:null}
-$("ct_connect").onclick=async()=>{
-  const p=provider();
-  if(!p){location.href="https://phantom.app/ul/browse/"+encodeURIComponent(location.href)+"?ref="+encodeURIComponent(location.origin);return}
-  try{
-    const r=await p.connect();
-    wallet=r.publicKey.toString();
-    $("ct_connect").textContent="Phantom connecté : "+wallet.slice(0,4)+"…"+wallet.slice(-4);
-    msg("Connecté. Vous pouvez voir le prix et échanger.");
-  }catch(e){msg("Connexion refusée",true)}
+window.SolDeskOpenSwap=(symbol,mint,requestedSide)=>{
+  window.ajouterJeton(symbol,mint,TOKENS.find(t=>t[1]===mint)?.[2]||6);
+  side=requestedSide==="sell"?"vente":"achat";updateSide();
+  $("ct_montant").value="";msg("Proposition transférée vers l'échange manuel. Indique le montant souhaité, vérifie le devis, puis confirme dans Phantom.");
 };
-function params(){
-  const j=JETONS[$("ct_jeton").value],n=parseFloat(String($("ct_montant").value).replace(",","."));
-  if(!(n>0))throw new Error("Entrez un montant");
-  if(n>1e12)throw new Error("Montant trop élevé");
-  const inMint=sens==="achat"?USDC:j[1],outMint=sens==="achat"?j[1]:USDC,dec=sens==="achat"?6:j[2];
-  return {j,inMint,outMint,amount:BigInt(Math.round(n*10**dec)).toString()};
+async function order(input,taker){
+  const qs=new URLSearchParams({inputMint:input.inputMint,outputMint:input.outputMint,amount:input.amount});
+  if(taker)qs.set("taker",taker);
+  // Les appels sans clé sont limités par Jupiter : pas de boucle agressive ni de retry d'envoi.
+  let response;
+  try{response=await fetch(BASE+"/order?"+qs,{cache:"no-store"});}
+  catch(e){throw Error("Jupiter inaccessible depuis ce navigateur : "+(e.message||e));}
+  let data={};
+  try{data=await response.json();}catch(e){throw Error("Réponse Jupiter invalide (HTTP "+response.status+").");}
+  if(!response.ok||data.error||data.errorCode)
+    throw Error("Jupiter HTTP "+response.status+" : "+(data.errorMessage||data.error||data.message||"aucun itinéraire disponible"));
+  if(!/^[0-9]+$/.test(String(data.outAmount||"")))throw Error("Aucun devis Jupiter exploitable.");
+  return data;
 }
-function errJup(d,status){
-  const t=(d&&(d.error||d.message||d.errorMessage))||("Erreur Jupiter "+status);
-  if(/not tradable|TOKEN_NOT_TRADABLE/i.test(t))return "Ce jeton n'est pas échangeable pour l'instant";
-  if(/insufficient|balance/i.test(t))return "Solde insuffisant pour cet échange";
-  if(/slippage/i.test(t))return "Slippage trop élevé, réessayez";
-  return t;
-}
-async function build(taker){
-  const p=params();
-  const q=new URLSearchParams({
-    inputMint:p.inMint,outputMint:p.outMint,amount:p.amount,taker,
-    slippageBps:"100",platformFeeBps:String(FEE_BPS),feeAccount:FEE_ACCOUNT
-  });
-  const r=await fetch(API+"?"+q,{cache:"no-store"});
-  if(r.status===429)throw new Error("Jupiter est saturé, réessayez dans 1 minute");
-  let d=null;try{d=await r.json()}catch(_){throw new Error("Réponse Jupiter invalide")}
-  if(!r.ok||d.error||!d.swapInstruction)throw new Error(errJup(d,r.status));
-  return {p,d};
+function preview(input,result){
+  const amount=Number(result.outAmount)/10**input.outputDecimals;
+  const received=input.side==="achat"?input.token[0]:"USDC";
+  const feeBps=Number(result.feeBps);
+  const desc="Reçu estimé : "+format(amount)+" "+received+" · route "+String(result.router||"Jupiter")+
+    (Number.isFinite(feeBps)?" · frais Jupiter "+format(feeBps/100,2)+" %":"")+
+    " · prix non garanti jusqu'à la signature.";
+  $("ct_devis").textContent=desc;return desc;
 }
 $("ct_devisBtn").onclick=async()=>{
   if(busy)return;
-  try{
-    setBusy(true);msg("Calcul du prix…");
-    const {p,d}=await build(wallet||"9yj3zvLS3fDMqi1F8zhkaWfq8TZpZWHe6cz1Sgt7djXf");
-    const outDec=sens==="achat"?p.j[2]:6,inDec=sens==="achat"?6:p.j[2];
-    const recu=Number(d.outAmount)/10**outDec,donne=Number(d.inAmount)/10**inDec;
-    const usdc=sens==="achat"?donne:recu/(1-FEE_BPS/1e4),fee=usdc*FEE_BPS/1e4;
-    const impact=d.priceImpactPct!=null?` · Impact prix : ${(+d.priceImpactPct).toLocaleString("fr-FR",{maximumFractionDigits:3})} %`:"";
-    $("ct_devis").innerHTML=`Vous recevez ≈ <b>${recu.toLocaleString("fr-FR",{maximumFractionDigits:6})} ${sens==="achat"?p.j[0]:"USDC"}</b><br>Frais du site : ${fee.toLocaleString("fr-FR",{maximumFractionDigits:4})} USDC (${(FEE_BPS/100).toLocaleString("fr-FR")} %)${impact}`;
-    msg("Prix calculé. Vous pouvez échanger.");
-  }catch(e){msg("⚠ "+(e.message||"Erreur"),true)}
-  finally{setBusy(false)}
+  setBusy(true);
+  try{msg("Recherche d'un devis réel Jupiter…");
+    const input=current();const data=await order(input);
+    lastQuote={input,shown:data,time:Date.now()};
+    preview(input,data);
+    msg("Devis obtenu. L'échange n'est pas exécuté tant que tu ne l'as pas signé.");
+  }catch(e){msg("⚠ "+String(e.message||e),true);}
+  finally{setBusy(false);}
 };
+$("ct_connect").onclick=async()=>{
+  if(busy)return;
+  const p=provider();
+  if(!p){msg("Ouvre le terminal dans le navigateur Phantom pour connecter le portefeuille.",true);return;}
+  try{const response=await p.connect();wallet=response.publicKey.toString();
+    $("ct_connect").textContent="Phantom "+wallet.slice(0,5)+"…"+wallet.slice(-4);
+    msg("Phantom connecté. Tu peux consulter un devis ; tout envoi exigera une signature.");
+  }catch(e){msg("Connexion Phantom non autorisée : "+(e.message||e),true);}
+};
+function base64(bytes){
+  let binary="";for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.slice(i,i+8192));
+  return btoa(binary);
+}
 $("ct_echanger").onclick=async()=>{
   if(busy)return;
+  const p=provider();
+  if(!p){msg("Connecte Phantom dans son navigateur intégré.",true);return;}
   try{
-    if(!wallet){msg("Connectez d'abord Phantom",true);return}
-    if(!window.solanaWeb3){msg("Bibliothèque Solana encore en chargement, réessayez",true);return}
-    setBusy(true);msg("Préparation…");
-    const {d}=await build(wallet);const W=window.solanaWeb3;
-    const ix=x=>new W.TransactionInstruction({
-      programId:new W.PublicKey(x.programId),
-      keys:x.accounts.map(a=>({pubkey:new W.PublicKey(a.pubkey),isSigner:a.isSigner,isWritable:a.isWritable})),
-      data:Uint8Array.from(atob(x.data),c=>c.charCodeAt(0))
+    const input=current();
+    if(!lastQuote||Date.now()-lastQuote.time>45000||
+      JSON.stringify(lastQuote.input)!==JSON.stringify(input))
+      throw Error("Devis absent, modifié ou périmé : actualise le devis avant de signer.");
+    if(!window.solanaWeb3?.VersionedTransaction)throw Error("Bibliothèque Solana indisponible.");
+    const r=await p.connect();const signer=r.publicKey.toString();
+    if(wallet&&wallet!==signer)throw Error("Le portefeuille Phantom a changé : reconnecte-le et redemande un devis.");
+    wallet=signer;
+    setBusy(true);msg("Construction d'un nouvel ordre avec Jupiter…");
+    const data=await order(input,signer);
+    if(!data.transaction||!data.requestId)throw Error("Route impossible à exécuter : "+(data.errorMessage||"devis non signable"));
+    const previous=BigInt(lastQuote.shown.outAmount),fresh=BigInt(data.outAmount);
+    // La signature doit se baser sur un prix aussi bon que le devis ou au plus 1 % inférieur.
+    if(previous>0n&&fresh*100n<previous*99n)throw Error("Le montant reçu a baissé de plus de 1 % : redemande un devis.");
+    const expected=Number(data.outAmount)/10**input.outputDecimals;
+    const asset=input.side==="achat"?input.token[0]:"USDC";
+    if(!window.confirm("Autoriser dans Phantom un échange réel sur Solana ?\nMontant estimé reçu : "+format(expected)+" "+asset+"\nAucune commission Sol Desk. Frais Jupiter/réseau éventuels.")){
+      msg("Échange non validé.");return;
+    }
+    const bytes=Uint8Array.from(atob(data.transaction),c=>c.charCodeAt(0));
+    const tx=window.solanaWeb3.VersionedTransaction.deserialize(bytes);
+    if(!p.signTransaction)throw Error("Phantom ne permet pas la signature séparée. Utilise Jupiter officiel.");
+    msg("Vérifie le détail et signe dans Phantom…");
+    const signed=await p.signTransaction(tx);
+    const signedTransaction=base64(signed.serialize());
+    if(p.publicKey.toString()!==signer)throw Error("Portefeuille changé : opération annulée.");
+    msg("Transaction signée, transmission à Jupiter…");
+    // Un seul POST : ne pas doubler l'opération en cas d'état réseau inconnu.
+    const response=await fetch(BASE+"/execute",{
+      method:"POST",headers:{"content-type":"application/json"},
+      body:JSON.stringify({signedTransaction,requestId:data.requestId})
     });
-    const list=[
-      W.ComputeBudgetProgram.setComputeUnitLimit({units:600000}),
-      ...(d.computeBudgetInstructions||[]).map(ix),
-      ...(d.setupInstructions||[]).map(ix),
-      ix(d.swapInstruction),
-      ...(d.cleanupInstruction?[ix(d.cleanupInstruction)]:[]),
-      ...(d.otherInstructions||[]).map(ix),
-      ...(d.tipInstruction?[ix(d.tipInstruction)]:[])
-    ];
-    const alts=Object.entries(d.addressesByLookupTableAddress||{}).map(([k,v])=>new W.AddressLookupTableAccount({
-      key:new W.PublicKey(k),
-      state:{deactivationSlot:BigInt("18446744073709551615"),lastExtendedSlot:0,lastExtendedSlotStartIndex:0,addresses:v.map(a=>new W.PublicKey(a))}
-    }));
-    const raw=d.blockhashWithMetadata&&d.blockhashWithMetadata.blockhash;
-    if(!raw)throw new Error("Blockhash manquant");
-    const hash=new W.PublicKey(Uint8Array.from(raw)).toBase58();
-    const m=new W.TransactionMessage({payerKey:new W.PublicKey(wallet),recentBlockhash:hash,instructions:list}).compileToV0Message(alts);
-    const tx=new W.VersionedTransaction(m);msg("Validez dans Phantom…");
-    const r=await provider().signAndSendTransaction(tx);
-    const sig=r.signature||r;
-    $("ct_swapMsg").innerHTML=`✅ Échange envoyé ! <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">Voir sur Solscan</a>`;
-    $("ct_swapMsg").className="";
-  }catch(e){
-    const m=e&&(e.message||e.error||e.toString())||"Échange annulé";
-    msg("⚠ "+m,true);
-  }finally{setBusy(false)}
+    let result={};try{result=await response.json();}catch(e){}
+    if(result.signature){
+      const link=document.createElement("a");link.href="https://solscan.io/tx/"+encodeURIComponent(result.signature);
+      link.target="_blank";link.rel="noopener noreferrer";link.textContent="Voir la transaction sur Solscan";
+      const status=$("ct_swapMsg");status.replaceChildren(document.createTextNode(
+        result.status==="Success"?"Échange confirmé par Jupiter. ":"État de l'envoi incertain : vérifie sur Solscan. "),link);
+    }else{msg("Résultat Jupiter non confirmé (HTTP "+response.status+"). Vérifie le portefeuille avant de réessayer.",true);}
+    lastQuote=null;
+  }catch(e){msg("⚠ "+String(e.message||e)+" Si tu as déjà signé, vérifie Phantom avant toute nouvelle tentative.",true);}
+  finally{setBusy(false);}
 };
 })();
