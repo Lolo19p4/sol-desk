@@ -82,17 +82,11 @@ let yT=0,rates=[];async function yields(){if(Date.now()-yT<6e5)return;yT=Date.no
  const res=await Promise.all(Object.entries(POOLS).map(async([id,ch])=>{const d=await j('https://yields.llama.fi/chart/'+id);const l=d?.data?.at(-1);return l&&l.apy!=null?{id,chain:ch,apy:l.apy,tvl:l.tvlUsd}:null}));
  rates=res.filter(Boolean).sort((a,b)=>b.apy-a.apy);
  $('yield').innerHTML=rates.length?'<table><tr><th>Réseau</th><th>APY</th><th>Dépôts</th></tr>'+rates.map(p=>`<tr><td>${p.chain}</td><td class=ok>${p.apy.toFixed(2)} %</td><td>$${(p.tvl/1e6).toFixed(0)}M</td></tr>`).join('')+'</table><div class=sk>Source : DefiLlama (Aave v3 USDC).</div>':'<span class=sk>Données indisponibles</span>';
- if(!rates.length)return;const b=rates[0];S.y=S.y||{total:0,day:0,dk:'',last:Date.now()};
- if(!S.y.id){S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy;log(`Rendement USDC : dépôt fictif sur Aave ${b.chain} à ${b.apy.toFixed(2)} %`)}
- else{const cur=rates.find(r=>r.id===S.y.id);if(cur)S.y.apy=cur.apy;
-  if(b.id!==S.y.id&&b.apy>=S.y.apy+0.5){log(`Rendement USDC : changement ${S.y.chain} (${S.y.apy.toFixed(2)} %) → ${b.chain} (${b.apy.toFixed(2)} %)`);S.y.id=b.id;S.y.chain=b.chain;S.y.apy=b.apy}}save()}
+}
+
 const RES=0.90;// garde 90 % du cash libre (3 trades à 30 %) pour les prochains achats
-function accrue(){const y=S.y;if(!y?.id)return;const now=Date.now(),dt=(now-y.last)/1e3;y.last=now;
- const dep=Math.max(0,S.bal*(1-RES)),gain=dep*y.apy/100*dt/31536e3;S.bal+=gain;y.total+=gain;
- const dk=new Date().toDateString();if(y.dk!==dk){y.dk=dk;y.day=0}y.day+=gain;
- $('yc').innerHTML=`Pool : <b>Aave ${y.chain}</b><br>Taux : <b class=ok>${y.apy.toFixed(2)} %</b><br>Placé : $${dep.toFixed(2)} (réserve $${(S.bal-dep).toFixed(2)})<br>Gagné total : <b class=ok>$${y.total.toFixed(2)}</b><br>Aujourd'hui : $${y.day.toFixed(2)}`;
- showBal()}
-setInterval(()=>{accrue();if(Math.random()<0.1)save()},1000);setInterval(yields,6e5);
+// Les rendements sont informatifs ; aucun gain fictif ne modifie les fonds.
+setInterval(yields,6e5);
 async function risk(){lit(4);await riskMaj();const ks=Object.keys(S.pos).filter(k=>!S.pos[k].major);if(!ks.length)return;
  const ps=await j(DS+'/latest/dex/pairs/solana/'+ks.map(k=>S.pos[k].pair).join(','));
  const list=ps?.pairs||[];
@@ -111,8 +105,8 @@ function render(){lit(5);showBal();const s=S.stats;
  const v=$('sel').value;$('sel').innerHTML=Object.entries(S.pos).map(([a,p])=>`<option value="${a}">${p.sym}</option>`).join('')||'<option>SOL (aucune position)</option>';if(S.pos[v])$('sel').value=v;drawChart()}
 
 const seenRows=[];
-let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy)return;inCycle=1;try{
- await risk();yields();
+let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy||!window.REAL?.on)return;inCycle=1;try{
+ // Aucun moteur de portefeuille fictif : seuls les signaux réels Phantom sont étudiés.
  if($('mode').value==='prudent'){await prudent();render();return}
  const ps=await scout();
  for(const p of ps.slice(0,8)){const r=await filter(p);const fail=r.filter(x=>x[1]===false);
@@ -124,7 +118,7 @@ let inCycle=0;async function cycle(){if(inCycle||window.REAL?.busy)return;inCycl
   $('seen').innerHTML='<tr><th>Jeton</th><th>Mcap</th><th>Règles (✔ ok ✘ non – pas de données)</th><th>Résultat</th></tr>'+seenRows.slice(0,40).join('')}
  save()}catch(e){log('Erreur : '+e)}finally{inCycle=0}render()}
 
-$('go').onclick=()=>{running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log(window.REAL&&REAL.on?'Démarrage (RÉEL, signature Phantom).':'Démarrage (simulation).');cycle();timer=setInterval(cycle,window.REAL&&REAL.on?5000:15000)}else clearInterval(timer)};
+$('go').onclick=()=>{if(!window.REAL?.on){log('Signaux désactivés : activer Phantom avant toute proposition.');return;}running=!running;$('go').textContent=running?'⏸ Pause':'▶ Démarrer';if(running){log(window.REAL&&REAL.on?'Démarrage (RÉEL, signature Phantom).':'Démarrage (simulation).');cycle();timer=setInterval(cycle,window.REAL&&REAL.on?5000:15000)}else clearInterval(timer)};
 $('reset').onclick=()=>{if(confirm('Tout remettre à zéro (solde 60 $) ?')){localStorage.removeItem(K);location.reload()}};
 $('mode').value=S.mode||'prudent';$('mode').onchange=()=>{S.mode=$('mode').value;save();log('Stratégie : '+S.mode)};yields();render();var _l=$('log');if(_l)_l.textContent=S.log.join('\n');
-if(location.search.includes('auto'))$('go').click();
+
