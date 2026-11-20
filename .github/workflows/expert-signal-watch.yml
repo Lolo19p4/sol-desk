@@ -9,6 +9,9 @@ on:
     paths:
       - 'expert-scanner.js'
       - 'real.js'
+      - 'performance-core.js'
+      - 'performance-dashboard.js'
+      - 'tools/test-performance.mjs'
       - 'auto.js'
       - 'terminal.js'
       - 'index.html'
@@ -33,10 +36,21 @@ jobs:
         run: |
           node --check expert-scanner.js
           node --check real.js
+          node --check performance-core.js
+          node --check performance-dashboard.js
+          node --check tools/test-performance.mjs
           node --check auto.js
           node --check terminal.js
           node --check tools/expert_market_check.mjs
           grep -q 'id="expert-radar"' index.html
           grep -q 'expert-scanner.js?v=1' index.html
+          grep -q 'performance-core.js?v=1' index.html
+          grep -q 'performance-dashboard.js?v=1' index.html
+      - name: Valider les résultats enregistrés et les risques
+        run: |
+          node tools/test-performance.mjs
+          grep -Fq 'R.stopped=!!D.halt' real.js
+          grep -Fq "src!=='USDC'" real.js
+          grep -Fq 'R.pk!==intendedWallet' real.js
       - name: Interroger le marché et l'état Sol Desk
         run: node tools/expert_market_check.mjs
