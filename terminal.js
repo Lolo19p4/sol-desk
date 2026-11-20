@@ -20,7 +20,7 @@
     'HZ1JovNiVvGrGNiiYvEozEVgZ58xaU3RKwX8eACQBCt3':'PYTH'
   };
   var BINANCE_SYM={SOL:'solusdt',ETH:'ethusdt',BTC:'btcusdt',BONK:'bonkusdt',JUP:'jupusdt',WIF:'wifusdt',PYTH:'pythusdt'};
-  var JUP_PRICE='https://lite-api.jup.ag/price/v3?ids=';
+  var JUP_PRICE='https://api.jup.ag/price/v3?ids=';
   var ASSETS=[
     {id:'SOL',sym:'SOLUSDT',nom:'Solana'},
     {id:'ETH',sym:'ETHUSDT',nom:'Ethereum'},
@@ -180,10 +180,11 @@
     });
   }
   async function loadWallet(){
+    var selectedWallet=(window.REAL&&(window.REAL.pk||window.REAL.watch))||WALLET;
     var parts=await Promise.all([
-      rpc('getBalance',[WALLET]),
-      rpc('getTokenAccountsByOwner',[WALLET,{programId:TOKEN_PROG},{encoding:'jsonParsed'}]),
-      rpc('getTokenAccountsByOwner',[WALLET,{programId:TOKEN_2022},{encoding:'jsonParsed'}])
+      rpc('getBalance',[selectedWallet]),
+      rpc('getTokenAccountsByOwner',[selectedWallet,{programId:TOKEN_PROG},{encoding:'jsonParsed'}]),
+      rpc('getTokenAccountsByOwner',[selectedWallet,{programId:TOKEN_2022},{encoding:'jsonParsed'}])
     ]);
     var h={};
     var sol=((parts[0]&&parts[0].value)||0)/1e9;
