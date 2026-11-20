@@ -44,7 +44,7 @@ function rsi(v,n=14){
  return down===0?(up===0?50:100):100-100/(1+up/down);
 }
 function signal(x){
- if(!x||!Number.isFinite(x.price)||!Number.isFinite(x.high24)||x.high24<=0||Date.now()-(x.candlesAt||0)>120000)return ["indisponible","Cours, seuil ou analyse récente absent"];
+ if(!x||!Number.isFinite(x.price)||!Number.isFinite(x.high24)||x.high24<=0||Date.now()-(x.candlesAt||0)>90000||Date.now()-(x.priceAt||0)>40000)return ["indisponible","Cours, seuil ou analyse récente absent"];
  if(!x.regime)return ["attente","Prix sous EMA50 4 h ou tendance 4 h non confirmée"];
  if(!x.fastTrend)return ["attente","EMA9 5 min pas encore au-dessus de EMA21"];
  if(!Number.isFinite(x.rsi)||x.rsi<40||x.rsi>70)return ["prudence","RSI 15 min hors zone 40–70"];
@@ -92,7 +92,7 @@ async function updateCandles(){
   const ema50Before=ema(close4.slice(0,-6),50);
   const c4=close4[close4.length-1],m5prices=m5.map(z=>z.c),last1=h1[h1.length-1].c;
   const obj={
-    high24,regime:c4>ema50&&ema50>=ema50Before,
+    high24,priceAt:state[id]?.priceAt||0,regime:c4>ema50&&ema50>=ema50Before,
     fastTrend:ema(m5prices,9)>ema(m5prices,21),
     rsi:rsi(m15.map(z=>z.c)),confirmed:last1>high24,
     candlesAt:Date.now(),price:state[id]?.price||last1
@@ -110,7 +110,7 @@ async function updatePrices(){
   const data=await fetchJson("/api/v3/ticker/price?symbols="+encodeURIComponent(JSON.stringify(pairs.map(z=>z[1]))));
   if(!Array.isArray(data))throw Error("Cours invalides");
   let n=0;
-  for(const [id,sym] of pairs){const v=data.find(z=>z.symbol===sym),p=Number(v?.price);if(Number.isFinite(p)&&p>0&&state[id]){state[id].price=p;n++}}
+  for(const [id,sym] of pairs){const v=data.find(z=>z.symbol===sym),p=Number(v?.price);if(Number.isFinite(p)&&p>0&&state[id]){state[id].price=p;state[id].priceAt=Date.now();n++}}
   if(n>0){lastPrice=Date.now();lastError=""}else throw Error("Aucun cours exploitable");
  }catch(e){lastError=e.message||String(e)}
  render();
@@ -118,7 +118,7 @@ async function updatePrices(){
 async function refresh(){await updateCandles();await updatePrices()}
 $("expert-refresh").addEventListener("click",refresh);
 refresh();
-setInterval(updatePrices,15000);
-setInterval(updateCandles,60000);
+setInterval(updatePrices,10000);
+setInterval(updateCandles,30000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 })();

@@ -1,0 +1,54 @@
+name: Surveillance expert crypto (cours réels)
+on:
+  schedule:
+    - cron: '2-57/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - '.github/workflows/expert-market.yml'
+      - 'tools/expert_scan.mjs'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sol-desk-expert-market
+  cancel-in-progress: true
+
+jobs:
+  scanner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Contrôler le moteur et lire Binance
+        run: |
+          node --check tools/expert_scan.mjs
+          node tools/expert_scan.mjs
+      - name: Publier uniquement les signaux marché publics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- market_signals.json
+          if git diff --cached --quiet; then
+            echo "Aucun changement."
+            exit 0
+          fi
+          staged="$(git diff --cached --name-only)"
+          test "$staged" = "market_signals.json"
+          git commit -m "Surveillance marché SOL BTC ETH [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase -X theirs origin master && git push origin HEAD:master; then
+              echo "Signaux marché publiés."
+              exit 0
+            fi
+            echo "Publication retardée ; nouvel essai $attempt."
+            sleep 5
+          done
+          echo "::error::Impossible de publier les signaux marché"
+          exit 1
