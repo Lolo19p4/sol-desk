@@ -10,7 +10,7 @@ const R=window.REAL={on:false,MAJ,pk:null,bal:{},pend:{},stopped:false,pos:JSON.
 const el=id=>document.getElementById(id);
 const sp=()=>localStorage.setItem('soldesk_real_pos',JSON.stringify(R.pos));
 const RK='soldesk_real_on',ss=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},gs=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
-function setReal(on,quiet){R.on=on;ss(RK,on?'1':null);const b=document.querySelector('.badge');
+function setReal(on,quiet){R.on=on;ss(RK,on?'1':'0');const b=document.querySelector('.badge');
  el('realbox').style.display=on?'block':'none';
  el('realbtn').textContent=on?'Arrêter les signaux':'Activer les signaux réels';
  b.textContent=on?'RÉEL':'SIM';b.style.background=on?'#14532d':'';b.style.color=on?'#4ade80':'';
