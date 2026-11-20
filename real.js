@@ -12,9 +12,9 @@ const sp=()=>localStorage.setItem('soldesk_real_pos',JSON.stringify(R.pos));
 const RK='soldesk_real_on',ss=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}},gs=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 function setReal(on,quiet){R.on=on;ss(RK,on?'1':null);const b=document.querySelector('.badge');
  el('realbox').style.display=on?'block':'none';
- el('realbtn').textContent=on?'Revenir en simulation':'Passer en RÉEL';
- b.textContent=on?'RÉEL':'SIM';b.style.background=on?'#14532d':'';b.style.color=on?'#4ade80':'';
- showWal();if(!quiet)log(on?'MODE RÉEL activé (validation dans Phantom).':'Retour en simulation.')}
+ el('realbtn').textContent=on?'Mettre le trading en pause':'Activer le trading avec Phantom';
+ b.textContent=on?'TRADING ACTIVÉ':'TRADING EN PAUSE';b.style.background=on?'#14532d':'#334155';b.style.color=on?'#4ade80':'#cbd5e1';
+ showWal();if(!quiet)log(on?'Trading activé (chaque opération exige Phantom).':'Trading mis en pause.')}
 function showWal(){const w=R.watch||gs('soldesk_watch'),s=a=>a.slice(0,4)+'…'+a.slice(-4);
  el('wal').innerHTML=R.pk?'<span class=ok>Connecté : '+s(R.pk)+'</span>':(w?'Portefeuille enregistré : <b>'+s(w)+'</b> (lecture seule) — appuie sur Connecter Phantom pour signer':'Non connecté');
  const rb=el('rbal');if(rb)rb.innerHTML=(R.pk||w)?el('wbal').innerHTML:''}
@@ -30,7 +30,7 @@ async function bal(){const W=R.pk||R.watch;R.balAddress=null;R.balAt=0;if(!W){R.
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
  R.tot=tot;R.px=pr;el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;showWal();
  const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==W){D={dk,pk:W,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
- const dd=D.start?(tot/D.start-1)*100:0;R.stopped=!!(D.start>0&&dd<=-L.loss);
+ const dd=D.start?(tot/D.start-1)*100:0;if(D.start>0&&dd<=-L.loss){D.halt=true;localStorage.setItem(PK,JSON.stringify(D))}R.stopped=!!D.halt;
  el('rstat').innerHTML=`Début de journée : $${(+D.start).toFixed(2)} · Variation : <span class=${dd>=0?'ok':'ko'}>${dd.toFixed(2)} %</span>`+(R.stopped?` <b class=ko>— PERTE MAX DU JOUR ATTEINTE : bot arrêté jusqu'à demain</b>`:'');
  // stops réels -6 % / suiveur
  for(const[m,P]of Object.entries(R.pos)){const px=pr[m]?.usdPrice;if(!px)continue;if(!R.bal[m]){delete R.pos[m];continue}P.peak=Math.max(P.peak,px);const ch=px/P.entry-1;
@@ -51,7 +51,7 @@ R.check=(sym,mint,bull,bear,why)=>{if(!R.on)return;const P=R.plan(sym,mint,bull,
 R.cool={};// ROTATION : tout le portefeuille va sur l'actif qui monte le plus (SOL, wBTC, wETH), sinon USDC
 const TK={SOL:SOLM,BTC:MAJ.BTC,ETH:MAJ.ETH,USDC,...XT};const NM={SOL:'SOL',BTC:'wBTC',ETH:'wETH',USDC:'USDC',BONK:'BONK',WIF:'WIF',RAY:'RAY',LTC:'cbLTC'};
 R.TK=TK;R.NM=NM;R.NAME=NAME;R.SC={};R.DEC={};
-R.pick=list=>{const up=list.filter(x=>x.bull).sort((a,b)=>b.force-a.force);return up.length?up[0].s:'USDC'};
+R.pick=list=>{const up=list.filter(x=>x.bull&&(!L.pru||['SOL','BTC','ETH'].includes(x.s))).sort((a,b)=>b.force-a.force);return up.length?up[0].s:'USDC'};
 R.free=s=>{const m=TK[s],b=R.bal[m];if(!b)return 0;return Math.max(0,+b.raw-(m===SOLM?FEE:0))};
 R.val=s=>{const m=TK[s],b=R.bal[m],px=s==='USDC'?1:(R.px||{})[m]?.usdPrice;if(!b||!px)return 0;return R.free(s)/(+b.raw/b.ui)*px};
 R.rotate=list=>{if(!R.on)return;const tgt=R.pick(list);const t=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});if(R.stopped&&tgt!=='USDC'){el('rchk').textContent='Coupe-circuit actif : achats et rotations vers des cryptos bloqués.';return}
@@ -71,7 +71,7 @@ function drawP(){const v=Object.entries(R.pend);el('pend').innerHTML=v.length?v.
 async function quote(inM,outM,amt,sl){sl=sl||L.slip;const u=`${JUP}/swap/v1/quote?inputMint=${inM}&outputMint=${outM}&amount=${amt}&slippageBps=${Math.round(sl*100)}`;let q=await j(u);for(let i=0;i<3&&(!q||q.error);i++){await new Promise(z=>setTimeout(z,2500*(i+1)));q=await j(u)}
  if(!q||q.error)throw'Pas de devis Jupiter';if(+q.priceImpactPct*100>1)throw'Impact de prix '+(q.priceImpactPct*100).toFixed(2)+' % > limite';return q}
 R.quote=quote;
-async function exec(k){const p=R.pend[k];if(!p||R.busy)return;R.busy=1;const pv=prov();try{
+async function exec(k){const p=R.pend[k];if(!p||R.busy||!R.on)return;R.busy=1;const pv=prov();try{
  if(!R.pk||!pv)throw'Connecte Phantom d’abord';
  await bal();if(R.balAddress!==R.pk||!R.balAt||Date.now()-R.balAt>60000)throw'Portefeuille connecté non vérifié. Aucune opération possible.';let q;
  if(p.side==='swap'){await bal();const free=R.free(p.src),availableUsd=R.val(p.src);const budgetUsd=Math.min(availableUsd,(R.tot||0)*L.pct/100);const amt=availableUsd>0?Math.floor(free*budgetUsd/availableUsd):0;if(amt<=0||budgetUsd<MIN)throw'Rotation plafonnée ou montant inférieur à 8 $';q=await quote(TK[p.src],TK[p.tgt],amt,L.slip)}
@@ -82,7 +82,7 @@ async function exec(k){const p=R.pend[k];if(!p||R.busy)return;R.busy=1;const pv=
  const sw=()=>fetch(JUP+'/swap/v1/swap',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:R.pk,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true})}).then(r=>r.json()).catch(e=>({error:e.message}));
  let s=await sw();for(let i=0;i<3&&!s.swapTransaction;i++){await new Promise(z=>setTimeout(z,2500*(i+1)));s=await sw()}
  if(!s.swapTransaction)throw'Jupiter n’a pas construit la transaction ('+(s.error||s.message||JSON.stringify(s).slice(0,120))+')';
- const tx=solanaWeb3.VersionedTransaction.deserialize(Uint8Array.from(atob(s.swapTransaction),c=>c.charCodeAt(0)));
+ if(!R.on)throw'Trading mis en pause avant signature';const tx=solanaWeb3.VersionedTransaction.deserialize(Uint8Array.from(atob(s.swapTransaction),c=>c.charCodeAt(0)));
  const {signature}=await pv.signAndSendTransaction(tx);
  log(`RÉEL : transaction envoyée ${p.sym} — https://solscan.io/tx/${signature}`);
  if(p.side==='swap'){}else if(p.side==='buy'){const pr=await price([p.mint]);R.pos[p.mint]={sym:p.sym,entry:pr[p.mint]?.usdPrice||0,peak:pr[p.mint]?.usdPrice||0}}else delete R.pos[p.mint];sp();
