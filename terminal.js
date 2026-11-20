@@ -200,6 +200,7 @@
   }
 
   var tradesData=null, hold=null, holdErr=null, scan={}, lastOk=0, prices={};
+  var priceAt={}, lastScanAt=0, refreshBusy=false, lastExpertCode={};
   var statusData=null, statusErr=null, botTick=null;
 
   function lastSellMs(actif){
@@ -420,6 +421,36 @@
     }).join('');
   }
 
+  function renderExpert(){
+    var container=document.getElementById('tmexpert');
+    if(!container) return;
+    var analyser=window.SolDeskExpert&&window.SolDeskExpert.evaluate;
+    if(typeof analyser!=='function'){
+      container.textContent='Moteur expert non chargé. Vérifie la connexion et recharge la page.';
+      return;
+    }
+    var botAge=passageMs(statusData),botLate=!botAge||(Date.now()-botAge>30*60000);
+    var notice=botLate
+      ?'<p class="ko">Bot autonome : dernier passage publié trop ancien ou introuvable. Les signaux marché ne prouvent pas qu’un ordre est envoyé.</p>'
+      :'<p class="sk">Dernier passage publié du bot : '+esc(fmtAgo(botAge))+'. Aucune preuve de transaction sans hash blockchain.</p>';
+    var rows=ASSETS.map(function(a){
+      var x=scan[a.id]||{},price=prices[a.id],signal=analyser({
+        now:Date.now(),price:price,ph24:x.ph24,scanAt:lastScanAt,priceAt:priceAt[a.id],
+        reg4h:x.reg4h,croise:x.croise,pause6h:x.pause6h,confirmed:x.ok
+      });
+      if(lastExpertCode[a.id]!==signal.code){
+        lastExpertCode[a.id]=signal.code;
+        // Une alerte informe. Elle n'autorise jamais une transaction.
+      }
+      var delta=signal.distancePct==null?'n/d':((signal.distancePct>=0?'+':'')+
+        signal.distancePct.toLocaleString('fr-FR',{maximumFractionDigits:2})+' %');
+      return '<div class="tm-card"><div class="mk-head"><strong>'+esc(a.id)+'</strong><strong class="'+esc(signal.color)+'">'+esc(signal.label)+'</strong></div>'+
+        '<div class="sk">Prix récent : '+esc(fmtPx(price))+' · Plus haut 24 h : '+esc(fmtPx(x.ph24))+' · Écart : '+esc(delta)+'</div>'+
+        '<div class="sk">'+esc(signal.reason)+'</div></div>';
+    }).join('');
+    container.innerHTML=notice+'<div class="tm-assets">'+rows+'</div>'+
+      '<p class="sk">Analyse réactualisée à l’écran toutes les 5 s à partir des prix reçus. Bougies actualisées toutes les 30 s quand la page est visible. Alertes seulement : pas d’ordre, ni de promesse de gain.</p>';
+  }
   function renderTrades(){
     var box=document.getElementById('tmresume');
     var motifs=document.getElementById('tmmotifs');
@@ -464,6 +495,7 @@
   }
 
   function renderAll(){
+    renderExpert();
     renderBot();
     renderBalance();
     renderPosition();
@@ -490,22 +522,28 @@
       if(Array.isArray(tick)){
         tick.forEach(function(t){
           var a=ASSETS.find(function(x){return x.sym===t.symbol});
-          if(a&&isFinite(+t.price)) prices[a.id]=+t.price;
+          if(a&&isFinite(+t.price)&&+t.price>0){ prices[a.id]=+t.price; priceAt[a.id]=Date.now(); }
         });
       }
     }catch(e){}
     await Promise.all(jobs);
+    lastScanAt=Date.now();
   }
 
   async function refresh(){
+    if(refreshBusy||document.visibilityState==='hidden')return;
+    refreshBusy=true;
     var errors=[];
-    try{ if(!tradesData) await loadTrades() }catch(e){ errors.push('journal') }
-    try{ await loadScan() }catch(e){ errors.push('bougies') }
-    try{ hold=await loadWallet(); holdErr=null }catch(e){ hold=null; holdErr=e; errors.push('portefeuille') }
-    if(!errors.length||scan.SOL||scan.ETH||scan.BTC) lastOk=Date.now();
-    setLive(Date.now()-lastOk<90000);
-    renderAll();
-    setStatus(errors.length?('Chargé avec manque : '+errors.join(', ')):'Conditions et soldes à jour');
+    try{
+      try{ if(!tradesData) await loadTrades() }catch(e){ errors.push('journal') }
+      try{ await loadScan() }catch(e){ errors.push('bougies') }
+      try{ hold=await loadWallet(); holdErr=null }catch(e){ hold=null; holdErr=e; errors.push('portefeuille') }
+      // Une ancienne valeur scan n'est jamais une preuve de données récentes.
+      if(!errors.length) lastOk=Date.now();
+      setLive(Date.now()-lastOk<90000);
+      renderAll();
+      setStatus(errors.length?('Lecture partielle : '+errors.join(', ')):'Bougies, prix et soldes actualisés');
+    }finally{refreshBusy=false}
   }
 
   function bindMenu(){
@@ -551,10 +589,12 @@
           Object.keys(BINANCE_SYM).forEach(function(k){ if(BINANCE_SYM[k]===sym) id=k; });
           if(id&&isFinite(px)&&px>0){
             prices[id]=px;
+            priceAt[id]=Date.now();
             lastOk=Date.now();
             setLive(true);
             renderPosition();
             renderBalance();
+            renderExpert();
           }
         }catch(e){}
       };
@@ -600,11 +640,12 @@
   refresh();
   startBinanceWs();
   loadJupPrices();
-  setInterval(refresh, 60000);
+  setInterval(refresh, 30000);
   setInterval(loadStatus, 60000);
   setInterval(loadJupPrices, 30000);
   if(botTick) clearInterval(botTick);
   botTick=setInterval(function(){ renderBot(); }, 1000);
+  setInterval(function(){ if(document.visibilityState==='visible')renderExpert(); }, 5000);
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='visible'){
       loadStatus();
