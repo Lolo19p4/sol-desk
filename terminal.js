@@ -201,7 +201,7 @@
 
   var tradesData=null, hold=null, holdErr=null, scan={}, lastOk=0, prices={};
   var priceAt={}, lastScanAt=0, refreshBusy=false, lastExpertCode={};
-  var statusData=null, statusErr=null, botTick=null;
+  var statusData=null, statusErr=null, botTick=null, lastTradesAt=0;
 
   function lastSellMs(actif){
     if(!tradesData||!tradesData.trades) return null;
@@ -278,7 +278,7 @@
       return;
     }
     var level=botLevel(ms);
-    var label=level==='stop'?'ARRÊTÉ':level==='late'?'EN RETARD':'BOT EN MARCHE';
+    var label=level==='stop'?'SIGNAL OBSOLÈTE':level==='late'?'SIGNAL EN RETARD':'SIGNAL RÉCENT';
     var n=statusData.nb_positions;
     if(n==null) n=0;
     var posTxt=n===0?'aucune position':(n===1?'1 position':n+' positions');
@@ -505,7 +505,7 @@
   }
 
   async function loadTrades(){
-    tradesData=await getJson(['trades.json?v=43']);
+    tradesData=await getJson(['trades.json?t='+Date.now()]);lastTradesAt=Date.now();
   }
 
   async function loadScan(){
@@ -535,7 +535,7 @@
     refreshBusy=true;
     var errors=[];
     try{
-      try{ if(!tradesData) await loadTrades() }catch(e){ errors.push('journal') }
+      try{ if(!tradesData||Date.now()-lastTradesAt>60000) await loadTrades() }catch(e){ errors.push('journal') }
       try{ await loadScan() }catch(e){ errors.push('bougies') }
       try{ hold=await loadWallet(); holdErr=null }catch(e){ hold=null; holdErr=e; errors.push('portefeuille') }
       // Une ancienne valeur scan n'est jamais une preuve de données récentes.
