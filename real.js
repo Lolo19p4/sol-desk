@@ -148,7 +148,15 @@ function drawP(){
  for(const [key,p] of entries){
   const row=document.createElement('div');row.style.margin='8px 0';
   const title=document.createElement('span');title.textContent=(p.side==='buy'?'Achat : ':p.side==='sell'?'Vente : ':'Échange : ')+p.sym+' ('+p.why+') — validation Phantom obligatoire. ';
-  const accept=document.createElement('button');accept.type='button';accept.textContent='Examiner et signer';accept.onclick=()=>exec(key);
+  const accept=document.createElement('button');accept.type='button';accept.textContent='Préparer sur Jupiter';accept.onclick=()=>{
+    const mint=p.side==='swap'?TK[p.tgt]:p.mint;
+    const name=p.side==='swap'?NM[p.tgt]:p.sym;
+    if(!mint||typeof window.SolDeskOpenSwap!=='function'){
+      log('Échange manuel indisponible : ouvre Jupiter officiel.');return;
+    }
+    window.SolDeskOpenSwap(name,mint,p.side==='sell'?'sell':'buy');
+    delete R.pend[key];drawP();
+  };
   const ignore=document.createElement('button');ignore.type='button';ignore.textContent='Ignorer';ignore.onclick=()=>{delete R.pend[key];drawP()};
   row.append(title,accept,' ',ignore);root.appendChild(row);
  }
