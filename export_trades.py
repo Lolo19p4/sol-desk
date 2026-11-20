@@ -260,7 +260,7 @@ def from_origin_buy(origin, motif=None):
     return make_trade(date, actif, "achat", qte, usdc, prix, tx, note)
 
 
-def walk_state(state, rows):
+def walk_state(state, rows, journal_text=""):
     # Scanner Percolator close + we still need the buy from journal
     sc = state.get("scanner_dernier") or {}
     if sc.get("tx"):
@@ -447,10 +447,56 @@ def walk_state(state, rows):
     for bloc in (state.get("clotures_reactif") or {}).values():
         close_block(bloc)
 
-    # Open positions still in state (none expected)
+    # Positions encore listées dans state : achat, et vente si déjà clôturée.
     for pos in state.get("positions") or []:
-        if isinstance(pos, dict) and pos.get("tx"):
+        if not isinstance(pos, dict):
+            continue
+        if pos.get("tx"):
             add(rows, from_origin_buy(pos))
+        tx_sortie = pos.get("sortie_tx") or pos.get("tx_sortie")
+        if is_open_position(pos) or not tx_sortie:
+            continue
+        usdc = pos.get("sortie_usdc") or pos.get("recu_usdc") or pos.get("usdc_recu")
+        cout = pos.get("cout_usdc") or pos.get("cout")
+        pnl_usd = pnl_pct = None
+        if usdc is not None and cout is not None:
+            pnl_usd = round(float(usdc) - float(cout), 4)
+            if float(cout):
+                pnl_pct = round((float(usdc) - float(cout)) / float(cout) * 100, 2)
+        year = None
+        maj = state.get("maj") if isinstance(state, dict) else None
+        if isinstance(maj, str) and len(maj) >= 4 and maj[:4].isdigit():
+            year = int(maj[:4])
+        date = (
+            iso_paris(pos.get("sortie_date") or pos.get("date_sortie") or pos.get("cloture"))
+            or date_from_journal_tx(journal_text, tx_sortie, year)
+            or iso_paris(maj)
+        )
+        qte = pos.get("qte_vendue") or pos.get("qte")
+        prix = None
+        try:
+            if usdc is not None and qte:
+                prix = round(float(usdc) / float(qte), 8)
+        except (TypeError, ZeroDivisionError, ValueError):
+            prix = None
+        motif = pos.get("sortie_motif") or "Vente sur stop"
+        if str(motif).strip().lower() == "stop":
+            motif = "Vente sur stop (−7 %)"
+        add(
+            rows,
+            make_trade(
+                date,
+                pos.get("actif"),
+                "vente",
+                qte,
+                usdc,
+                prix,
+                tx_sortie,
+                motif,
+                pnl_usd,
+                pnl_pct,
+            ),
+        )
 
 
 # ---------- journal ----------
@@ -879,6 +925,50 @@ def entry_price(pos):
     return None
 
 
+PASSAGE_LINE_RE = re.compile(
+    r"Passage\s+(\d{1,2}):(\d{2})\s*\(Paris,\s*(\d{1,2})/(\d{1,2})\)",
+    re.I,
+)
+CLOSED_ETATS = {
+    "fermee",
+    "fermée",
+    "ferme",
+    "fermé",
+    "closed",
+    "sold",
+    "vendu",
+    "vendue",
+}
+
+
+def is_open_position(pos):
+    """Une position listée dans state.positions peut déjà être fermée."""
+    if not isinstance(pos, dict):
+        return False
+    etat = str(pos.get("etat") or "").strip().lower()
+    if etat in CLOSED_ETATS:
+        return False
+    if pos.get("sortie_tx") or pos.get("tx_sortie"):
+        return False
+    return bool(pos.get("actif") or pos.get("qte"))
+
+
+def date_from_journal_tx(journal_text, tx, year=None):
+    if not journal_text or not tx:
+        return None
+    for line in journal_text.splitlines():
+        if tx not in line:
+            continue
+        m = PASSAGE_LINE_RE.search(line)
+        if not m:
+            continue
+        hh, mm, dd, mo = m.groups()
+        if year is None:
+            year = 2026
+        return iso_paris(f"{int(dd):02d}/{int(mo):02d}/{int(year)} {int(hh):02d}:{mm}")
+    return None
+
+
 def public_position(pos):
     if not isinstance(pos, dict):
         return {}
@@ -915,7 +1005,7 @@ def public_open_positions(state):
     if not isinstance(state, dict):
         return out
     for pos in state.get("positions") or []:
-        if not isinstance(pos, dict):
+        if not is_open_position(pos):
             continue
         row = public_position(pos)
         if not row.get("actif"):
@@ -939,7 +1029,7 @@ def nb_positions_ouvertes(state):
     if not isinstance(state, dict):
         return 0
     for pos in state.get("positions") or []:
-        if isinstance(pos, dict) and (pos.get("actif") or pos.get("qte")):
+        if is_open_position(pos):
             n += 1
     return n
 
@@ -974,17 +1064,18 @@ def main():
     out_path = Path(sys.argv[3]) if len(sys.argv) > 3 else OUT_PATH
 
     rows = []
+    journal_text = journal_path.read_text() if journal_path.exists() else ""
+    if not journal_path.exists():
+        print(f"Avertissement : {journal_path} introuvable", file=sys.stderr)
     if state_path.exists():
         state = json.loads(state_path.read_text())
-        walk_state(state, rows)
+        walk_state(state, rows, journal_text)
     else:
         print(f"Avertissement : {state_path} introuvable", file=sys.stderr)
         state = {}
 
-    if journal_path.exists():
-        from_journal(journal_path.read_text(), rows)
-    else:
-        print(f"Avertissement : {journal_path} introuvable", file=sys.stderr)
+    if journal_text:
+        from_journal(journal_text, rows)
 
     trades = enrich_sell_pnl(merge(rows))
     journal_text = journal_path.read_text() if journal_path.exists() else ""
@@ -1000,7 +1091,7 @@ def main():
     # If state has open positions, export public fields only
     ouvertes = []
     for pos in state.get("positions") or []:
-        if not isinstance(pos, dict):
+        if not is_open_position(pos):
             continue
         ouvertes.append(public_position(pos))
     payload["positions_ouvertes"] = [p for p in ouvertes if p.get("actif")]

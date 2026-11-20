@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Publie trades.json et status.json sur master seulement s'ils ont changé.
 # N'ajoute jamais d'autre fichier. Ne plante pas si rien n'a changé.
+# Si origin/master a avancé, rebase en gardant la version locale de
+# status.json et trades.json, puis retente le push une fois.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -33,5 +35,16 @@ if [[ -n "$unexpected" ]]; then
 fi
 
 git commit -m "maj status et trades"
-git push origin master
+
+# En rebase, « theirs » = nos commits locaux (status.json / trades.json à jour).
+rebase_master() {
+  git fetch origin
+  git pull --rebase -X theirs origin master
+}
+
+if ! { rebase_master && git push origin master; }; then
+  echo "Push refusé, nouvelle tentative après rebase."
+  rebase_master
+  git push origin master
+fi
 echo "Publié sur master."
