@@ -44,7 +44,7 @@ function rsi(v,n=14){
  return down===0?(up===0?50:100):100-100/(1+up/down);
 }
 function signal(x){
- if(!x||!Number.isFinite(x.price)||!Number.isFinite(x.high24)||x.high24<=0)return ["indisponible","Cours ou seuil absent"];
+ if(!x||!Number.isFinite(x.price)||!Number.isFinite(x.high24)||x.high24<=0||Date.now()-(x.candlesAt||0)>120000)return ["indisponible","Cours, seuil ou analyse récente absent"];
  if(!x.regime)return ["attente","Prix sous EMA50 4 h ou tendance 4 h non confirmée"];
  if(!x.fastTrend)return ["attente","EMA9 5 min pas encore au-dessus de EMA21"];
  if(!Number.isFinite(x.rsi)||x.rsi<40||x.rsi>70)return ["prudence","RSI 15 min hors zone 40–70"];
@@ -100,7 +100,7 @@ async function updateCandles(){
   state[id]=obj;
  }));
  if(results.every(x=>x.status==="rejected"))throw Error("Bougies indisponibles sur les 3 actifs");
- lastCandles=Date.now();lastError=results.filter(x=>x.status==="rejected").map((x,i)=>"").join("");
+ lastCandles=Date.now();const failures=results.filter(x=>x.status==="rejected").length;lastError=failures?failures+" actif(s) sans bougies : signaux incomplets.":"";
  }catch(e){lastError=e.message||String(e)}
  finally{running=false;render()}
 }
