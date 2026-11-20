@@ -1,11 +1,8 @@
-// Sol Desk : scanner réel au chargement, pas de commande financière automatique.
-// Chaque ordre reste une proposition jusqu'au clic distinct « Examiner et signer ».
+// Analyse des marchés à l'ouverture de la page.
+// La connexion au portefeuille et l'activation des propositions restent manuelles.
+// Aucun achat, vente, transfert, signature ou clé secrète.
 (function(){
   "use strict";
-  const el=id=>document.getElementById(id);
-  const btn=el("realbtn"),start=el("go");
-  if(window.REAL&&!window.REAL.on&&btn&&localStorage.getItem('soldesk_real_on')!=='0')btn.click();
+  const start=document.getElementById("go");
   if(start&&!/pause/i.test(start.textContent||""))start.click();
-  // Ni forçage répété de mode, ni démarrage automatique des tests historiques.
-  // Une connexion Phantom doit être autorisée directement dans Phantom.
 })();
