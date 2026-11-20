@@ -1,0 +1,42 @@
+name: Radar expert crypto — cours réels
+
+on:
+  schedule:
+    # Quatre contrôles par heure en complément des prix rafraîchis à 15 s dans le navigateur.
+    - cron: '8,23,38,53 * * * *'
+  push:
+    branches: [master]
+    paths:
+      - 'expert-scanner.js'
+      - 'real.js'
+      - 'auto.js'
+      - 'terminal.js'
+      - 'index.html'
+      - 'tools/expert_market_check.mjs'
+      - '.github/workflows/expert-signal-watch.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sol-desk-expert-radar
+  cancel-in-progress: true
+
+jobs:
+  market-expert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Contrôler le JavaScript
+        run: |
+          node --check expert-scanner.js
+          node --check real.js
+          node --check auto.js
+          node --check terminal.js
+          node --check tools/expert_market_check.mjs
+          grep -q 'id="expert-radar"' index.html
+          grep -q 'expert-scanner.js?v=1' index.html
+      - name: Interroger le marché et l'état Sol Desk
+        run: node tools/expert_market_check.mjs
