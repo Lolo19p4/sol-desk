@@ -2,7 +2,7 @@ name: Radar expert crypto — cours réels
 
 on:
   schedule:
-    # Quatre contrôles par heure en complément des prix rafraîchis à 15 s dans le navigateur.
+    # Quatre contrôles par heure en complément des prix rafraîchis à 10 s dans le navigateur.
     - cron: '8,23,38,53 * * * *'
   push:
     branches: [master]
@@ -37,6 +37,6 @@ jobs:
           node --check terminal.js
           node --check tools/expert_market_check.mjs
           grep -q 'id="expert-radar"' index.html
-          grep -q 'expert-scanner.js?v=1' index.html
+          grep -q 'expert-scanner.js?v=2' index.html
       - name: Interroger le marché et l'état Sol Desk
         run: node tools/expert_market_check.mjs
