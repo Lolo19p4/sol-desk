@@ -29,7 +29,7 @@ async function bal(){const W=R.pk||R.watch;if(!W)return;R.balWallet=null;R.balCo
  const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
  R.balComplete=Object.keys(R.bal).every(m=>m===USDC||!!(pr[m]&&Number.isFinite(+pr[m].usdPrice)&&+pr[m].usdPrice>0));R.balWallet=W;R.balAt=Date.now();
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=m===USDC?b.ui:pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u!=null)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
- R.tot=tot;R.px=pr;el('wbal').innerHTML=`<b>Portefeuille : $${tot.toFixed(2)}</b><table>${rows.join('')}</table>`;showWal();
+ R.tot=tot;R.px=pr;el('wbal').innerHTML=`<b>Montant valorisé : ${tot.toFixed(2)}${R.balComplete?'':' (incomplet, achats bloqués)'}</b><table>${rows.join('')}</table>`;showWal();
  const dk=new Date().toDateString();let D=JSON.parse(localStorage.getItem(PK)||'{}');if(D.dk!==dk||D.pk!==W){D={dk,pk:W,start:tot};localStorage.setItem(PK,JSON.stringify(D))}
  const dd=D.start?(tot/D.start-1)*100:0;R.stopped=(R.balComplete&&D.start>0&&dd<=-L.loss);
  el('rstat').innerHTML=`Début de journée : $${(+D.start).toFixed(2)} · Variation : <span class=${dd>=0?'ok':'ko'}>${dd.toFixed(2)} %</span>`+(R.stopped?` <b class=ko>— PERTE MAX DU JOUR ATTEINTE : bot arrêté jusqu'à demain</b>`:'');
@@ -94,7 +94,7 @@ async function exec(k){const p=R.pend[k];if(!p||R.busy)return;R.busy=1;const pv=
  if(p.side==='swap'){const free=R.free(p.src),value=R.val(p.src),cap=(R.tot||0)*L.pct/100;
   if(!(free>0&&value>0&&cap>=MIN))throw'Solde vérifié ou capital insuffisant';
   const amt=Math.floor(free*Math.min(1,cap/value));if(!(amt>0))throw'Taille insuffisante';q=await quote(TK[p.src],TK[p.tgt],amt,L.slip)}
- else if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC';const amt=Math.min(+u.raw,+p.raw,Math.floor((R.tot||0)*L.pct/100*1e6));if(amt<MIN*1e6)throw'Taille autorisée insuffisante';q=await quote(USDC,p.mint,amt,L.slip)}
+ else if(p.side==='buy'){const u=R.bal[USDC];if(!u)throw'Pas d’USDC';const pendingCap=Number.isFinite(+p.raw)&&+p.raw>0?+p.raw:Infinity;const amt=Math.min(+u.raw,pendingCap,Math.floor((R.tot||0)*L.pct/100*1e6));if(amt<MIN*1e6)throw'Taille autorisée insuffisante';q=await quote(USDC,p.mint,amt,L.slip)}
  else{const b=R.bal[p.mint];if(!b)throw'Rien à vendre';let amt=+b.raw-(p.mint===SOLM?FEE:0);if(p.raw)amt=Math.min(amt,p.raw);if(amt<=0)throw'Rien à vendre';q=await quote(p.mint,USDC,amt)}
  const out=p.side==='swap'?`${p.sym} (reçu ~${(+q.outAmount/10**({USDC:6,SOL:9,BTC:8,ETH:8,BONK:5,WIF:6,RAY:6,LTC:8,...R.DEC}[p.tgt])).toPrecision(4)} ${NM[p.tgt]})`:p.side==='buy'?`${(+q.inAmount/1e6).toFixed(2)} USDC → ${p.sym}`:`${p.sym} → ${(+q.outAmount/1e6).toFixed(2)} USDC`;
  log('RÉEL : devis Jupiter '+out+' — signe dans Phantom');
