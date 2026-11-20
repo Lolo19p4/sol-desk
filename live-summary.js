@@ -35,11 +35,13 @@
     busy = true;
     try {
       const [stat, signal, journal] = await Promise.allSettled([
-        read("status.json"), read("market_signals.json"), read("trades.json")
+        read("status.json"), read("market_signals.json"), read("trades.json"), read("signal_history.json")
       ]);
       const s = stat.status === "fulfilled" ? stat.value : null;
       const m = signal.status === "fulfilled" ? signal.value : null;
       const j = journal.status === "fulfilled" ? journal.value : null;
+      const historyResult = result[3];
+      const scans = historyResult.status === "fulfilled" && Array.isArray(historyResult.value.checks) ? historyResult.value.checks : [];
       const checks = ageMinutes(s && s.dernier_passage);
       const scan = ageMinutes(m && m.checked_at);
       const count = s && Number.isSafeInteger(s.nb_positions) && s.nb_positions >= 0 ? s.nb_positions : null;
@@ -54,6 +56,9 @@
              s ? "Dernier passage publié : " + fmtDate(s.dernier_passage) : "Impossible de lire status.json", botState),
         card("RADAR DES MARCHÉS", scan <= 20 && m && m.status !== "error" ? "Actualisé" : "Données anciennes",
              m ? "SOL / BTC / ETH · " + fmtDate(m.checked_at) + " · aucun ordre envoyé" : "Signaux indisponibles", marketState),
+        card("DERNIERS SCANS CLOUD", scans.length+" contrôles",
+             scans.length ? "Dernier scan : "+fmtDate(scans[0].checked_at)+" · aucune exécution" : "Pas de journal de scans disponible",
+             scans.length && ageMinutes(scans[0].checked_at)<=20 ? "recent" : "ancien"),
         card("BOT DYDY / ORDRES", "Non vérifiés",
              "Aucune preuve ici d'une session d'exécution ou d'une signature Phantom.", "ancien")
       );
@@ -66,7 +71,32 @@
           ". Ce journal ne prouve pas la détention actuelle des positions.";
         cards.append(line);
       }
-      root.replaceChildren(cards);
+      const content = document.createDocumentFragment();
+      content.append(cards);
+      if(scans.length){
+        const heading=document.createElement("h3");
+        heading.textContent="Historique des contrôles sans téléphone";
+        const tbl=document.createElement("table");
+        const hr=document.createElement("tr");
+        for(const title of ["Heure de Paris","SOL","BTC","ETH","Alerte"]){
+          const th=document.createElement("th"); th.textContent=title; hr.append(th);
+        }
+        const thead=document.createElement("thead"); thead.append(hr); tbl.append(thead);
+        const body=document.createElement("tbody");
+        for(const scan of scans.slice(0,8)){
+          const row=document.createElement("tr");
+          const alert=Array.isArray(scan.alerts)?scan.alerts:[];
+          for(const txt of [fmtDate(scan.checked_at),scan.assets?.SOL?.code||"—",
+            scan.assets?.BTC?.code||"—",scan.assets?.ETH?.code||"—",alert.join(", ")||"Aucune"]){
+            const td=document.createElement("td"); td.textContent=txt; row.append(td);
+          }
+          body.append(row);
+        }
+        tbl.append(body);
+        const wrap=document.createElement("div"); wrap.style.overflowX="auto";wrap.style.marginTop="16px";
+        wrap.append(heading,tbl);content.append(wrap);
+      }
+      root.replaceChildren(content);
     } catch (e) {
       root.textContent = "État public indisponible : aucune position ni activité du bot ne peut être confirmée.";
     } finally { busy = false; }
