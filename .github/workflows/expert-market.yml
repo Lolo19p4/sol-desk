@@ -8,6 +8,8 @@ on:
     paths:
       - '.github/workflows/expert-market.yml'
       - 'tools/expert_scan.mjs'
+      - 'tools/record_signal_history.mjs'
+      - 'tools/test-signal-history.mjs'
 
 permissions:
   contents: write
@@ -27,20 +29,39 @@ jobs:
       - name: Contrôler le moteur et lire Binance
         run: |
           node --check tools/expert_scan.mjs
+          node --check tools/record_signal_history.mjs
+          node --check tools/test-signal-history.mjs
+          node tools/test-signal-history.mjs
           node tools/expert_scan.mjs
+          node tools/record_signal_history.mjs
       - name: Publier uniquement les signaux marché publics
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- market_signals.json
+          git add -- market_signals.json signal_history.json
           if git diff --cached --quiet; then
-            echo "Aucun changement."
+            echo "Aucun changement de signal ou d’historique."
             exit 0
           fi
           staged="$(git diff --cached --name-only)"
-          test "$staged" = "market_signals.json"
+          if printf '%s\\n' "$staged" | grep -Ev '^(market_signals\\.json|signal_history\\.json)
+          git commit -m "Surveillance marché SOL BTC ETH [skip ci]"
+          for attempt in 1 2 3; do
+            if git pull --rebase -X theirs origin master && git push origin HEAD:master; then
+              echo "Signaux marché et journal publiés."
+              exit 0
+            fi
+            echo "Publication retardée ; nouvel essai $attempt."
+            sleep 5
+          done
+          echo "::error::Impossible de publier les signaux marché"
+          exit 1
+; then
+            echo "::error::Un fichier non prévu a été préparé"
+            exit 1
+          fi
           git commit -m "Surveillance marché SOL BTC ETH [skip ci]"
           for attempt in 1 2 3; do
             if git pull --rebase -X theirs origin master && git push origin HEAD:master; then
