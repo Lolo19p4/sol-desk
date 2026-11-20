@@ -1,6 +1,6 @@
 // MODE RÉEL : rien n'est signé automatiquement. Aucune clé stockée. Chaque transaction passe par Phantom.
 (function(){
-const JUP='https://lite-api.jup.ag',USDC='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',SOLM='So11111111111111111111111111111111111111112';
+const JUP='https://api.jup.ag',USDC='EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',SOLM='So11111111111111111111111111111111111111112';
 const MAJ={SOL:SOLM,BTC:'3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',ETH:'7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs'};
 const XT={BONK:'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',WIF:'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm',RAY:'4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',LTC:'cbLTC4T5NpzSUtQ7ekgEMZGaUPVJY1ko6BUikqa4gGf'};
 const NAME={[SOLM]:'SOL',[MAJ.BTC]:'wBTC',[MAJ.ETH]:'wETH',[USDC]:'USDC',[XT.BONK]:'BONK',[XT.WIF]:'WIF',[XT.RAY]:'RAY',[XT.LTC]:'cbLTC'};
@@ -25,9 +25,59 @@ el('conn').onclick=async()=>{const p=prov();const inPh=/Phantom/i.test(navigator
  if(!p){if(/Android|iPhone/i.test(navigator.userAgent)&&!inPh&&!(()=>{try{const v=sessionStorage.getItem('phr');sessionStorage.setItem('phr','1');return v}catch(e){return 1}})()){location.href='https://phantom.app/ul/browse/'+encodeURIComponent(location.href)+'?ref='+encodeURIComponent(location.origin)}else alert(inPh?'Phantom pas encore prêt : réessaie dans 2 secondes.':'Phantom non trouvé. Installe l’extension Phantom ou ouvre cette page dans l’appli Phantom.');return}
  try{const r=await p.connect();R.pk=r.publicKey.toString();showWal();hook(p);log('Phantom connecté '+R.pk.slice(0,4)+'…');await bal()}catch(e){el('wal').innerHTML='<span class=ko>Connexion Phantom échouée : '+String(e&&e.message||e).replace(/</g,'&lt;')+'</span>'}};
 async function price(ids){const d=await j(JUP+'/price/v3?ids='+ids.join(','));return d||{}}
-async function bal(){const W=R.pk||R.watch;if(!W)return;R.balWallet=null;R.balComplete=false;const d=await j(JUP+'/ultra/v1/balances/'+W);if(!d){el('wbal').innerHTML='<span class=sk>Soldes indisponibles</span>';return}
+// Solana RPC : lecture de soldes vérifiables sans API Ultra obsolète.
+const BALANCE_RPCS=['https://solana-rpc.publicnode.com','https://api.mainnet-beta.solana.com'];
+async function solanaRpc(method,params){
+  let lastError;
+  for(const base of BALANCE_RPCS){
+    try{
+      const c=new AbortController(),timeout=setTimeout(()=>c.abort(),6500);
+      let response;
+      try{response=await fetch(base,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),signal:c.signal,cache:'no-store'});}
+      finally{clearTimeout(timeout)}
+      if(!response.ok)throw Error('RPC HTTP '+response.status);
+      const d=await response.json();
+      if(d.error||!d.result)throw Error('RPC invalide');
+      return d.result;
+    }catch(e){lastError=e}
+  }
+  throw lastError||Error('Solana indisponible');
+}
+async function solanaHoldings(wallet){
+  const TOKEN='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+  const TOKEN22='TokenzQdBNbLqP5VEhdkAS6EtFNwCb2EB4yF4bFUH5vcg';
+  const [native,legacy,v22]=await Promise.all([
+    solanaRpc('getBalance',[wallet,{commitment:'confirmed'}]),
+    solanaRpc('getTokenAccountsByOwner',[wallet,{programId:TOKEN},{encoding:'jsonParsed',commitment:'confirmed'}]),
+    solanaRpc('getTokenAccountsByOwner',[wallet,{programId:TOKEN22},{encoding:'jsonParsed',commitment:'confirmed'}])
+  ]);
+  const lamports=Number(native.value);
+  if(!Number.isSafeInteger(lamports)||lamports<0)throw Error('SOL invalid');
+  const out={SOL:{amount:String(lamports),uiAmount:lamports/1e9}};
+  for(const block of [legacy,v22]){
+    if(!Array.isArray(block.value))throw Error('Comptes token manquants');
+    for(const record of block.value){
+      const info=record.account?.data?.parsed?.info;
+      const mint=info?.mint,raw=info?.tokenAmount?.amount,dec=Number(info?.tokenAmount?.decimals);
+      if(!mint||!/^\\d+$/.test(String(raw))||!Number.isSafeInteger(dec)||dec<0||dec>18)continue;
+      const name=String(mint),q=BigInt(raw);
+      if(!out[name])out[name]={rawSum:0n,decimals:dec};
+      if(out[name].decimals!==dec)throw Error('Incohérence des décimales');
+      out[name].rawSum+=q;
+    }
+  }
+  for(const [mint,record] of Object.entries(out)){
+    if(mint==='SOL')continue;
+    const raw=record.rawSum;
+    const qty=Number(raw)/10**record.decimals;
+    if(!Number.isFinite(qty)||qty<0)throw Error('Montant token invalid');
+    out[mint]={amount:raw.toString(),uiAmount:qty};
+  }
+  return out;
+}
+async function bal(){const W=R.pk||R.watch;if(!W)return;R.balWallet=null;R.balComplete=false;let d;try{d=await solanaHoldings(W)}catch(e){el('wbal').textContent='Soldes RPC indisponibles : '+(e.message||e);return}
  R.bal={};for(const[k,v]of Object.entries(d)){const m=k==='SOL'?SOLM:k;if(v.uiAmount>0)R.bal[m]={ui:v.uiAmount,raw:v.amount}}
- const pr=await price(Object.keys(R.bal).slice(0,50));let tot=0;
+ const pr=await price(Object.keys(R.bal).filter(m=>m!==SOLM).concat([SOLM]).slice(0,50));let tot=0;
  R.balComplete=Object.keys(R.bal).every(m=>m===USDC||!!(pr[m]&&Number.isFinite(+pr[m].usdPrice)&&+pr[m].usdPrice>0));R.balWallet=W;R.balAt=Date.now();
  const rows=Object.entries(R.bal).map(([m,b])=>{const u=m===USDC?b.ui:pr[m]?.usdPrice?b.ui*pr[m].usdPrice:null;if(u!=null)tot+=u;return`<tr><td>${NAME[m]||m.slice(0,6)+'…'}</td><td>${b.ui.toLocaleString('fr-FR',{maximumFractionDigits:6})}</td><td>${u==null?'–':'$'+u.toFixed(2)}</td></tr>`});
  R.tot=tot;R.px=pr;el('wbal').innerHTML=`<b>Montant valorisé : ${tot.toFixed(2)}${R.balComplete?'':' (incomplet, achats bloqués)'}</b><table>${rows.join('')}</table>`;showWal();
