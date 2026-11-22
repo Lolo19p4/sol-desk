@@ -1,8 +1,30 @@
 {
-  "updated_at": "2026-11-22T01:25:03.878Z",
+  "updated_at": "2026-11-22T08:39:46.100Z",
   "purpose": "Contrôles publics de marchés, sans ordre ni transaction",
   "trading_executed": false,
   "checks": [
+    {
+      "checked_at": "2026-11-22T08:39:46.100Z",
+      "status": "ok",
+      "assets": {
+        "SOL": {
+          "status": "ok",
+          "code": "REGIME_4H_INSUFFISANT",
+          "price": 70.2
+        },
+        "BTC": {
+          "status": "ok",
+          "code": "REGIME_4H_INSUFFISANT",
+          "price": 60221.56
+        },
+        "ETH": {
+          "status": "ok",
+          "code": "REGIME_4H_INSUFFISANT",
+          "price": 1694.41
+        }
+      },
+      "alerts": []
+    },
     {
       "checked_at": "2026-11-22T01:25:03.878Z",
       "status": "ok",
