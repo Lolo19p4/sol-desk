@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-22T22:07:55.993Z",
+  "checked_at": "2026-11-23T02:45:28.668Z",
   "source": "Binance cours spot et bougies closes",
   "trading_executed": false,
   "status": "ok",
@@ -7,38 +7,38 @@
     "SOL": {
       "status": "ok",
       "code": "REGIME_4H_INSUFFISANT",
-      "price": 70.41,
+      "price": 70.02,
       "high24": 71.43,
-      "distance_pct": -1.428,
-      "rsi15": 55.16,
+      "distance_pct": -1.974,
+      "rsi15": 37.8,
       "regime_4h": false,
-      "fast_trend_5m": true,
+      "fast_trend_5m": false,
       "confirmed_1h": false,
-      "latest_closed_1h": 1795384799999
+      "latest_closed_1h": 1795399199999
     },
     "BTC": {
       "status": "ok",
       "code": "REGIME_4H_INSUFFISANT",
-      "price": 60902.86,
+      "price": 60523.52,
       "high24": 61669.99,
-      "distance_pct": -1.244,
-      "rsi15": 53.5,
+      "distance_pct": -1.859,
+      "rsi15": 34.52,
       "regime_4h": false,
-      "fast_trend_5m": true,
+      "fast_trend_5m": false,
       "confirmed_1h": false,
-      "latest_closed_1h": 1795384799999
+      "latest_closed_1h": 1795399199999
     },
     "ETH": {
       "status": "ok",
       "code": "REGIME_4H_INSUFFISANT",
-      "price": 1717.04,
+      "price": 1702.18,
       "high24": 1732.52,
-      "distance_pct": -0.893,
-      "rsi15": 54.55,
+      "distance_pct": -1.751,
+      "rsi15": 30.91,
       "regime_4h": false,
-      "fast_trend_5m": true,
+      "fast_trend_5m": false,
       "confirmed_1h": false,
-      "latest_closed_1h": 1795384799999
+      "latest_closed_1h": 1795399199999
     }
   }
 }
