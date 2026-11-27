@@ -1,8 +1,32 @@
 {
-  "updated_at": "2026-11-27T04:08:13.721Z",
+  "updated_at": "2026-11-27T13:51:51.187Z",
   "purpose": "Contrôles publics de marchés, sans ordre ni transaction",
   "trading_executed": false,
   "checks": [
+    {
+      "checked_at": "2026-11-27T13:51:51.187Z",
+      "status": "ok",
+      "assets": {
+        "SOL": {
+          "status": "ok",
+          "code": "PROCHE_CASSURE",
+          "price": 73.4
+        },
+        "BTC": {
+          "status": "ok",
+          "code": "REGIME_4H_INSUFFISANT",
+          "price": 61545.64
+        },
+        "ETH": {
+          "status": "ok",
+          "code": "REGIME_4H_INSUFFISANT",
+          "price": 1726.92
+        }
+      },
+      "alerts": [
+        "SOL: PROCHE_CASSURE"
+      ]
+    },
     {
       "checked_at": "2026-11-27T04:08:13.721Z",
       "status": "ok",
